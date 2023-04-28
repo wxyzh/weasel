@@ -20,8 +20,8 @@ int WeaselServerApp::Run()
 		return -1;
 
 	//win_sparkle_set_appcast_url("http://localhost:8000/weasel/update/appcast.xml");
-	win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
-	win_sparkle_init();
+	//win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
+	//win_sparkle_init();
 	m_ui.Create(m_server.GetHWnd());
 
 	tray_icon.Create(m_server.GetHWnd());
@@ -37,7 +37,7 @@ int WeaselServerApp::Run()
 	m_handler->Finalize();
 	m_ui.Destroy();
 	tray_icon.RemoveIcon();
-	win_sparkle_cleanup();
+	//win_sparkle_cleanup();
 
 	return ret;
 }
@@ -53,7 +53,7 @@ void WeaselServerApp::SetupMenuHandlers()
 	m_server.AddMenuHandler(ID_WEASELTRAY_WIKI, std::bind(open, L"https://rime.im/docs/"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_HOMEPAGE, std::bind(open, L"https://rime.im/"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_FORUM, std::bind(open, L"https://rime.im/discuss/"));
-	m_server.AddMenuHandler(ID_WEASELTRAY_CHECKUPDATE, check_update);
+	//m_server.AddMenuHandler(ID_WEASELTRAY_CHECKUPDATE, check_update);
 	m_server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, std::bind(explore, dir));
 	m_server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG, std::bind(explore, WeaselUserDataPath()));
 }

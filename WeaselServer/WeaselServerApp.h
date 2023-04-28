@@ -5,7 +5,7 @@
 #include <WeaselUI.h>
 #include <RimeWithWeasel.h>
 #include <WeaselUtility.h>
-#include <winsparkle.h>
+//#include <winsparkle.h>
 #include <functional>
 #include <memory>
 
@@ -27,7 +27,7 @@ public:
 	{
 		return (int)ShellExecuteW(NULL, L"open", path.c_str(), NULL, NULL, SW_SHOWNORMAL) > 32;
 	}
-
+/*
 	static bool check_update()
 	{
 		// when checked manually, show testing versions too
@@ -39,7 +39,7 @@ public:
 		win_sparkle_check_update_with_ui();
 		return true;
 	}
-
+*/
 	static std::wstring install_dir()
 	{
 		WCHAR exe_path[MAX_PATH] = { 0 };

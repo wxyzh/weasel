@@ -16,3 +16,4 @@ on:
 jobs:
   windows:
     uses: ./.github/workflows/windows-build.yml
+    secrets: inherit
