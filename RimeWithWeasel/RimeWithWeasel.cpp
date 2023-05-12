@@ -61,6 +61,7 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
 	, m_active_session(0)
 	, m_disabled(true)
 	, _UpdateUICallback(NULL)
+	, m_last_app_name("")
 {
 	_Setup();
 }
@@ -154,11 +155,11 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	UINT session_id = RimeCreateSession();
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
 	_ReadClientInfo(session_id, buffer);
-
 #ifdef USE_THEME_DARK
 	if (m_ui)
 		m_ui->style() = IsThemeLight() ? m_base_style : m_base_style_dark;
 #endif /* USE_THEME_DARK */
+	/*
 	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
@@ -174,6 +175,7 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 			// set inline_preedit option end
 		}
 	}
+	*/
 	// show session's welcome message :-) if any
 	if (eat) {
 		_Respond(session_id, eat);
@@ -303,6 +305,8 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 			client_type = wcstoutf8(line.substr(kClientTypeKey.length()).c_str());
 		}
 	}
+	weasel::UIStyle style = m_ui->style();
+	weasel::UIStyle* pstyle = &style;
     // set app specific options
 	if (!app_name.empty())
 	{
@@ -311,13 +315,17 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 		if (m_app_options.find(app_name) != m_app_options.end())
 		{
 			AppOptions& options(m_app_options[app_name]);
-			std::for_each(options.begin(), options.end(), [session_id](std::pair<const std::string, bool> &pair)
+			std::for_each(options.begin(), options.end(), [session_id, pstyle](std::pair<const std::string, bool> &pair)
 			{
 				DLOG(INFO) << "set app option: " << pair.first << " = " << pair.second;
-				RimeSetOption(session_id, pair.first.c_str(), Bool(pair.second));
+				if(pair.first == "inline_preedit")
+					pstyle->inline_preedit = pair.second;
+				else
+					RimeSetOption(session_id, pair.first.c_str(), Bool(pair.second));
 			});
 		}
 	}
+	m_ui->style().inline_preedit = style.inline_preedit;
 	// ime | tsf
 	RimeSetProperty(session_id, "client_type", client_type.c_str());
 	// inline preedit
@@ -403,7 +411,7 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	if (session_id == 0)
 		weasel_status.disabled = m_disabled;
 
-	_GetStatus(weasel_status, session_id);
+	//_GetStatus(weasel_status, session_id);
 
 	if (!is_tsf) {
 		_GetContext(weasel_context, session_id);
@@ -548,6 +556,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		RimeFreeCommit(&commit);
 	}
 	
+	weasel::Status weasel_status;
+	_GetStatus(weasel_status, session_id);
 	bool is_composing = false;
 	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
@@ -1150,11 +1160,40 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
 	if (RimeGetStatus(session_id, &status))
 	{
 		std::string schema_id = status.schema_id;
-		if (schema_id != m_last_schema_id)
+		static char app_name_[50];
+		RimeGetProperty(session_id, "client_app", app_name_, sizeof(app_name_) - 1);
+		std::string app_name = app_name_;
+		if((schema_id != m_last_schema_id) || (app_name != m_last_app_name))
 		{
-			m_last_schema_id = schema_id;
+			if (schema_id != m_last_schema_id)
+				m_last_schema_id = schema_id;
+			if (app_name != m_last_app_name)
+				m_last_app_name = app_name;
 			RimeSetOption(session_id, "__synced", false); // Sync new schema options with front end
 			_LoadSchemaSpecificSettings(schema_id);
+			{
+				weasel::UIStyle style = m_ui->style();
+				weasel::UIStyle* pstyle = &style;
+				// set app specific options
+				if (!app_name.empty())
+				{
+					RimeSetProperty(session_id, "client_app", app_name.c_str());
+
+					if (m_app_options.find(app_name) != m_app_options.end())
+					{
+						AppOptions& options(m_app_options[app_name]);
+						std::for_each(options.begin(), options.end(), [session_id, pstyle](std::pair<const std::string, bool> &pair)
+								{
+								DLOG(INFO) << "set app option: " << pair.first << " = " << pair.second;
+								if(pair.first == "inline_preedit")
+								pstyle->inline_preedit = pair.second;
+								else
+								RimeSetOption(session_id, pair.first.c_str(), Bool(pair.second));
+								});
+					}
+				}
+				m_ui->style().inline_preedit = style.inline_preedit;
+			}
 			{
 				// set inline_preedit option
 				bool inline_preedit = m_ui->style().inline_preedit && _IsSessionTSF(session_id);	
