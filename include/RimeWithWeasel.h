@@ -50,6 +50,7 @@ private:
 	UINT m_active_session;
 	bool m_disabled;
 	std::string m_last_schema_id;
+	std::string m_last_app_name;
 	weasel::UIStyle m_base_style;
 #ifdef USE_THEME_DARK
 	weasel::UIStyle m_base_style_dark;
