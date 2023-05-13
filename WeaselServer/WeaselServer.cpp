@@ -76,12 +76,12 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 			return 0;
 	}
 
-	bool check_updates = !wcscmp(L"/update", lpstrCmdLine);
+	/*bool check_updates = !wcscmp(L"/update", lpstrCmdLine);
 	if (check_updates)
 	{
-		WeaselServerApp::check_update();
+		//WeaselServerApp::check_update();
 	}
-
+*/
 	CreateDirectory(WeaselUserDataPath().c_str(), NULL);
 
 	int nRet = 0;
