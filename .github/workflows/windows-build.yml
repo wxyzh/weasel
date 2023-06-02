@@ -68,7 +68,6 @@ jobs:
       - name: Copy Rime files
         run: .\github.install.bat
 
-
       - name: Build Weasel
         id: build_weasel
         run: |
@@ -85,6 +84,12 @@ jobs:
         run: |
           $tempCertFile = New-TemporaryFile
           $tempCAFile = New-TemporaryFile
+          .\build.bat installer
+        
+      - name: Compress Debug Symbols
+        shell: pwsh
+        run: |
+          Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
 
           # Retrieve environment variables for cert/password.
           $certText = $env:env_certificate
@@ -140,3 +145,4 @@ jobs:
           if-no-files-found: error
           path: |
             .\output\archives\weasel*.exe
+            .\output\archives\symbols.zip
