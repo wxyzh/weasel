@@ -86,10 +86,6 @@ jobs:
           $tempCAFile = New-TemporaryFile
           .\build.bat installer
         
-      - name: Compress Debug Symbols
-        shell: pwsh
-        run: |
-          Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
 
           # Retrieve environment variables for cert/password.
           $certText = $env:env_certificate
@@ -118,6 +114,11 @@ jobs:
           Get-ChildItem -Path $output |  where {$Extension -contains $_.Extension} | Set-AuthenticodeSignature -Certificate $Cert -TimestampServer http://timestamp.digicert.com
           Remove-Item $tempCAFile -Force
           Remove-Item $tempCertFile -Force
+     
+      - name: Compress Debug Symbols
+        shell: pwsh
+        run: |
+          Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
 
           
 
