@@ -1,32 +1,22 @@
-name: Windows build
+name: Release Sgin CI
+
 on:
-  workflow_call:
-    inputs:
-      repository:
-        default: ${{ github.repository }}
-        required: false
-        type: string
-      rime_plugins:
-        required: false
-        type: string
+  workflow_dispatch:
+
 jobs:
-  build:
+  build-and-release:
+    permissions:
+      contents: write
     runs-on: windows-2019
     env:
       boost_version: 1.78.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
-      RIME_PLUGINS: ${{ inputs.rime_plugins }}
-
-          
+      RIME_PLUGINS: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v3
         with:
-          repository: ${{ inputs.repository }}
           submodules: recursive
-
-
-
 
       - name: Configure build environment
         run: |
@@ -65,6 +55,7 @@ jobs:
         if: steps.cache-deps.outputs.cache-hit != 'true'
         run: .\build.bat opencc
 
+      # TODO: compile rime and other deps instead of downloading binary
       - name: Copy Rime files
         run: .\github.install.bat
 
@@ -75,7 +66,7 @@ jobs:
           .\build.bat hant
           #.\build.bat installer
           
-      - name: Sgin Bintest
+      - name: Sgin Bin
         shell: pwsh
         env:
           env_certificate: ${{ secrets.CERTIFICATE }}
@@ -83,9 +74,7 @@ jobs:
           env_catert: '${{ secrets.CACERT }}'
         run: |
           $tempCertFile = New-TemporaryFile
-          $tempCAFile = New-TemporaryFile
-          .\build.bat installer
-        
+          $tempCAFile = New-TemporaryFile        
 
           # Retrieve environment variables for cert/password.
           $certText = $env:env_certificate
@@ -114,14 +103,13 @@ jobs:
           Get-ChildItem -Path $output |  where {$Extension -contains $_.Extension} | Set-AuthenticodeSignature -Certificate $Cert -TimestampServer http://timestamp.digicert.com
           Remove-Item $tempCAFile -Force
           Remove-Item $tempCertFile -Force
-     
+          
+        
       - name: Compress Debug Symbols
         shell: pwsh
         run: |
           Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
-
-          
-
+      
       - name: Upload artifacts bin
         uses: actions/upload-artifact@v3
         with:
@@ -147,3 +135,4 @@ jobs:
           path: |
             .\output\archives\weasel*.exe
             .\output\archives\symbols.zip
+
