@@ -53,10 +53,10 @@ STDAPI CCompartmentEventSink::OnChange(_In_ REFGUID guidCompartment)
 HRESULT CCompartmentEventSink::_Advise(_In_ com_ptr<IUnknown> punk, _In_ REFGUID guidCompartment)
 {
 	HRESULT hr = S_OK;
-	ITfCompartmentMgr* pCompartmentMgr = nullptr;
-	ITfSource* pSource = nullptr;
+	com_ptr<ITfCompartmentMgr> pCompartmentMgr;
+	com_ptr<ITfSource> pSource;
 
-	hr = punk->QueryInterface(IID_ITfCompartmentMgr, (void **)&pCompartmentMgr);
+	hr = punk->QueryInterface(&pCompartmentMgr);
 	if (FAILED(hr))
 	{
 		return hr;
@@ -65,28 +65,24 @@ HRESULT CCompartmentEventSink::_Advise(_In_ com_ptr<IUnknown> punk, _In_ REFGUID
 	hr = pCompartmentMgr->GetCompartment(guidCompartment, &_compartment);
 	if (SUCCEEDED(hr))
 	{
-		hr = _compartment->QueryInterface(IID_ITfSource, (void **)&pSource);
+		hr = _compartment->QueryInterface(&pSource);
 		if (SUCCEEDED(hr))
 		{
 			hr = pSource->AdviseSink(IID_ITfCompartmentEventSink, this, &_cookie);
-			pSource->Release();
 		}
 	}
-
-	pCompartmentMgr->Release();
 
 	return hr;
 }
 HRESULT CCompartmentEventSink::_Unadvise()
 {
 	HRESULT hr = S_OK;
-	ITfSource* pSource = nullptr;
+	com_ptr<ITfSource> pSource;
 
-	hr = _compartment->QueryInterface(IID_ITfSource, (void **)&pSource);
+	hr = _compartment->QueryInterface(&pSource);
 	if (SUCCEEDED(hr))
 	{
 		hr = pSource->UnadviseSink(_cookie);
-		pSource->Release();
 	}
 
 	_compartment = nullptr;
@@ -98,27 +94,27 @@ HRESULT CCompartmentEventSink::_Unadvise()
 
 BOOL WeaselTSF::_IsKeyboardDisabled()
 {
-	ITfCompartmentMgr *pCompMgr = NULL;
-	ITfDocumentMgr *pDocMgrFocus = NULL;
-	ITfContext *pContext = NULL;
-	BOOL fDisabled = FALSE;
+	com_ptr<ITfCompartmentMgr> pCompMgr;
+	com_ptr<ITfDocumentMgr> pDocMgrFocus;
+	com_ptr<ITfContext> pContext;
+	
 
 	if ((_pThreadMgr->GetFocus(&pDocMgrFocus) != S_OK) || (pDocMgrFocus == NULL))
 	{
-		fDisabled = TRUE;
-		goto Exit;
+		return TRUE;
 	}
 
 	if ((pDocMgrFocus->GetTop(&pContext) != S_OK) || (pContext == NULL))
 	{
-		fDisabled = TRUE;
-		goto Exit;
+		return TRUE;
 	}
 
-	if (pContext->QueryInterface(IID_ITfCompartmentMgr, (void **) &pCompMgr) == S_OK)
+	BOOL fDisabled = FALSE;
+
+	if (pContext->QueryInterface(&pCompMgr) == S_OK)
 	{
-		ITfCompartment *pCompartmentDisabled;
-		ITfCompartment *pCompartmentEmptyContext;
+		com_ptr<ITfCompartment> pCompartmentDisabled;
+		com_ptr<ITfCompartment> pCompartmentEmptyContext;
 
 		/* Check GUID_COMPARTMENT_KEYBOARD_DISABLED */
 		if (pCompMgr->GetCompartment(GUID_COMPARTMENT_KEYBOARD_DISABLED, &pCompartmentDisabled) == S_OK)
@@ -129,7 +125,6 @@ BOOL WeaselTSF::_IsKeyboardDisabled()
 				if (var.vt == VT_I4) // Even VT_EMPTY, GetValue() can succeed
 					fDisabled = (BOOL) var.lVal;
 			}
-			pCompartmentDisabled->Release();
 		}
 
 		/* Check GUID_COMPARTMENT_EMPTYCONTEXT */
@@ -141,16 +136,9 @@ BOOL WeaselTSF::_IsKeyboardDisabled()
 				if (var.vt == VT_I4) // Even VT_EMPTY, GetValue() can succeed
 					fDisabled = (BOOL) var.lVal;
 			}
-			pCompartmentEmptyContext->Release();
 		}
-		pCompMgr->Release();
 	}
 
-Exit:
-	if (pContext)
-		pContext->Release();
-	if (pDocMgrFocus)
-		pDocMgrFocus->Release();
 	return fDisabled;
 }
 
@@ -182,7 +170,7 @@ HRESULT WeaselTSF::_SetKeyboardOpen(BOOL fOpen)
 
 	if (_pThreadMgr->QueryInterface(&pCompMgr) == S_OK)
 	{
-		ITfCompartment *pCompartment;
+		com_ptr<ITfCompartment> pCompartment;
 		if (pCompMgr->GetCompartment(GUID_COMPARTMENT_KEYBOARD_OPENCLOSE, &pCompartment) == S_OK)
 		{
 			VARIANT var;

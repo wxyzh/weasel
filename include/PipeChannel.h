@@ -50,7 +50,7 @@ namespace weasel {
 	/* Pipe based IPC channel */
 	template<
 		typename _TyMsg,
-		typename _TyRes = DWORD,
+		typename _TyRes = uint64_t,
 		size_t _MsgSize = sizeof(_TyMsg),
 		size_t _ResSize = sizeof(_TyRes)>
 	class PipeChannel : public PipeChannelBase

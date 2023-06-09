@@ -6,7 +6,7 @@
 using namespace std;
 using namespace weasel;
 
-CCandidateList::CCandidateList(com_ptr<WeaselTSF> pTextService)
+CCandidateList::CCandidateList(WeaselTSF& pTextService)
 	: _ui(make_unique<UI>())
 	, _tsf(pTextService)
 	, _pbShow(TRUE)
@@ -110,7 +110,7 @@ STDMETHODIMP CCandidateList::GetUpdatedFlags(DWORD * pdwFlags)
 STDMETHODIMP CCandidateList::GetDocumentMgr(ITfDocumentMgr ** ppdim)
 {
 	*ppdim = nullptr;
-	auto pThreadMgr = _tsf->_GetThreadMgr();
+	auto pThreadMgr = _tsf._GetThreadMgr();
 	if (pThreadMgr == nullptr)
 	{
 		return E_FAIL;
@@ -187,7 +187,7 @@ STDMETHODIMP CCandidateList::Finalize(void)
 
 STDMETHODIMP CCandidateList::Abort(void)
 {
-	_tsf->_AbortComposition(true);
+	_tsf._AbortComposition(true);
 	Destroy();
 	return S_OK;
 }
@@ -217,7 +217,7 @@ STDMETHODIMP CCandidateList::ShowCandidateNumbers(BOOL * pIsShow)
 
 STDMETHODIMP CCandidateList::FinalizeExactCompositionString()
 {
-	_tsf->_AbortComposition(false);
+	_tsf._AbortComposition(false);
 	return E_NOTIMPL;
 }
 
@@ -271,7 +271,7 @@ HWND CCandidateList::_GetActiveWnd()
 	com_ptr<ITfDocumentMgr> pDocumentMgr;
 	com_ptr<ITfContext> pContext;
 	com_ptr<ITfContextView> pContextView;
-	com_ptr<ITfThreadMgr> pThreadMgr = _tsf->_GetThreadMgr();
+	com_ptr<ITfThreadMgr> pThreadMgr = _tsf._GetThreadMgr();
 
 	HWND w = NULL;
 
@@ -297,7 +297,7 @@ HRESULT CCandidateList::_UpdateUIElement()
 	HRESULT hr = S_OK;
 
 	com_ptr<ITfUIElementMgr> pUIElementMgr;
-	com_ptr<ITfThreadMgr> pThreadMgr = _tsf->_GetThreadMgr();
+	com_ptr<ITfThreadMgr> pThreadMgr = _tsf._GetThreadMgr();
 	if (nullptr == pThreadMgr)
 	{
 		return S_OK;
@@ -314,7 +314,7 @@ HRESULT CCandidateList::_UpdateUIElement()
 
 void CCandidateList::StartUI()
 {
-	com_ptr<ITfThreadMgr> pThreadMgr = _tsf->_GetThreadMgr();
+	com_ptr<ITfThreadMgr> pThreadMgr = _tsf._GetThreadMgr();
 	com_ptr<ITfUIElementMgr> pUIElementMgr;
 	auto hr = pThreadMgr->QueryInterface(&pUIElementMgr);
 	if (FAILED(hr))
@@ -336,7 +336,7 @@ void CCandidateList::StartUI()
 
 void CCandidateList::EndUI()
 {
-	com_ptr<ITfThreadMgr> pThreadMgr = _tsf->_GetThreadMgr();
+	com_ptr<ITfThreadMgr> pThreadMgr = _tsf._GetThreadMgr();
 	com_ptr<ITfUIElementMgr> emgr;
 	auto hr = pThreadMgr->QueryInterface(&emgr);
 	if (FAILED(hr))

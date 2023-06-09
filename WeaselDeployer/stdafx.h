@@ -23,3 +23,5 @@
 #include <wtl/atldlgs.h>
 
 #include <logging.h>
+
+#include <filesystem>

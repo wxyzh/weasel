@@ -9,7 +9,9 @@ class CCandidateList :
 	public ITfCandidateListUIElementBehavior
 {
 public:
-	CCandidateList(com_ptr<WeaselTSF> pTextService);
+	// com_ptr智能指针作为参数传送会触发COM引用计数，测试时日志里会因为这个COM引用计数不会递减至0
+	// 故将其类型改为了引用
+	CCandidateList(WeaselTSF& pTextService); 
 	~CCandidateList();
 
 	// IUnknown
@@ -70,8 +72,9 @@ private:
 	void _MakeUIWindow();
 
 	std::unique_ptr<weasel::UI> _ui;
-	DWORD _cRef;
-	com_ptr<WeaselTSF> _tsf;
+	// 改为引用后，成员变量的初始化顺序是依据定义时的顺序，需要调整下定义的位置
+	WeaselTSF& _tsf;
+	DWORD _cRef;	
 	DWORD uiid;
 	TfIntegratableCandidateListSelectionStyle _selectionStyle = STYLE_ACTIVE_SELECTION;
 

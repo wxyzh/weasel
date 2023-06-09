@@ -16,6 +16,6 @@ public:
 	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer);
 
 private:
-	bool _Respond(LPWSTR buffer, std::wstring const& msg);
+	bool _Respond(LPWSTR buffer, std::wstring_view msg);
 	boost::python::object m_service;
 };

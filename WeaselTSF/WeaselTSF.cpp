@@ -31,7 +31,7 @@ WeaselTSF::WeaselTSF()
 
 	_fCUASWorkaroundTested = _fCUASWorkaroundEnabled = FALSE;
 
-	_cand = new CCandidateList(this);
+	_cand = new CCandidateList(*this);
 
 	DllAddRef();
 }
@@ -108,7 +108,7 @@ STDAPI WeaselTSF::Deactivate()
 	_UninitThreadMgrEventSink();
 
 	_UninitKeyEventSink();
-	_UninitPreservedKey();
+	// _UninitPreservedKey();
 
 	_UninitLanguageBar();
 
@@ -145,8 +145,8 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	if (!_InitDisplayAttributeGuidAtom())
 		goto ExitError;
 
-	if (!_InitPreservedKey())
-		goto ExitError;
+	//if (!_InitPreservedKey())
+	//	goto ExitError;
 
 	if (!_InitLanguageBar())
 		goto ExitError;

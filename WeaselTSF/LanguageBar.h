@@ -5,7 +5,9 @@
 class CLangBarItemButton : public ITfLangBarItemButton, public ITfSource
 {
 public:
-	CLangBarItemButton(com_ptr<WeaselTSF> pTextService, REFGUID guid, weasel::UIStyle& style );
+	// com_ptr智能指针作为参数传送会触发COM引用计数，测试时日志里会因为这个COM引用计数不会递减至0
+	// 故将其类型改为了引用
+	CLangBarItemButton(WeaselTSF& textService, REFGUID guid, weasel::UIStyle& style );
 	~CLangBarItemButton();
 
 	/* IUnknown */
@@ -34,13 +36,13 @@ public:
 	void SetLangbarStatus(DWORD dwStatus, BOOL fSet);
 
 private:
+	WeaselTSF& _textService;
 	GUID _guid;
-	com_ptr<WeaselTSF> _pTextService;
+	weasel::UIStyle& _style;
 	com_ptr<ITfLangBarItemSink> _pLangBarItemSink;
 	LONG _cRef; /* COM Reference count */
 	DWORD _status;
-	bool ascii_mode;
-	weasel::UIStyle& _style;
+	bool ascii_mode;	
 	std::wstring _current_schema_zhung_icon;
 	std::wstring _current_schema_ascii_icon;
 };

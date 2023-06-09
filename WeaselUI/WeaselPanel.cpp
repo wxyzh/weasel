@@ -117,8 +117,9 @@ void WeaselPanel::Refresh()
 	// check if to hide candidates window
 	// show tips status, two kind of situation: 1) only aux strings, don't care icon status; 2)only icon(ascii mode switching)
 	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty()) || (m_ctx.empty() && should_show_icon);
-	// show schema menu status: always preedit start with "〔方案選單〕"
-	bool show_schema_menu = std::regex_search(m_ctx.preedit.str, std::wsmatch(), std::wregex(L"^〔方案選單〕", std::wregex::icase));
+	// show schema menu status: always preedit start with "〔方案选单〕"
+	std::wsmatch m;
+	bool show_schema_menu = std::regex_search(m_ctx.preedit.str, m, std::wregex(L"^〔方案选单〕", std::wregex::icase));
 	bool margin_negative = (m_style.margin_x < 0 || m_style.margin_y < 0);
 	bool inline_no_candidates = m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0) && (!show_tips);
 	// when to hide_cadidates?
@@ -153,7 +154,11 @@ void WeaselPanel::_InitFontRes(void)
 		pDWR = new DirectWriteResources(m_style, dpiX);
 	// if style changed, re-initialize font resources
 	else if (m_ostyle != m_style)
+	{
 		pDWR->InitResources(m_style, dpiX);
+		pDWR->pRenderTarget->SetTextAntialiasMode((D2D1_TEXT_ANTIALIAS_MODE)m_style.antialias_mode);
+
+	}
 	else if( dpiX != dpi)
 	{
 		pDWR->InitResources(m_style, dpiX);
@@ -410,7 +415,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 		}
 		m_blurer->DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
 
-		g_back.DrawImage(pBitmapDropShadow, rc.left - blurMarginX, rc.top - blurMarginY);
+		g_back.DrawImage(pBitmapDropShadow, INT(rc.left - blurMarginX), INT(rc.top - blurMarginY));
 
 		// free memory
 		delete pBitmapDropShadow;

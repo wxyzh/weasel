@@ -27,11 +27,11 @@ echo.
 
 if not defined BJAM_TOOLSET (
   rem the number actually means platform toolset, not %VisualStudioVersion%
-  set BJAM_TOOLSET=msvc-14.2
+  set BJAM_TOOLSET=msvc-14.3
 )
 
 if not defined PLATFORM_TOOLSET (
-  set PLATFORM_TOOLSET=v142
+  set PLATFORM_TOOLSET=v143
 )
 
 if defined DEVTOOLS_PATH set PATH=%DEVTOOLS_PATH%%PATH%
@@ -69,7 +69,10 @@ if "%1" == "hant" set build_hant=1
 if "%1" == "rime" set build_rime=1
 if "%1" == "librime" set build_rime=1
 if "%1" == "weasel" set build_weasel=1
-if "%1" == "installer" set build_installer=1
+if "%1" == "installer" (
+    set build_x64=1
+    set build_installer=1
+)
 if "%1" == "all" (
   set build_boost=1
   set build_data=1
@@ -168,7 +171,7 @@ msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platfor
 if errorlevel 1 goto error
 
 if %build_installer% == 1 (
-  "%ProgramFiles(x86)%"\NSIS\Bin\makensis.exe ^
+  "D:\Program Files (x86)"\NSIS\Bin\makensis.exe ^
   /DWEASEL_VERSION=%WEASEL_VERSION% ^
   /DWEASEL_BUILD=%WEASEL_BUILD% ^
   output\install.nsi

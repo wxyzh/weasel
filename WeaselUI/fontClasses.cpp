@@ -44,7 +44,7 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 	pCommentTextFormat(NULL),
 	pTextLayout(NULL)
 {
-	// prepare d2d1 resources
+	D2D1_TEXT_ANTIALIAS_MODE mode = _style.antialias_mode <= 3 ? (D2D1_TEXT_ANTIALIAS_MODE)(_style.antialias_mode) : D2D1_TEXT_ANTIALIAS_MODE_FORCE_DWORD; // prepare d2d1 resources
 	HRESULT hResult = S_OK;
 	// create factory
 	if (pD2d1Factory == NULL)
@@ -58,7 +58,7 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 		const D2D1_PIXEL_FORMAT format = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
 		const D2D1_RENDER_TARGET_PROPERTIES properties = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT, format);
 		pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget);
-		pRenderTarget->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+		pRenderTarget->SetTextAntialiasMode(mode);
 		pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 	}
 	//get the dpi information
@@ -133,7 +133,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		pTextFormat->SetWordWrapping(wrapping);
 		_SetFontFallback(pTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(std::vector<std::wstring>());
+	fontFaceStrVector.clear();
 
 	fontFaceStrVector = ws_split(font_face, L",");
 	//_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
@@ -155,7 +155,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		pPreeditTextFormat->SetWordWrapping(wrapping);
 		_SetFontFallback(pPreeditTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(std::vector<std::wstring>());
+	fontFaceStrVector.clear();
 
 	// label font text format set up
 	fontFaceStrVector = ws_split(label_font_face, L",");
@@ -179,7 +179,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		pLabelTextFormat->SetWordWrapping(wrapping);
 		_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(std::vector<std::wstring>());
+	fontFaceStrVector.clear();
 
 	// comment font text format set up
 	fontFaceStrVector = ws_split(comment_font_face, L",");
@@ -203,7 +203,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		pCommentTextFormat->SetWordWrapping(wrapping);
 		_SetFontFallback(pCommentTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(std::vector<std::wstring>());
+	fontFaceStrVector.clear();
 	return hResult;
 }
 
@@ -233,42 +233,42 @@ void weasel::DirectWriteResources::SetDpi(UINT dpi)
 
 void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle)
 {
-	if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":thin", std::wregex::icase)))
+	if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":thin", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_THIN;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":extra_light", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":extra_light", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_LIGHT;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":ultra_light", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":ultra_light", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_LIGHT;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":light", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":light", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_LIGHT;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":semi_light", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":semi_light", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":medium", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":medium", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_MEDIUM;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":demi_bold", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":demi_bold", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_DEMI_BOLD;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":semi_bold", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":semi_bold", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":bold", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":bold", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_BOLD;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":extra_bold", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":extra_bold", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BOLD;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":ultra_bold", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":ultra_bold", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BOLD;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":black", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":black", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_BLACK;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":heavy", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":heavy", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_HEAVY;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":extra_black", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":extra_black", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BLACK;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":ultra_black", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":ultra_black", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BLACK;
 	else
 		fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 
-	if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":italic", std::wregex::icase)))
+	if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":italic", std::wregex::icase)))
 		fontStyle = DWRITE_FONT_STYLE_ITALIC;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":oblique", std::wregex::icase)))
+	else if (std::wsmatch m; std::regex_search(fontFaceStr, m, std::wregex(L":oblique", std::wregex::icase)))
 		fontStyle = DWRITE_FONT_STYLE_OBLIQUE;
 	else
 		fontStyle = DWRITE_FONT_STYLE_NORMAL;
@@ -326,13 +326,13 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* textFormat, std:
 		DWRITE_UNICODE_RANGE range = { first, last };
 		const  WCHAR* familys = { _fontFaceWstr.c_str() };
 		pFontFallbackBuilder->AddMapping(&range, 1, &familys, 1);
-		fallbackFontsVector.swap(std::vector<std::wstring>());
+		fallbackFontsVector.clear();
 	}
 	// add system defalt font fallback
 	pFontFallbackBuilder->AddMappings(pSysFallback);
 	pFontFallbackBuilder->CreateFontFallback(&pFontFallback);
 	textFormat->SetFontFallback(pFontFallback);
-	fallbackFontsVector.swap(std::vector<std::wstring>());
+	fallbackFontsVector.clear();
 	SafeRelease(&pFontFallback);
 	SafeRelease(&pSysFallback);
 	SafeRelease(&pFontFallbackBuilder);

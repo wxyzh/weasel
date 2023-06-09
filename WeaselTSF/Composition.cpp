@@ -103,7 +103,10 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 
 	ITfRange *pCompositionRange;
 	if (_clear && _pComposition->GetRange(&pCompositionRange) == S_OK)
+	{
 		pCompositionRange->SetText(ec, 0, L"", 0);
+		pCompositionRange->Release();
+	}
 	
 	_pComposition->EndComposition(ec);
 	_pTextService->_FinalizeComposition();

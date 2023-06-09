@@ -48,7 +48,7 @@ void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
 bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, std::string color = "");
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
-void _RefreshTrayIcon(const UINT session_id, const std::function<void()> _UpdateUICallback)
+void _RefreshTrayIcon(const RimeSessionId session_id, const std::function<void()> _UpdateUICallback)
 {
 	// Dangerous, don't touch
 	static char app_name[50];
@@ -114,7 +114,7 @@ void RimeWithWeaselHandler::Finalize()
 	RimeFinalize();
 }
 
-UINT RimeWithWeaselHandler::FindSession(UINT session_id)
+RimeSessionId RimeWithWeaselHandler::FindSession(RimeSessionId session_id)
 {
 	if (m_disabled) return 0;
 	Bool found = RimeFindSession(session_id);
@@ -122,7 +122,7 @@ UINT RimeWithWeaselHandler::FindSession(UINT session_id)
 	return found ? session_id : 0;
 }
 
-UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
+RimeSessionId RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 {
 	if (m_disabled)
 	{
@@ -130,7 +130,7 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 		EndMaintenance();
 		if (m_disabled) return 0;
 	}
-	UINT session_id = RimeCreateSession();
+	RimeSessionId session_id = RimeCreateSession();
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
 	_ReadClientInfo(session_id, buffer);
 
@@ -152,7 +152,7 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	return session_id;
 }
 
-UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
+RimeSessionId RimeWithWeaselHandler::RemoveSession(RimeSessionId session_id)
 {
 	if (m_ui) m_ui->Hide();
 	if (m_disabled) return 0;
@@ -171,7 +171,7 @@ namespace ibus
 	};
 }
 
-BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, EatLine eat)
+BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, RimeSessionId session_id, EatLine eat)
 {
 	DLOG(INFO) << "Process key event: keycode = " << keyEvent.keycode << ", mask = " << keyEvent.mask
 		 << ", session_id = " << session_id;
@@ -183,7 +183,7 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sess
 	return (BOOL)handled;
 }
 
-void RimeWithWeaselHandler::CommitComposition(UINT session_id)
+void RimeWithWeaselHandler::CommitComposition(RimeSessionId session_id)
 {
 	DLOG(INFO) << "Commit composition: session_id = " << session_id;
 	if (m_disabled) return;
@@ -192,7 +192,7 @@ void RimeWithWeaselHandler::CommitComposition(UINT session_id)
 	m_active_session = session_id;
 }
 
-void RimeWithWeaselHandler::ClearComposition(UINT session_id)
+void RimeWithWeaselHandler::ClearComposition(RimeSessionId session_id)
 {
 	DLOG(INFO) << "Clear composition: session_id = " << session_id;
 	if (m_disabled) return;
@@ -201,7 +201,7 @@ void RimeWithWeaselHandler::ClearComposition(UINT session_id)
 	m_active_session = session_id;
 }
 
-void RimeWithWeaselHandler::FocusIn(DWORD client_caps, UINT session_id)
+void RimeWithWeaselHandler::FocusIn(PARAM client_caps, RimeSessionId session_id)
 {
 	DLOG(INFO) << "Focus in: session_id = " << session_id << ", client_caps = " << client_caps;
 	if (m_disabled) return;
@@ -209,14 +209,14 @@ void RimeWithWeaselHandler::FocusIn(DWORD client_caps, UINT session_id)
 	m_active_session = session_id;
 }
 
-void RimeWithWeaselHandler::FocusOut(DWORD param, UINT session_id)
+void RimeWithWeaselHandler::FocusOut(PARAM param, RimeSessionId session_id)
 {
 	DLOG(INFO) << "Focus out: session_id = " << session_id;
 	if (m_ui) m_ui->Hide();
 	m_active_session = 0;
 }
 
-void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
+void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, RimeSessionId session_id)
 {
 	DLOG(INFO) << "Update input position: (" << rc.left << ", " << rc.top
 		<< "), session_id = " << session_id << ", m_active_session = " << m_active_session;
@@ -233,7 +233,7 @@ std::string RimeWithWeaselHandler::m_message_type;
 std::string RimeWithWeaselHandler::m_message_value;
 
 void RimeWithWeaselHandler::OnNotify(void* context_object,
-	                                 uintptr_t session_id,
+	                                 RimeSessionId session_id,
                                      const char* message_type,
                                      const char* message_value)
 {
@@ -244,7 +244,7 @@ void RimeWithWeaselHandler::OnNotify(void* context_object,
 	m_message_value = message_value;
 }
 
-void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
+void RimeWithWeaselHandler::_ReadClientInfo(RimeSessionId session_id, LPWSTR buffer)
 {
 	std::string app_name;
 	std::string client_type;
@@ -341,7 +341,7 @@ void RimeWithWeaselHandler::EndMaintenance()
 	}
 }
 
-void RimeWithWeaselHandler::SetOption(UINT session_id, const std::string & opt, bool val)
+void RimeWithWeaselHandler::SetOption(RimeSessionId session_id, const std::string & opt, bool val)
 {
 	RimeSetOption(session_id, opt.c_str(), val);
 }
@@ -362,7 +362,7 @@ bool RimeWithWeaselHandler::_IsDeployerRunning()
 	return deployer_detected;
 }
 
-void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
+void RimeWithWeaselHandler::_UpdateUI(RimeSessionId session_id)
 {
 	weasel::Status weasel_status;
 	weasel::Context weasel_context;
@@ -430,11 +430,11 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 				|| RimeConfigGetString(&config, "schema/zhung_icon", buffer, BUF_SIZE))
 		{
 			std::wstring tmp = utf8towcs(buffer);
-			std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
+			std::wstring user_dir = to_wstring(weasel_user_data_dir());
 			DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
 			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
 			{
-				std::wstring share_dir = string_to_wstring(weasel_shared_data_dir());
+				std::wstring share_dir = to_wstring(weasel_shared_data_dir());
 				dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
 				if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
 					m_ui->style().current_zhung_icon = L"";
@@ -451,11 +451,11 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 		if (RimeConfigGetString(&config, "schema/ascii_icon", buffer, BUF_SIZE))
 		{
 			std::wstring tmp = utf8towcs(buffer);
-			std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
+			std::wstring user_dir = to_wstring(weasel_user_data_dir());
 			DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
 			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
 			{
-				std::wstring share_dir = string_to_wstring(weasel_shared_data_dir());
+				std::wstring share_dir = to_wstring(weasel_shared_data_dir());
 				dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
 				if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
 					m_ui->style().current_ascii_icon = L"";
@@ -482,7 +482,7 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 		else if (m_message_value == "success")
 			tips = L"部署完成";
 		else if (m_message_value == "failure")
-			tips = L"有錯誤，請查看日誌 %TEMP%\\rime.weasel.*.INFO";
+			tips = L"有错误，请查看日志 %TEMP%\\rime.weasel.*.INFO";
 	}
 	else if (m_message_type == "schema") {
 		tips = /*L"【" + */status.schema_name/* + L"】"*/;
@@ -505,7 +505,7 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 		else if (m_message_value == "ascii_punct")
 			tips = L"，．";
 		else if (m_message_value == "!simplification")
-			tips = L"漢字";
+			tips = L"汉字";
 		else if (m_message_value == "simplification")
 			tips = L"汉字";
 	}
@@ -520,10 +520,10 @@ inline std::string _GetLabelText(const std::vector<weasel::Text> &labels, int id
 {
 	wchar_t buffer[128];
 	swprintf_s<128>(buffer, format, labels.at(id).str.c_str());
-	return wstring_to_string(std::wstring(buffer), CP_UTF8);
+	return to_string(std::wstring(buffer), CP_UTF8);
 }
 
-bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
+bool RimeWithWeaselHandler::_Respond(RimeSessionId session_id, EatLine eat)
 {
 	std::set<std::string> actions;
 	std::list<std::string> messages;
@@ -587,8 +587,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 				for (auto i = 0; i < ctx.menu.num_candidates; i++)
 				{
 					std::string label = m_ui->style().label_font_point > 0 ? _GetLabelText(cinfo.labels, i, m_ui->style().label_text_format.c_str()) : "";
-					std::string comment = m_ui->style().comment_font_point > 0 ? wstring_to_string(cinfo.comments.at(i).str, CP_UTF8) : "";
-					std::string mark_text = m_ui->style().mark_text.empty() ? "*" : wstring_to_string(m_ui->style().mark_text, CP_UTF8);
+					std::string comment = m_ui->style().comment_font_point > 0 ? to_string(cinfo.comments.at(i).str, CP_UTF8) : "";
+					std::string mark_text = m_ui->style().mark_text.empty() ? "*" : to_string(m_ui->style().mark_text, CP_UTF8);
 					std::string prefix = (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
 					topush += " " + prefix + label + std::string(ctx.menu.candidates[i].text) + " " + comment;
 				}
@@ -648,9 +648,9 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 
 	messages.push_back(std::string(".\n"));
 
-	return std::all_of(messages.begin(), messages.end(), [&eat](std::string &msg)
+	return std::all_of(messages.begin(), messages.end(), [&eat](std::string& msg)
 	{
-		return eat(std::wstring(utf8towcs(msg.c_str())));
+		return eat(std::wstring(utf8towcs(msg.data())));
 	});
 }
 
@@ -811,6 +811,20 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 			style.preedit_type = weasel::UIStyle::PREVIEW;
 		else if (!std::strcmp(preedit_type, "preview_all"))
 			style.preedit_type = weasel::UIStyle::PREVIEW_ALL;
+	}
+	char antialias_mode[20] = { 0 };
+	if (RimeConfigGetString(config, "style/antialias_mode", antialias_mode, sizeof(antialias_mode) - 1))
+	{
+		if (!std::strcmp(antialias_mode, "force_dword"))
+			style.antialias_mode = weasel::UIStyle::FORCE_DWORD;
+		else if (!std::strcmp(antialias_mode, "cleartype"))
+			style.antialias_mode = weasel::UIStyle::CLEARTYPE;
+		else if (!std::strcmp(antialias_mode, "grayscale"))
+			style.antialias_mode = weasel::UIStyle::GRAYSCALE;
+		else if (!std::strcmp(antialias_mode, "aliased"))
+			style.antialias_mode = weasel::UIStyle::ALIASED;
+		else
+			style.antialias_mode = weasel::UIStyle::DEFAULT;
 	}
 
 	char align_type[20] = { 0 };
@@ -1100,7 +1114,7 @@ static void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options
 	RimeConfigEnd(&app_iter);
 }
 
-void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
+void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, RimeSessionId session_id)
 {
 	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
@@ -1128,7 +1142,7 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
 
 }
 
-void RimeWithWeaselHandler::_GetContext(weasel::Context & weasel_context, UINT session_id)
+void RimeWithWeaselHandler::_GetContext(weasel::Context & weasel_context, RimeSessionId session_id)
 {
 	RIME_STRUCT(RimeContext, ctx);
 	if (RimeGetContext(session_id, &ctx))
@@ -1155,14 +1169,14 @@ void RimeWithWeaselHandler::_GetContext(weasel::Context & weasel_context, UINT s
 	}
 }
 
-bool RimeWithWeaselHandler::_IsSessionTSF(UINT session_id)
+bool RimeWithWeaselHandler::_IsSessionTSF(RimeSessionId session_id)
 {
 	static char client_type[20] = { 0 };
 	RimeGetProperty(session_id, "client_type", client_type, sizeof(client_type) - 1);
 	return std::string(client_type) == "tsf";
 }
 
-void RimeWithWeaselHandler::_UpdateInlinePreeditStatus(UINT session_id)
+void RimeWithWeaselHandler::_UpdateInlinePreeditStatus(RimeSessionId session_id)
 {
 	if (!m_ui)	return;
 	// set inline_preedit option

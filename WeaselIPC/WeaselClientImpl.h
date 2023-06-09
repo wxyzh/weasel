@@ -25,20 +25,20 @@ namespace weasel
 		void UpdateInputPosition(RECT const& rc);
 		void FocusIn();
 		void FocusOut();
-		void TrayCommand(UINT menuId);
+		void TrayCommand(PARAM menuId);
 		bool GetResponseData(ResponseHandler const& handler);
 
 	protected:
 		void _InitializeClientInfo();
 		bool _WriteClientInfo();
 
-		LRESULT _SendMessage(WEASEL_IPC_COMMAND Msg, DWORD wParam, DWORD lParam);
+		PARAM _SendMessage(WEASEL_IPC_COMMAND Msg, PARAM wParam, RimeSessionId lParam);
 
 		bool _Connected() const { return channel.Connected(); }
 		bool _Active() const { return channel.Connected() && session_id != 0; }
 
 	private:
-		UINT session_id;
+		RimeSessionId session_id;
 		std::wstring app_name;
 		bool is_ime;
 
