@@ -5,7 +5,7 @@
 class CLangBarItemButton : public ITfLangBarItemButton, public ITfSource
 {
 public:
-	CLangBarItemButton(com_ptr<WeaselTSF> pTextService, REFGUID guid, weasel::UIStyle& style );
+	CLangBarItemButton(WeaselTSF& textService, REFGUID guid, weasel::UIStyle& style );
 	~CLangBarItemButton();
 
 	/* IUnknown */
@@ -34,13 +34,13 @@ public:
 	void SetLangbarStatus(DWORD dwStatus, BOOL fSet);
 
 private:
+	WeaselTSF& _textService;
 	GUID _guid;
-	com_ptr<WeaselTSF> _pTextService;
+	weasel::UIStyle& _style;
 	com_ptr<ITfLangBarItemSink> _pLangBarItemSink;
 	LONG _cRef; /* COM Reference count */
 	DWORD _status;
-	bool ascii_mode;
-	weasel::UIStyle& _style;
+	bool ascii_mode;	
 	std::wstring _current_schema_zhung_icon;
 	std::wstring _current_schema_ascii_icon;
 };

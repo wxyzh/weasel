@@ -71,7 +71,7 @@ bool ClientImpl::ProcessKeyEvent(KeyEvent const& keyEvent)
 	if (!_Active())
 		return false;
 
-	LRESULT ret = _SendMessage(WEASEL_IPC_PROCESS_KEY_EVENT, keyEvent, session_id);
+	auto ret = _SendMessage(WEASEL_IPC_PROCESS_KEY_EVENT, keyEvent, session_id);
 	return ret != 0;
 }
 
@@ -80,7 +80,7 @@ bool ClientImpl::CommitComposition()
 	if (!_Active())
 		return false;
 
-	LRESULT ret = _SendMessage(WEASEL_IPC_COMMIT_COMPOSITION, 0, session_id);
+	auto ret = _SendMessage(WEASEL_IPC_COMMIT_COMPOSITION, 0, session_id);
 	return ret != 0;
 }
 
@@ -89,7 +89,7 @@ bool ClientImpl::ClearComposition()
 	if (!_Active())
 		return false;
 
-	LRESULT ret = _SendMessage(WEASEL_IPC_CLEAR_COMPOSITION, 0, session_id);
+	auto ret = _SendMessage(WEASEL_IPC_CLEAR_COMPOSITION, 0, session_id);
 	return ret != 0;
 }
 
@@ -130,7 +130,7 @@ void ClientImpl::FocusOut()
 	_SendMessage(WEASEL_IPC_FOCUS_OUT, 0, session_id);
 }
 
-void ClientImpl::TrayCommand(UINT menuId)
+void ClientImpl::TrayCommand(PARAM menuId)
 {
 	_SendMessage(WEASEL_IPC_TRAY_COMMAND, menuId, session_id);
 }
@@ -141,7 +141,7 @@ void ClientImpl::StartSession()
 		return;
 
 	_WriteClientInfo();
-	UINT ret = _SendMessage(WEASEL_IPC_START_SESSION, 0, 0);
+	auto ret = _SendMessage(WEASEL_IPC_START_SESSION, 0, 0);
 	session_id = ret;
 }
 
@@ -168,7 +168,7 @@ bool ClientImpl::Echo()
 	if (!_Active())
 		return false;
 
-	UINT serverEcho = _SendMessage(WEASEL_IPC_ECHO, 0, session_id);
+	auto serverEcho = _SendMessage(WEASEL_IPC_ECHO, 0, session_id);
 	return (serverEcho == session_id);
 }
 
@@ -192,7 +192,7 @@ bool ClientImpl::_WriteClientInfo()
 }
 
 
-LRESULT ClientImpl::_SendMessage(WEASEL_IPC_COMMAND Msg, DWORD wParam, DWORD lParam)
+PARAM ClientImpl::_SendMessage(WEASEL_IPC_COMMAND Msg, PARAM wParam, RimeSessionId lParam)
 {
 	try {
 		PipeMessage req{ Msg, wParam, lParam };

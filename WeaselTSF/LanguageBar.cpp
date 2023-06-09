@@ -33,14 +33,13 @@ static void HMENU2ITfMenu(HMENU hMenu, ITfMenu *pTfMenu)
 	}
 }
 
-CLangBarItemButton::CLangBarItemButton(com_ptr<WeaselTSF> pTextService, REFGUID guid, weasel::UIStyle& style)
-	: _status(0), _style(style), _current_schema_zhung_icon(), _current_schema_ascii_icon()
+CLangBarItemButton::CLangBarItemButton(WeaselTSF& textService, REFGUID guid, weasel::UIStyle& style)
+	: _textService{ textService }, _status(0), _style(style), _current_schema_zhung_icon(), _current_schema_ascii_icon()
 {
 	DllAddRef();
 
 	_pLangBarItemSink = NULL;
 	_cRef = 1;
-	_pTextService = pTextService;
 	_guid = guid;
 	ascii_mode = false;
 }
@@ -107,7 +106,7 @@ STDAPI CLangBarItemButton::Show(BOOL fShow)
 
 STDAPI CLangBarItemButton::GetTooltipString(BSTR *pbstrToolTip)
 {
-	*pbstrToolTip = SysAllocString(L"左鍵切換模式，右鍵打開菜單");
+	*pbstrToolTip = SysAllocString(L"左键切换模式，右键打开菜单");
 	return (*pbstrToolTip == NULL)? E_OUTOFMEMORY: S_OK;
 }
 
@@ -115,7 +114,7 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click, POINT pt, const RECT *prcAr
 {
 	if (click == TF_LBI_CLK_LEFT)
 	{
-		_pTextService->_HandleLangBarMenuSelect(ascii_mode ? ID_WEASELTRAY_DISABLE_ASCII : ID_WEASELTRAY_ENABLE_ASCII);
+		_textService._HandleLangBarMenuSelect(ascii_mode ? ID_WEASELTRAY_DISABLE_ASCII : ID_WEASELTRAY_ENABLE_ASCII);
 		ascii_mode = !ascii_mode;
 		if (_pLangBarItemSink) {
 			_pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
@@ -124,14 +123,14 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click, POINT pt, const RECT *prcAr
 	else if (click == TF_LBI_CLK_RIGHT)
 	{
 		/* Open menu */
-		HWND hwnd = _pTextService->_GetFocusedContextWindow();
+		HWND hwnd = _textService._GetFocusedContextWindow();
 		if (hwnd != NULL)
 		{
 			HMENU menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP));
 			HMENU popupMenu = GetSubMenu(menu, 0);
 			UINT wID = TrackPopupMenuEx(popupMenu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x, pt.y, hwnd, NULL);
 			DestroyMenu(menu);
-			_pTextService->_HandleLangBarMenuSelect(wID);
+			_textService._HandleLangBarMenuSelect(wID);
 		}
 	}
 	return S_OK;
@@ -148,7 +147,7 @@ STDAPI CLangBarItemButton::InitMenu(ITfMenu *pMenu)
 
 STDAPI CLangBarItemButton::OnMenuSelect(UINT wID)
 {
-	_pTextService->_HandleLangBarMenuSelect(wID);
+	_textService._HandleLangBarMenuSelect(wID);
 	return S_OK;
 }
 
@@ -321,7 +320,7 @@ BOOL WeaselTSF::_InitLanguageBar()
 	if (_pThreadMgr->QueryInterface(&pLangBarItemMgr) != S_OK)
 		return FALSE;
 
-	if ((_pLangBarButton = new CLangBarItemButton(this, GUID_LBI_INPUTMODE, _cand->style())) == NULL)
+	if ((_pLangBarButton = new CLangBarItemButton(*this, GUID_LBI_INPUTMODE, _cand->style())) == NULL)
 		return FALSE;
 
 	if (pLangBarItemMgr->AddItem(_pLangBarButton) != S_OK)

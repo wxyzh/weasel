@@ -1,88 +1,88 @@
-﻿【小狼毫】輸入法
+﻿【小狼毫】输入法
 ================
 
-基於 中州韻輸入法引擎／Rime Input Method Engine 等開源技術
+基于 中州韵输入法引擎／Rime Input Method Engine 等开源技术
 
-式恕堂 版權所無
+式恕堂 版权所无
 
 [![Download](https://img.shields.io/github/v/release/rime/weasel)](https://github.com/rime/weasel/releases/latest)
 [![Build status](https://github.com/rime/weasel/actions/workflows/commit-ci.yml/badge.svg)](https://github.com/rime/weasel/actions/workflows/commit-ci.yml)
 [![GitHub Tag](https://img.shields.io/github/tag/rime/weasel.svg)](https://github.com/rime/weasel)
 
-授權條款：GPLv3
+授权条款：GPLv3
 
-項目主葉：https://rime.im
+项目主叶：https://rime.im
 
-您可能還需要 RIME 用於其他操作系統的發行版：
+您可能还需要 RIME 用于其他操作系统的发行版：
 
-  * 【中州韻】用於 Linux + IBus 輸入法框架
-  * 【鼠鬚管】用於 macOS （64位）
+  * 【中州韵】用于 Linux + IBus 输入法框架
+  * 【鼠须管】用于 macOS （64位）
 
-安裝輸入法
+安装输入法
 ----------
 
-本品適用於 Windows 8.1 ~ Windows 11
+本品适用于 Windows 8.1 ~ Windows 11
 
-初次安裝時，安裝程序將顯示「安裝選項」對話框。
+初次安装时，安装程序将显示「安装选项」对话框。
 
-若要將【小狼毫】註冊到繁體中文（臺灣）鍵盤佈局，請在「輸入語言」欄選擇「中文（臺灣）」，再點擊「安裝」按鈕。
+若要将【小狼毫】注册到繁体中文（台湾）键盘布局，请在「输入语言」栏选择「中文（台湾）」，再点击「安装」按钮。
 
-安裝完成後，仍可由開始菜單打開「安裝選項」更改輸入語言。
+安装完成后，仍可由开始菜单打开「安装选项」更改输入语言。
 
-使用輸入法
+使用输入法
 ----------
 
-選取輸入法指示器菜單裏的【中】字樣圖標，開始用小狼毫寫字。
+选取输入法指示器菜单里的【中】字样图标，开始用小狼毫写字。
 
-可通過快捷鍵 <code>Ctrl+`</code> 或 <code>F4</code> 呼出方案選單、切換輸入方式。
+可通过快捷键 <code>Ctrl+`</code> 或 <code>F4</code> 呼出方案选单、切换输入方式。
 
-定製輸入法
+定制输入法
 ----------
 
-通過 開始菜單 » 小狼毫輸入法 訪問設定工具及常用位置。
+通过 开始菜单 » 小狼毫输入法 访问设定工具及常用位置。
 
-用戶詞庫、配置文件位於 `%AppData%\Rime`，可通過菜單中的「用戶文件夾」打開。高水平玩家調教 Rime 輸入法常會用到。
+用户词库、配置文件位于 `%AppData%\Rime`，可通过菜单中的「用户文件夹」打开。高水平玩家调教 Rime 输入法常会用到。
 
-修改詞庫、配置文件後，須「重新部署」方可生效。
+修改词库、配置文件后，须「重新部署」方可生效。
 
-定製 Rime 的方法，請參考 Wiki [《定製指南》](https://github.com/rime/home/wiki/CustomizationGuide)
+定制 Rime 的方法，请参考 Wiki [《定制指南》](https://github.com/rime/home/wiki/CustomizationGuide)
 
-致謝
+致谢
 ----
 
-### 輸入方案設計：
+### 输入方案设计：
 
-  * 【朙月拼音】系列及【八股文】詞典
-    - 部分數據來源於 CC-CEDICT、Android 拼音、新酷音、opencc 等開源項目
-    - 維護者：佛振、瑾昀
+  * 【朙月拼音】系列及【八股文】词典
+    - 部分数据来源于 CC-CEDICT、Android 拼音、新酷音、opencc 等开源项目
+    - 维护者：佛振、瑾昀
   * 【注音／地球拼音】
-    - 維護者：佛振、瑾昀
-  * 【倉頡五代】
-    - 發明人：朱邦復先生
-    - 碼表源自 www.chinesecj.com
-    - 構詞碼表作者：惜緣
+    - 维护者：佛振、瑾昀
+  * 【仓颉五代】
+    - 发明人：朱邦复先生
+    - 码表源自 www.chinesecj.com
+    - 构词码表作者：惜缘
 
-  【五笔】【粵拼】【上海／蘇州吳語】【中古漢語拼音】【國際音標】等衆多方案
-  不再以安裝包預裝形式提供。可由 <https://github.com/rime/plum> 下載安裝。
+  【五笔】【粤拼】【上海／苏州吴语】【中古汉语拼音】【国际音标】等众多方案
+  不再以安装包预装形式提供。可由 <https://github.com/rime/plum> 下载安装。
 
-### 程序設計：
+### 程序设计：
 
   * [佛振](https://github.com/lotem)
-  * [鄒旭](https://github.com/zouxu09)
+  * [邹旭](https://github.com/zouxu09)
   * [Xiangyan Sun](https://github.com/wishstudio)
   * [Prcuvu](https://github.com/Prcuvu)
   * [nameoverflow](https://github.com/nameoverflow)
   * [fxliang](https://github.com/fxliang)
   * [Azuk 443](https://github.com/determ1ne)
 
-  查看更多 [代碼貢獻者](https://github.com/rime/weasel/graphs/contributors)
+  查看更多 [代码贡献者](https://github.com/rime/weasel/graphs/contributors)
 
-### 美術：
+### 美术：
 
-  * 圖標設計／[Patricivs](https://github.com/Patricivs)
+  * 图标设计／[Patricivs](https://github.com/Patricivs)
   * 配色方案／Aben、P1461、Patricivs、skoj、佛振、五磅兔
 
-### 本品引用了以下開源軟件：
+### 本品引用了以下开源软件：
 
   * [Boost C++ Libraries](http://www.boost.org/) (Boost Software License)
   * [curl](https://curl.haxx.se/) (MIT/X derivate license)
@@ -91,31 +91,31 @@
   * [LevelDB](https://github.com/google/leveldb) (BSD 3-Clause License)
   * [librime](https://github.com/rime/librime) (BSD 3-Clause License)
   * [marisa-trie](https://github.com/s-yata/marisa-trie) (BSD 2-Clause License, LGPL 2.1)
-  * [OpenCC / 開放中文轉換](https://github.com/BYVoid/OpenCC) (Apache License 2.0)
+  * [OpenCC / 开放中文转换](https://github.com/BYVoid/OpenCC) (Apache License 2.0)
   * [plum](https://github.com/rime/plum) (GNU Lesser General Public License v3.0)
   * [WinSparkle](https://github.com/vslavik/winsparkle) (MIT License)
   * [yaml-cpp](https://github.com/jbeder/yaml-cpp) (MIT License)
   * [7-Zip](https://www.7-zip.org) (GNU LGPLv2.1+ with unRAR restriction)
 
-問題與反饋
+问题与反馈
 ----------
 
-發現程序有 bug，請到 GitHub 反饋
+发现程序有 bug，请到 GitHub 反馈
 <https://github.com/rime/weasel/issues>
 
-歡迎提交 pull request
+欢迎提交 pull request
 <https://github.com/rime/weasel/pulls>
 
-Rime 輸入法（不限於 Windows 平臺）功能、使用方法與配置相關的問題，請反饋到
+Rime 输入法（不限于 Windows 平台）功能、使用方法与配置相关的问题，请反馈到
 <https://github.com/rime/home/issues>
 
-聯繫方式
+联系方式
 --------
 
-加入聊天室，提出疑問，發表建議或感想
+加入聊天室，提出疑问，发表建议或感想
 [![Join the chat at https://gitter.im/rime/home](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/rime/home?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-其他技術交流請寄 Rime 開發者 <rimeime@gmail.com>
+其他技术交流请寄 Rime 开发者 <rimeime@gmail.com>
 
-謝謝！
+谢谢！
 

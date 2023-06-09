@@ -21,7 +21,7 @@ enum class BackType
 
 class WeaselPanel : 
 	public CWindowImpl<WeaselPanel, CWindow, CWeaselPanelTraits>,
-	CDoubleBufferImpl<WeaselPanel>
+	public CDoubleBufferImpl<WeaselPanel>
 {
 public:
 	BEGIN_MSG_MAP(WeaselPanel)

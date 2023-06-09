@@ -32,7 +32,7 @@ Layout::Layout(const UIStyle& style, const Context& context, const Status& statu
 GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool roundTopLeft, bool roundTopRight, bool roundBottomRight, bool roundBottomLeft)
 {
 	if (!(roundTopLeft || roundTopRight || roundBottomRight || roundBottomLeft) || corner <= 0) {
-		Gdiplus::Rect& rcp = Gdiplus::Rect(rc.left, rc.top, rc.Width()  , rc.Height());
+		auto rcp = Gdiplus::Rect(rc.left, rc.top, rc.Width()  , rc.Height());
 		AddRectangle(rcp);
 	}
 	else {
@@ -41,16 +41,16 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool ro
 		int elWid = 2 * cnx;
 		int elHei = 2 * cny;
 		AddArc(rc.left, rc.top, elWid * roundTopLeft, elHei * roundTopLeft, 180, 90);
-		AddLine(rc.left + cnx * roundTopLeft, rc.top, rc.right - cnx * roundTopRight, rc.top);
+		AddLine(INT(rc.left + cnx * roundTopLeft), INT(rc.top), INT(rc.right - cnx * roundTopRight), INT(rc.top));
 
 		AddArc(rc.right - elWid * roundTopRight, rc.top, elWid * roundTopRight, elHei * roundTopRight, 270, 90);
-		AddLine(rc.right, rc.top + cny * roundTopRight, rc.right, rc.bottom - cny * roundBottomRight);
+		AddLine(INT(rc.right), INT(rc.top + cny * roundTopRight), INT(rc.right), INT(rc.bottom - cny * roundBottomRight));
 
 		AddArc(rc.right - elWid * roundBottomRight, rc.bottom - elHei * roundBottomRight, elWid * roundBottomRight, elHei * roundBottomRight, 0, 90);
-		AddLine(rc.right - cnx * roundBottomRight, rc.bottom, rc.left + cnx * roundBottomLeft, rc.bottom);
+		AddLine(INT(rc.right - cnx * roundBottomRight), INT(rc.bottom), INT(rc.left + cnx * roundBottomLeft), INT(rc.bottom));
 
 		AddArc(rc.left, rc.bottom - elHei * roundBottomLeft, elWid * roundBottomLeft, elHei * roundBottomLeft, 90, 90);
-		AddLine(rc.left, rc.top + cny * roundTopLeft, rc.left, rc.bottom - cny * roundBottomLeft);
+		AddLine(INT(rc.left), INT(rc.top + cny * roundTopLeft), INT(rc.left), INT(rc.bottom - cny * roundBottomLeft));
 	}
 }
 
@@ -74,7 +74,7 @@ void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int heigh
 		AddLine(left, top + cny, left, top + height - cny);
 	}
 	else {
-		Gdiplus::Rect& rc = Gdiplus::Rect(left, top, width, height);
+		auto rc = Gdiplus::Rect(left, top, width, height);
 		AddRectangle(rc);
 	}
 }

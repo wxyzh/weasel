@@ -392,3 +392,4 @@ bool StandardLayout::ShouldDisplayStatusIcon() const
 	// rule 4. rule 3 excluding tips FullScreenLayout with strings
 	return (_status.ascii_mode || !_status.composing || !_context.aux.empty()) && !((_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || _style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN) && !_context.aux.empty());
 }
+        

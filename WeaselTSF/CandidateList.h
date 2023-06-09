@@ -9,7 +9,7 @@ class CCandidateList :
 	public ITfCandidateListUIElementBehavior
 {
 public:
-	CCandidateList(com_ptr<WeaselTSF> pTextService);
+	CCandidateList(WeaselTSF& pTextService);
 	~CCandidateList();
 
 	// IUnknown
@@ -71,7 +71,7 @@ private:
 
 	std::unique_ptr<weasel::UI> _ui;
 	DWORD _cRef;
-	com_ptr<WeaselTSF> _tsf;
+	WeaselTSF& _tsf;
 	DWORD uiid;
 	TfIntegratableCandidateListSelectionStyle _selectionStyle = STYLE_ACTIVE_SELECTION;
 

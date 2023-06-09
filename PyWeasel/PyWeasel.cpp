@@ -70,7 +70,7 @@ UINT PyWeaselHandler::AddSession(LPWSTR buffer)
 		{
 			return 0;
 		}
-		wstring resp = python::extract<wstring>(session.attr("get_response")());
+		std::wstring resp = python::extract<std::wstring>(session.attr("get_response")());
 		_Respond(buffer, resp);
 
 	}
@@ -108,7 +108,7 @@ BOOL PyWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id
 		}
 		
 		taken = python::extract<bool>(session.attr("process_key_event")(keyEvent.keycode, keyEvent.mask));
-		wstring resp = python::extract<wstring>(session.attr("get_response")());
+		std::wstring resp = python::extract<std::wstring>(session.attr("get_response")());
 		_Respond(buffer, resp);
 	}
 	catch (python::error_already_set e)
@@ -119,11 +119,11 @@ BOOL PyWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id
 	return (BOOL)taken;
 }
 
-bool PyWeaselHandler::_Respond(LPWSTR buffer, wstring const& msg)
+bool PyWeaselHandler::_Respond(LPWSTR buffer, std::wstring_view msg)
 {
 	memset(buffer, 0, WEASEL_IPC_BUFFER_SIZE);
 	wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
-	bs << msg;
+	bs << msg.data();
 	if (!bs.good())
 	{
 		// response text toooo long!
