@@ -12,6 +12,7 @@ jobs:
       boost_version: 1.78.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
       RIME_PLUGINS: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
+      PLATFORM_TOOLSET: v143
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v3
