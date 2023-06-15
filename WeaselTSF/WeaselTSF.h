@@ -117,6 +117,8 @@ public:
 
 	com_ptr<ITfThreadMgr> _GetThreadMgr() { return _pThreadMgr; }
 
+	bool getSupportDisplayAttribute() const{ return _isSupportDisplayAttribute; }
+
 private:
 	/* TSF Related */
 	BOOL _InitThreadMgrEventSink();
@@ -183,4 +185,6 @@ private:
 
 	// guidatom for the display attibute.
 	TfGuidAtom _gaDisplayAttributeInput;
+
+	bool _isSupportDisplayAttribute{ true };
 };

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Register.h"
 #include <strsafe.h>
+#include <Msctf.h>
 
 #define CLSID_STRLEN 38  // strlen("{xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx}")
 
@@ -59,7 +60,7 @@ BOOL RegisterProfiles()
 			achIconFile,
 			cchIconFile,
 			TEXTSERVICE_ICON_INDEX,
-			FindIME(),
+			NULL,
 			0,
 			TRUE,
 			0);
@@ -114,7 +115,7 @@ const GUID SupportCategories0[] =
 
 BOOL RegisterCategories()
 {
-	ITfCategoryMgr* pCategoryMgr;
+	com_ptr<ITfCategoryMgr> pCategoryMgr;
 	HRESULT hr;
 
 	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void**)&pCategoryMgr);
@@ -129,13 +130,12 @@ BOOL RegisterCategories()
 			flag = FALSE;
 	}
 
-	pCategoryMgr->Release();
 	return flag;
 }
 
 void UnregisterCategories()
 {
-	ITfCategoryMgr* pCategoryMgr;
+	com_ptr<ITfCategoryMgr> pCategoryMgr;
 	HRESULT hr;
 
 	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void**)&pCategoryMgr);
@@ -144,8 +144,6 @@ void UnregisterCategories()
 
 	for (const auto& guid : SupportCategories0)
 		pCategoryMgr->UnregisterCategory(c_clsidTextService, guid, c_clsidTextService);
-
-	pCategoryMgr->Release();
 }
 
 static BOOL CLSIDToStringA(REFGUID refGUID, char *pchA)

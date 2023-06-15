@@ -3,6 +3,7 @@
 #include "WeaselTSF.h"
 #include "CandidateList.h"
 
+
 using namespace std;
 using namespace weasel;
 
@@ -331,6 +332,10 @@ void CCandidateList::StartUI()
 	{
 		_ui->style() = _style;
 		_MakeUIWindow();
+	}
+	else
+	{
+		pUIElementMgr->UpdateUIElement(uiid);
 	}
 }
 

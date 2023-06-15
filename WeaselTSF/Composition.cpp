@@ -99,7 +99,10 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 	/* Clear the dummy text we set before, if any. */
 	if (_pComposition == nullptr) return S_OK;
 
-	_pTextService->_ClearCompositionDisplayAttributes(ec, _pContext);
+	if (_pTextService->getSupportDisplayAttribute())
+	{
+		_pTextService->_ClearCompositionDisplayAttributes(ec, _pContext);
+	}
 
 	ITfRange *pCompositionRange;
 	if (_clear && _pComposition->GetRange(&pCompositionRange) == S_OK)
@@ -265,7 +268,10 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 		}
 	}
 
-	_pTextService->_SetCompositionDisplayAttributes(ec, _pContext, pRangeComposition);
+	if (_pTextService->getSupportDisplayAttribute())
+	{
+		_pTextService->_SetCompositionDisplayAttributes(ec, _pContext, pRangeComposition);
+	}
 
 	/* Set caret */
 	LONG cch;

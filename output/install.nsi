@@ -16,6 +16,7 @@ Unicode true
 !endif
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
+!define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel"
 
 ; The name of the installer
 Name "小狼毫 ${WEASEL_VERSION}"
@@ -62,8 +63,46 @@ RequestExecutionLevel admin
 ; Languages
 
 !insertmacro MUI_LANGUAGE "SimpChinese"
-!insertmacro MUI_LANGUAGE "TradChinese"
+LangString DISPLAYNAME ${LANG_SIMPCHINESE} "小狼毫输入法"
+LangString LNKFORMANUAL ${LANG_SIMPCHINESE} "【小狼毫】说明书"
+LangString LNKFORSETTING ${LANG_SIMPCHINESE} "【小狼毫】输入法设定"
+LangString LNKFORDICT ${LANG_SIMPCHINESE} "【小狼毫】用户词典管理"
+LangString LNKFORSYNC ${LANG_SIMPCHINESE} "【小狼毫】用户资料同步"
+LangString LNKFORDEPLOY ${LANG_SIMPCHINESE} "【小狼毫】重新部署"
+LangString LNKFORSERVER ${LANG_SIMPCHINESE} "小狼毫算法服务"
+LangString LNKFORUSERFOLDER ${LANG_SIMPCHINESE} "【小狼毫】用户文件夹"
+LangString LNKFORAPPFOLDER ${LANG_SIMPCHINESE} "【小狼毫】程序文件夹"
+LangString LNKFORUPDATER ${LANG_SIMPCHINESE} "【小狼毫】检查新版本"
+LangString LNKFORSETUP ${LANG_SIMPCHINESE} "【小狼毫】安装选项"
+LangString LNKFORUNINSTALL ${LANG_SIMPCHINESE} "卸载小狼毫"
 
+!insertmacro MUI_LANGUAGE "TradChinese"
+LangString DISPLAYNAME ${LANG_TRADCHINESE} "小狼毫輸入法"
+LangString LNKFORMANUAL ${LANG_TRADCHINESE} "【小狼毫】說明書"
+LangString LNKFORSETTING ${LANG_TRADCHINESE} "【小狼毫】輸入法設定"
+LangString LNKFORDICT ${LANG_TRADCHINESE} "【小狼毫】用戶詞典管理"
+LangString LNKFORSYNC ${LANG_TRADCHINESE} "【小狼毫】用戶資料同步"
+LangString LNKFORDEPLOY ${LANG_TRADCHINESE} "【小狼毫】重新部署"
+LangString LNKFORSERVER ${LANG_TRADCHINESE} "小狼毫算法服務"
+LangString LNKFORUSERFOLDER ${LANG_TRADCHINESE} "【小狼毫】用戶文件夾"
+LangString LNKFORAPPFOLDER ${LANG_TRADCHINESE} "【小狼毫】程序文件夾"
+LangString LNKFORUPDATER ${LANG_TRADCHINESE} "【小狼毫】檢查新版本"
+LangString LNKFORSETUP ${LANG_TRADCHINESE} "【小狼毫】安裝選項"
+LangString LNKFORUNINSTALL ${LANG_TRADCHINESE} "卸載小狼毫"
+
+!insertmacro MUI_LANGUAGE "English"
+LangString DISPLAYNAME ${LANG_ENGLISH} "Weasel"
+LangString LNKFORMANUAL ${LANG_ENGLISH} "[Weasel] Manual"
+LangString LNKFORSETTING ${LANG_ENGLISH} "[Weasel] Settings"
+LangString LNKFORDICT ${LANG_ENGLISH} "[Weasel] Dictionary Manager"
+LangString LNKFORSYNC ${LANG_ENGLISH} "[Weasel] Sync User Profile"
+LangString LNKFORDEPLOY ${LANG_ENGLISH} "[Weasel] Deploy"
+LangString LNKFORSERVER ${LANG_ENGLISH} "Weasel Server"
+LangString LNKFORUSERFOLDER ${LANG_ENGLISH} "[Weasel] User Folder"
+LangString LNKFORAPPFOLDER ${LANG_ENGLISH} "[Weasel] App Folder"
+LangString LNKFORUPDATER ${LANG_ENGLISH} "[Weasel] Check for Updates"
+LangString LNKFORSETUP ${LANG_ENGLISH} "[Weasel] Installation Preference"
+LangString LNKFORUNINSTALL ${LANG_ENGLISH} "Uninstall Weasel"
 ;--------------------------------
 
 !macro TIP_WHEN_AMD64_INSTALLER_RUNAT_X86
@@ -198,11 +237,18 @@ program_files:
   ExecWait "$INSTDIR\WeaselDeployer.exe /install"
 
   ; Write the uninstall keys for Windows
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "DisplayName" "小狼毫输入法"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "NoModify" 1
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "NoRepair" 1
+  WriteRegStr HKLM "${REG_UNINST_KEY}" "DisplayName" "$(DISPLAYNAME)"
+  WriteRegStr HKLM "${REG_UNINST_KEY}" "UninstallString" '"$INSTDIR\uninstall.exe"'
+  WriteRegStr HKLM "${REG_UNINST_KEY}" "DisplayVersion" "${WEASEL_VERSION}.${WEASEL_BUILD}"
+  WriteRegStr HKLM "${REG_UNINST_KEY}" "Publisher" "式恕堂"
+  WriteRegStr HKLM "${REG_UNINST_KEY}" "URLInfoAbout" "https://rime.im/"
+  WriteRegStr HKLM "${REG_UNINST_KEY}" "HelpLink" "https://rime.im/docs/"
+  WriteRegDWORD HKLM "${REG_UNINST_KEY}" "NoModify" 1
+  WriteRegDWORD HKLM "${REG_UNINST_KEY}" "NoRepair" 1
   WriteUninstaller "$INSTDIR\uninstall.exe"
+
+  ; run as user...
+  ExecWait "$INSTDIR\WeaselDeployer.exe /install"
 
   ; Write autorun key
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "WeaselServer" "$INSTDIR\WeaselServer.exe"
@@ -218,18 +264,18 @@ SectionEnd
 ; Optional section (can be disabled by the user)
 Section "Start Menu Shortcuts"
   SetShellVarContext all
-  CreateDirectory "$SMPROGRAMS\小狼毫输入法"
-  CreateShortCut "$SMPROGRAMS\小狼毫输入法\【小狼毫】说明书.lnk" "$INSTDIR\README.txt"
-  CreateShortCut "$SMPROGRAMS\小狼毫输入法\【小狼毫】输入法设定.lnk" "$INSTDIR\WeaselDeployer.exe" "" "$SYSDIR\shell32.dll" 21
-  CreateShortCut "$SMPROGRAMS\小狼毫输入法\【小狼毫】用户词典管理.lnk" "$INSTDIR\WeaselDeployer.exe" "/dict" "$SYSDIR\shell32.dll" 6
-  CreateShortCut "$SMPROGRAMS\小狼毫输入法\【小狼毫】用户资料同步.lnk" "$INSTDIR\WeaselDeployer.exe" "/sync" "$SYSDIR\shell32.dll" 26
-  CreateShortCut "$SMPROGRAMS\小狼毫输入法\【小狼毫】重新部署.lnk" "$INSTDIR\WeaselDeployer.exe" "/deploy" "$SYSDIR\shell32.dll" 144
-  CreateShortCut "$SMPROGRAMS\小狼毫输入法\小狼毫算法服务.lnk" "$INSTDIR\WeaselServer.exe" "" "$INSTDIR\WeaselServer.exe" 0
-  CreateShortCut "$SMPROGRAMS\小狼毫输入法\【小狼毫】用户文件夹.lnk" "$INSTDIR\WeaselServer.exe" "/userdir" "$SYSDIR\shell32.dll" 126
-  CreateShortCut "$SMPROGRAMS\小狼毫输入法\【小狼毫】程序文件夹.lnk" "$INSTDIR\WeaselServer.exe" "/weaseldir" "$SYSDIR\shell32.dll" 19
-  CreateShortCut "$SMPROGRAMS\小狼毫输入法\【小狼毫】检查新版本.lnk" "$INSTDIR\WeaselServer.exe" "/update" "$SYSDIR\shell32.dll" 13
-  CreateShortCut "$SMPROGRAMS\小狼毫输入法\【小狼毫】安装选项.lnk" "$INSTDIR\WeaselSetup.exe" "" "$SYSDIR\shell32.dll" 162
-  CreateShortCut "$SMPROGRAMS\小狼毫输入法\卸载小狼毫.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+  CreateDirectory "$SMPROGRAMS\$(DISPLAYNAME)"
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORMANUAL).lnk" "$INSTDIR\README.txt"
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORSETTING).lnk" "$INSTDIR\WeaselDeployer.exe" "" "$SYSDIR\shell32.dll" 21
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORDICT).lnk" "$INSTDIR\WeaselDeployer.exe" "/dict" "$SYSDIR\shell32.dll" 6
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORSYNC).lnk" "$INSTDIR\WeaselDeployer.exe" "/sync" "$SYSDIR\shell32.dll" 26
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORDEPLOY).lnk" "$INSTDIR\WeaselDeployer.exe" "/deploy" "$SYSDIR\shell32.dll" 144
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORSERVER).lnk" "$INSTDIR\WeaselServer.exe" "" "$INSTDIR\WeaselServer.exe" 0
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORUSERFOLDER).lnk" "$INSTDIR\WeaselServer.exe" "/userdir" "$SYSDIR\shell32.dll" 126
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORAPPFOLDER).lnk" "$INSTDIR\WeaselServer.exe" "/weaseldir" "$SYSDIR\shell32.dll" 19
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORUPDATER).lnk" "$INSTDIR\WeaselServer.exe" "/update" "$SYSDIR\shell32.dll" 13
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORSETUP).lnk" "$INSTDIR\WeaselSetup.exe" "" "$SYSDIR\shell32.dll" 162
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORUNINSTALL).lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
 
 SectionEnd
 
@@ -260,8 +306,8 @@ Section "Uninstall"
   RMDir /REBOOTOK "$INSTDIR\data"
   RMDir /REBOOTOK "$INSTDIR"
   SetShellVarContext all
-  Delete /REBOOTOK "$SMPROGRAMS\小狼毫输入法\*.*"
-  RMDir /REBOOTOK "$SMPROGRAMS\小狼毫输入法"
+  Delete /REBOOTOK "$SMPROGRAMS\$(DISPLAYNAME)\*.*"
+  RMDir /REBOOTOK "$SMPROGRAMS\$(DISPLAYNAME)"
 
   ; Prompt reboot
   SetRebootFlag true

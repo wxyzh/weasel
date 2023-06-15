@@ -108,7 +108,7 @@ STDAPI WeaselTSF::Deactivate()
 	_UninitThreadMgrEventSink();
 
 	_UninitKeyEventSink();
-	// _UninitPreservedKey();
+	_UninitPreservedKey();
 
 	_UninitLanguageBar();
 
@@ -143,10 +143,12 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 		goto ExitError;
 
 	if (!_InitDisplayAttributeGuidAtom())
-		goto ExitError;
+	{
+		_isSupportDisplayAttribute = false;
+	}
 
-	//if (!_InitPreservedKey())
-	//	goto ExitError;
+	if (!_InitPreservedKey())
+		goto ExitError;	
 
 	if (!_InitLanguageBar())
 		goto ExitError;
