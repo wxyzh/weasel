@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: windows-2022
     env:
       boost_version: 1.82.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_82_0
