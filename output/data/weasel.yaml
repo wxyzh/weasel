@@ -11,6 +11,7 @@ app_options:
 
 style:
   color_scheme: dark_temple
+  ascii_tip_follow_cursor: false
   font_face: Microsoft YaHei
   label_font_face: Microsoft YaHei
   comment_font_face: Microsoft YaHei
