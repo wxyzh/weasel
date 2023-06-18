@@ -881,7 +881,8 @@ void WeaselPanel::MoveTo(RECT const& rc)
 	{
 		m_octx = m_ctx;
 		m_oinputPos = rc;
-		m_inputPos = rc;
+		m_inputPos.OffsetRect(0, 6);
+		m_oinputPos = m_inputPos;
 		// with parameter to avoid vertical flicker
 		_RepositionWindow(true);
 		RedrawWindow();
