@@ -204,6 +204,14 @@
   <ItemGroup>
     <Manifest Include="WeaselSetup.manifest" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WeaselIPCServer\WeaselIPCServer.vcxproj">
+      <Project>{26930622-cfa2-43df-a9f3-4aa4a313b2a4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\WeaselIPC\WeaselIPC.vcxproj">
+      <Project>{ce11a2df-8d20-4b07-a935-4b0d03f0303d}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

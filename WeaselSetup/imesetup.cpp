@@ -15,7 +15,6 @@ static const GUID c_clsidTextService =
 static const GUID c_guidProfile = 
 { 0x3d02cab6, 0x2b8e, 0x4781, { 0xba, 0x20, 0x1c, 0x92, 0x67, 0x52, 0x94, 0x67 } };
 
-
 BOOL copy_file(const std::wstring& src, const std::wstring& dest)
 {
 	BOOL ret = CopyFile(src.c_str(), dest.c_str(), FALSE);

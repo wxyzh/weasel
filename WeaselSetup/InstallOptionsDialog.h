@@ -32,6 +32,8 @@ protected:
 	LRESULT OnUseCustomDir(WORD, WORD code, HWND, BOOL&);
 
 	void UpdateWidgets();
+	void Modify();
+	void ResetServer();
 
 	CButton cn_;
 	CButton tw_;

@@ -21,7 +21,7 @@ LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	dir_.Attach(GetDlgItem(IDC_EDIT_DIR));
 
 	CheckRadioButton(IDC_RADIO_CN, IDC_RADIO_TW,
-		(hant? IDC_RADIO_TW : IDC_RADIO_CN));
+		(hant ? IDC_RADIO_TW : IDC_RADIO_CN));
 	CheckRadioButton(IDC_RADIO_DEFAULT_DIR, IDC_RADIO_CUSTOM_DIR,
 		(user_dir.empty() ? IDC_RADIO_DEFAULT_DIR : IDC_RADIO_CUSTOM_DIR));
 	dir_.SetWindowTextW(user_dir.c_str());
@@ -30,6 +30,8 @@ LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	tw_.EnableWindow(!installed);
 	remove_.EnableWindow(installed);
 	dir_.EnableWindow(user_dir.empty() ? FALSE : TRUE);
+
+	GetDlgItem(IDOK).SetWindowTextW(installed ? L"更改" : L"安装");
 
 	CenterWindow();
 	return 0;
@@ -40,14 +42,17 @@ LRESULT InstallOptionsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
 	return 0;
 }
 
-LRESULT InstallOptionsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
+LRESULT InstallOptionsDialog::OnOK(WORD, WORD code, HWND, BOOL&)
+{
 	hant = (IsDlgButtonChecked(IDC_RADIO_TW) == BST_CHECKED);
-	if (IsDlgButtonChecked(IDC_RADIO_CUSTOM_DIR) == BST_CHECKED) {
+	if (IsDlgButtonChecked(IDC_RADIO_CUSTOM_DIR) == BST_CHECKED) 
+	{
 		CStringW text;
 		dir_.GetWindowTextW(text);
 		user_dir = text;
 	}
-	else {
+	else 
+	{
 		user_dir.clear();
 	}
 	EndDialog(IDOK);
@@ -55,12 +60,13 @@ LRESULT InstallOptionsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
 }
 
 LRESULT InstallOptionsDialog::OnRemove(WORD, WORD code, HWND, BOOL&) {
-  const bool non_silent = false;
+	const bool non_silent = false;
 	uninstall(non_silent);
 	installed = false;
 	cn_.EnableWindow(!installed);
 	tw_.EnableWindow(!installed);
 	remove_.EnableWindow(installed);
+	GetDlgItem(IDOK).SetWindowTextW(L"安装");
 	return 0;
 }
 

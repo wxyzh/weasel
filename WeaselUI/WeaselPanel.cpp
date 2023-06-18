@@ -38,8 +38,8 @@ static inline void ReconfigRoundInfo(IsToRoundStruct& rd, const int& i, const in
 	}
 }
 
-WeaselPanel::WeaselPanel(weasel::UI& ui)
-	: m_layout(NULL),
+WeaselPanel::WeaselPanel(weasel::UI& ui) :
+	m_layout(NULL),
 	m_ctx(ui.ctx()),
 	m_octx(ui.octx()),
 	m_status(ui.status()),
@@ -75,8 +75,8 @@ WeaselPanel::~WeaselPanel()
 void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
-	CSize size = m_layout->GetContentSize();
-	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW);
+	m_size = m_layout->GetContentSize();
+	SetWindowPos(NULL, 0, 0, m_size.cx, m_size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW);
 	ReleaseDC(dc);
 }
 
@@ -524,11 +524,13 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			CRect prc = m_layout->GetPrepageRect();
 			// clickable color / disabled color
 			int color = m_ctx.cinfo.currentPage ? m_style.prevpage_color : m_style.text_color;
+			if (m_istorepos) prc.OffsetRect(0, m_offsety_preedit);
 			_TextOut(prc, pre.c_str(), pre.length(), color, txtFormat);
 
 			CRect nrc = m_layout->GetNextpageRect();
 			// clickable color / disabled color
 			color = m_ctx.cinfo.is_last_page ? m_style.text_color : m_style.nextpage_color;
+			if (m_istorepos) nrc.OffsetRect(0, m_offsety_preedit);
 			_TextOut(nrc, next.c_str(), next.length(), color, txtFormat);
 		}
 		drawn = true;
@@ -873,14 +875,16 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		_RepositionWindow(true);
 		RedrawWindow();
 	}
-	else if(CRect(rc) != m_oinputPos		// pos changed
+	else if ((rc.left != m_oinputPos.left && rc.bottom != m_oinputPos.bottom)		// pos changed
+		|| m_size != m_osize
 		|| m_octx != m_ctx
 		|| (m_style.inline_preedit && m_ctx.preedit.str.empty() && (CRect(rc) == m_oinputPos))	// after disabled by ctrl+space, inline_preedit
 		|| !m_ctx.aux.str.empty()	// aux not empty, msg 
 		|| (m_ctx.aux.empty() && (m_layout) && m_layout->ShouldDisplayStatusIcon()))	// ascii icon
 	{
 		m_octx = m_ctx;
-		m_oinputPos = rc;
+		m_osize = m_size;
+		m_inputPos = rc;
 		m_inputPos.OffsetRect(0, 6);
 		m_oinputPos = m_inputPos;
 		// with parameter to avoid vertical flicker
@@ -910,18 +914,19 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	rcWorkArea.bottom -= height;
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
-	if (m_style.shadow_radius > 0) {
-		x -= (m_style.shadow_offset_x >= 0) ? m_layout->offsetX : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_x - m_style.hilite_padding));
-		// avoid flickering in MoveTo
-		if(adj) {
-			y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding));
-			y -= m_style.shadow_radius / 2;
-		}
+	x -= (m_style.shadow_offset_x >= 0 || COLORTRANSPARENT(m_style.shadow_color)) ? m_layout->offsetX : (m_layout->offsetX / 2);
+	if (adj)
+	{
+		y -= (m_style.shadow_offset_y >= 0 || COLORTRANSPARENT(m_style.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
 	}
 	// for vertical text layout, flow right to left, make window left side
-	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right) {
-		x -= width;
-		x += m_layout->offsetX;
+	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right) 
+	{
+		x += m_layout->offsetX - width;
+		if (m_style.shadow_offset_x < 0)
+		{
+			x += m_layout->offsetX;
+		}
 	}
 	if(adj) m_istorepos = false;
 	if (x > rcWorkArea.right) x = rcWorkArea.right;		// over workarea right
@@ -929,15 +934,13 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	// show panel above the input focus if we're around the bottom
 	if (y > rcWorkArea.bottom)
 	{
-		y = m_inputPos.top - height; // over workarea bottom
-		if (m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL)
+		y = m_inputPos.top - height - 6; // over workarea bottom
+		if (!adj && (y + height < m_oinputPos.top))
 		{
-			m_istorepos = true;
-			if(m_style.shadow_radius > 0 && adj) {
-				y += (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding));
-				y += m_style.shadow_radius / 2;
-			}
+			y = m_oinputPos.top - height;
 		}
+		m_istorepos = (m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL);
+		y += (m_style.shadow_offset_y < 0 || COLORTRANSPARENT(m_style.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
 	}
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)

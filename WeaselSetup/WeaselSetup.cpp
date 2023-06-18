@@ -4,15 +4,19 @@
 #include "stdafx.h"
 #include "WeaselSetup.h"
 #include "InstallOptionsDialog.h"
+#include <WeaselIPC.h>
+#include <RimeWithWeasel.h>
+#include <format>
 
 CAppModule _Module;
 
 static int Run(LPTSTR lpCmdLine);
+void ResetServer();
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPTSTR    lpCmdLine,
-                     int       nCmdShow)
+	HINSTANCE hPrevInstance,
+	LPTSTR    lpCmdLine,
+	int       nCmdShow)
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 
@@ -47,6 +51,7 @@ static int CustomInstall(bool installing)
 	bool hant = false;
 	bool silent = false;
 	std::wstring user_dir;
+	bool installed{};
 
 	const WCHAR KEY[] = L"Software\\Rime\\Weasel";
 	HKEY hKey;
@@ -76,23 +81,25 @@ static int CustomInstall(bool installing)
 	if (!silent)
 	{
 		InstallOptionsDialog dlg;
-		dlg.installed = has_installed();
+		dlg.installed = installed = has_installed();
 		dlg.hant = hant;
 		dlg.user_dir = user_dir;
-		if (IDOK != dlg.DoModal()) {
+		if (IDOK != dlg.DoModal())
+		{
 			if (!installing)
 				return 1;  // aborted by user
 		}
-		else {
+		else
+		{
 			hant = dlg.hant;
 			user_dir = dlg.user_dir;
 		}
 	}
-	if (0 != install(hant, silent))
+	if (!installed && 0 != install(hant, silent))
 		return 1;
 
 	ret = RegCreateKeyEx(HKEY_CURRENT_USER, KEY,
-		                 0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
+		0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
 		MessageBox(NULL, KEY, L"安装失败", MB_ICONERROR | MB_OK);
@@ -100,12 +107,18 @@ static int CustomInstall(bool installing)
 	}
 
 	ret = RegSetValueEx(hKey, L"RimeUserDir", 0, REG_SZ,
-		                (const BYTE*)user_dir.c_str(),
-						(user_dir.length() + 1) * sizeof(WCHAR));
+		(const BYTE*)user_dir.c_str(),
+		(user_dir.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
 		MessageBox(NULL, L"无法写入 RimeUserDir", L"安装失败", MB_ICONERROR | MB_OK);
 		return 1;
+	}
+
+	if (installed)
+	{
+		ResetServer();
+		return 0;
 	}
 
 	DWORD data = hant ? 1 : 0;
@@ -114,7 +127,7 @@ static int CustomInstall(bool installing)
 	{
 		MessageBox(NULL, L"无法写入 Hant", L"安装失败", MB_ICONERROR | MB_OK);
 		return 1;
-	}
+	}	
 
 	return 0;
 }
@@ -133,4 +146,18 @@ static int Run(LPTSTR lpCmdLine)
 		return install(true, silent);
 	bool installing = !wcscmp(L"/i", lpCmdLine);
 	return CustomInstall(installing);
+}
+
+void ResetServer()
+{
+	weasel::Client client;
+	if (client.Connect())
+	{
+		client.ShutdownServer();
+	}
+
+	if ((size_t)ShellExecute(nullptr, L"Open", L"WeaselServer.exe", nullptr, L".\\", SW_SHOWDEFAULT) < 33)
+	{
+		MessageBox(nullptr, std::format(L"L错误代码：{}", GetLastError()).data(), L"算法服务启动失败", MB_OK);
+	}
 }

@@ -8,6 +8,7 @@
 #include <math.h>
 #include <regex>
 #include <rime_api.h>
+#include <thread>
 
 #define ARGB2ABGR(value)	((value & 0xff000000) | ((value & 0x000000ff) << 16) | (value & 0x0000ff00) | ((value & 0x00ff0000) >> 16)) 
 #define RGBA2ABGR(value)    (((value & 0xff) << 24) | ((value & 0xff000000) >> 24) | ((value & 0x00ff0000) >> 8) | ((value & 0x0000ff00) << 8))
@@ -53,10 +54,22 @@ void _RefreshTrayIcon(const RimeSessionId session_id, const std::function<void()
 	// Dangerous, don't touch
 	static char app_name[50];
 	RimeGetProperty(session_id, "client_app", app_name, sizeof(app_name) - 1);
-	if (utf8towcs(app_name) == std::wstring(L"explorer.exe")) 
-		boost::thread th([=]() { ::Sleep(100); if (_UpdateUICallback) _UpdateUICallback(); });
-	else 
-		if (_UpdateUICallback) _UpdateUICallback();
+	if (utf8towcs(app_name) == std::wstring(L"explorer.exe"))
+	{
+		std::thread th{	[=]()
+			{
+				::Sleep(100);
+				if (_UpdateUICallback)
+				{
+					_UpdateUICallback();
+				}
+			}};
+		th.detach();
+	}
+	else if (_UpdateUICallback)
+	{
+		_UpdateUICallback();
+	}
 }
 
 void RimeWithWeaselHandler::_Setup()
