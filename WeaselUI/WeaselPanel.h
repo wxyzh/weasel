@@ -42,7 +42,7 @@ public:
 	END_MSG_MAP()
 
 	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) { return 0; };
+	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 #ifdef USE_MOUSE_EVENTS
 	LRESULT OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -61,7 +61,6 @@ public:
 	void MoveTo(RECT const& rc);
 	void Refresh();
 	void DoPaint(CDCHandle dc);
-	void CleanUp();
 
 private:
 	void _InitFontRes(void);
@@ -78,7 +77,7 @@ private:
 	bool _DrawPreeditBack(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle &dc, bool back = false);
 	void _HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type, IsToRoundStruct rd, COLORREF bordercolor);
-	void _TextOut(CRect const& rc, std::wstring psz, size_t cch, int inColor, IDWriteTextFormat* pTextFormat = NULL);
+	void _TextOut(CRect const& rc, std::wstring psz, size_t cch, int inColor, IDWriteTextFormat1* pTextFormat = NULL);
 
 	void _LayerUpdate(const CRect& rc, CDCHandle dc);
 
@@ -95,6 +94,7 @@ private:
 	int  m_offsety_preedit;
 	int  m_offsety_aux;
 	bool m_istorepos;
+	CSize m_size;
 	CSize m_osize;
 
 	CIcon m_iconDisabled;
@@ -104,6 +104,8 @@ private:
 	CIcon m_iconHalf;
 	std::wstring m_current_zhung_icon;
 	std::wstring m_current_ascii_icon;
+	std::wstring m_current_half_icon;
+	std::wstring m_current_full_icon;
 	// for gdiplus drawings
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
@@ -115,8 +117,5 @@ private:
 
 	bool hide_candidates;
 	// for multi font_face & font_point
-	GdiplusBlur* m_blurer;
-	DirectWriteResources* pDWR;
-	ID2D1SolidColorBrush* pBrush;
+	PDWR pDWR;
 };
-

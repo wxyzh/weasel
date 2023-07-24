@@ -10,6 +10,8 @@ app_options:
     ascii_mode: true
 
 style:
+  antialias_mode: default
+  ascii_tip_follow_cursor: false
   color_scheme: aqua
   font_face: Microsoft YaHei
   label_font_face: Microsoft YaHei

@@ -47,7 +47,6 @@ set build_rime=0
 set rime_build_variant=release
 set build_weasel=0
 set build_installer=0
-set build_x64=1
 
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
@@ -79,7 +78,6 @@ if "%1" == "all" (
   set build_weasel=1
   set build_installer=1
 )
-if "%1" == "nox64" set build_x64=0
 shift
 goto parse_cmdline_options
 :end_parsing_cmdline_options
@@ -112,8 +110,8 @@ if %build_rime% == 1 (
   if not exist env.bat (
     copy %WEASEL_ROOT%\env.bat env.bat
   )
-  if not exist thirdparty\lib\opencc.lib (
-    call build.bat thirdparty %rime_build_variant%
+  if not exist lib\opencc.lib (
+    call build.bat deps %rime_build_variant%
     if errorlevel 1 goto error
   )
   call build.bat %rime_build_variant%
@@ -152,18 +150,14 @@ if not exist weasel.props (
 del msbuild*.log
 
 if %build_hant% == 1 (
-  if %build_x64% == 1 (
-    msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="x64" /fl4
-    if errorlevel 1 goto error
-  )
+  msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="x64" /fl4
+  if errorlevel 1 goto error
   msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="Win32" /fl3
   if errorlevel 1 goto error
 )
 
-if %build_x64% == 1 (
-  msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="x64" /fl2
-  if errorlevel 1 goto error
-)
+msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="x64" /fl2
+if errorlevel 1 goto error
 msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="Win32" /fl1
 if errorlevel 1 goto error
 
@@ -179,38 +173,35 @@ goto end
 
 :build_boost
 
-set BOOST_COMPILED_LIBS=--with-date_time^
+set BJAM_OPTIONS_COMMON=-j%NUMBER_OF_PROCESSORS%^
  --with-filesystem^
+ --with-json^
  --with-locale^
  --with-regex^
+ --with-serialization^
  --with-system^
  --with-thread^
- --with-serialization
-
-set BJAM_OPTIONS_COMMON=toolset=%BJAM_TOOLSET%^
- variant=%boost_build_variant%^
+ define=BOOST_USE_WINAPI_VERSION=0x0603^
+ toolset=%BJAM_TOOLSET%^
  link=static^
- threading=multi^
  runtime-link=static^
- cxxflags="/Zc:threadSafeInit- "
+ --build-type=complete
 
 set BJAM_OPTIONS_X86=%BJAM_OPTIONS_COMMON%^
- define=BOOST_USE_WINAPI_VERSION=0x0501
+ architecture=x86^
+ address-model=32
 
 set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
- define=BOOST_USE_WINAPI_VERSION=0x0502^
- address-model=64^
- --stagedir=stage_x64
+ architecture=x86^
+ address-model=64
 
 cd /d %BOOST_ROOT%
 if not exist b2.exe call bootstrap.bat
 if errorlevel 1 goto error
 b2 %BJAM_OPTIONS_X86% stage %BOOST_COMPILED_LIBS%
 if errorlevel 1 goto error
-if %build_x64% == 1 (
-  b2 %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
-  if errorlevel 1 goto error
-)
+b2 %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
+if errorlevel 1 goto error
 exit /b
 
 :build_data
@@ -225,14 +216,14 @@ if errorlevel 1 goto error
 exit /b
 
 :build_opencc_data
-if not exist %WEASEL_ROOT%\librime\thirdparty\share\opencc\TSCharacters.ocd (
+if not exist %WEASEL_ROOT%\librime\share\opencc\TSCharacters.ocd2 (
   cd %WEASEL_ROOT%\librime
-  call build.bat thirdparty %rime_build_variant%
+  call build.bat deps %rime_build_variant%
   if errorlevel 1 goto error
 )
 cd %WEASEL_ROOT%
 if not exist output\data\opencc mkdir output\data\opencc
-copy %WEASEL_ROOT%\librime\thirdparty\share\opencc\*.* output\data\opencc\
+copy %WEASEL_ROOT%\librime\share\opencc\*.* output\data\opencc\
 if errorlevel 1 goto error
 exit /b
 

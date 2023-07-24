@@ -4,7 +4,7 @@
 
 using namespace weasel;
 
-void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
+void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 {
 	if(_style.vertical_text_with_wrap)
 	{
@@ -30,8 +30,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-	int pgh = pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2;
-	int pgw = max(pgszl.cx, pgszr.cx);
+	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
+	int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding_y * 2 : 0;
+	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
 
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
@@ -41,7 +42,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		// icon size wider then preedit text
 		int xoffset = (STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szx) / 2 : 0;
 		_preeditRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing - 1;
+		width += size.cx + xoffset * 2 + _style.spacing;
 		height = max(height, offsetY + real_margin_y + size.cy + szy);
 		if(ShouldDisplayStatusIcon()) height += STATUS_ICON_SIZE;
 	}
@@ -53,7 +54,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		// icon size wider then preedit text
 		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
 		_auxiliaryRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing - 1;
+		width += size.cx + xoffset * 2 + _style.spacing;
 		height = max(height, offsetY + real_margin_y + size.cy);
 	}
 	/* Candidates */
@@ -171,9 +172,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 				_candidateCommentRects[i].OffsetRect(offset, 0);
 			}
 			if (!IsInlinePreedit() && !_context.preedit.str.empty())
-				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - 1 - _preeditRect.left, 0);
+				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - _preeditRect.left, 0);
 			if (!_context.aux.str.empty())
-				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - 1 - _auxiliaryRect.left, 0);
+				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - _auxiliaryRect.left, 0);
 		}
 	}
 	else
@@ -185,9 +186,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	_contentSize.SetSize(width + offsetX, height + offsetY);
 
 	// calc page indicator 
-	if(candidates_count && !_style.inline_preedit)
+	if(page_en && candidates_count && !_style.inline_preedit)
 	{
-		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding - pgh;
+		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding_y - pgh;
 		int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;
 		_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
 		_nextPageRect.SetRect(_prex, _prePageRect.bottom + _style.hilite_spacing, 
@@ -214,7 +215,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
 }
 
-void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDWR)
+void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 {
 	CSize size;
 	int height = offsetY, width = offsetX + real_margin_x;
@@ -234,8 +235,9 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-	int pgh = pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2;
-	int pgw = max(pgszl.cx, pgszr.cx);
+	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
+	int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding_y * 2 : 0;
+	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
 
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
@@ -245,7 +247,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 		// icon size wider then preedit text
 		int xoffset = (STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szx) / 2 : 0;
 		_preeditRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing - 1;
+		width += size.cx + xoffset * 2 + _style.spacing;
 		height = max(height, offsetY + real_margin_y + size.cy + szy);
 		if(ShouldDisplayStatusIcon()) height += STATUS_ICON_SIZE;
 	}
@@ -256,7 +258,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 		// icon size wider then auxiliary text
 		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
 		_auxiliaryRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing - 1;
+		width += size.cx + xoffset * 2 + _style.spacing;
 		height = max(height, offsetY + real_margin_y + size.cy);
 	}
 	// candidates
@@ -409,9 +411,9 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 			}
 			_highlightRect = _candidateRects[id];
 			if (!IsInlinePreedit() && !_context.preedit.str.empty())
-				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - 1 - _preeditRect.left, 0);
+				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - _preeditRect.left, 0);
 			if (!_context.aux.str.empty())
-				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - 1 - _auxiliaryRect.left, 0);
+				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - _auxiliaryRect.left, 0);
 		}
 	}
 
@@ -427,9 +429,9 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 
 	// calc page indicator 
-	if(candidates_count && !_style.inline_preedit)
+	if(page_en && candidates_count && !_style.inline_preedit)
 	{
-		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding - pgh;
+		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding_y - pgh;
 		int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;
 		_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
 		_nextPageRect.SetRect(_prex, _prePageRect.bottom + _style.hilite_spacing, 

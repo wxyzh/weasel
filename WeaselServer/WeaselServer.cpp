@@ -66,14 +66,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	// command line option /q stops the running server
 	bool quit = !wcscmp(L"/q", lpstrCmdLine) || !wcscmp(L"/quit", lpstrCmdLine);
 	// restart if already running
+	if(quit)
 	{
 		weasel::Client client;
 		if (client.Connect())  // try to connect to running server
 		{
 			client.ShutdownServer();
 		}
-		if (quit)
-			return 0;
+		return 0;
 	}
 
 	bool check_updates = !wcscmp(L"/update", lpstrCmdLine);
@@ -85,7 +85,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	CreateDirectory(WeaselUserDataPath().c_str(), NULL);
 
 	int nRet = 0;
-
 	try
 	{
 		WeaselServerApp app;
