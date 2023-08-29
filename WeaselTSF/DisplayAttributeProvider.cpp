@@ -1,8 +1,9 @@
+module;
 #include "stdafx.h"
-
-#include "WeaselTSF.h"
-#include "EnumDisplayAttributeInfo.h"
-#include "DisplayAttributeInfo.h"
+#include "Globals.h"
+module WeaselTSF;
+import EnumDisplayAttributeInfo;
+import DisplayAttributeInfo;
 
 STDAPI WeaselTSF::EnumDisplayAttributeInfo(__RPC__deref_out_opt IEnumTfDisplayAttributeInfo** ppEnum)
 {

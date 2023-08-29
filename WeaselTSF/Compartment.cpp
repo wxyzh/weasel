@@ -1,8 +1,131 @@
+module;
 #include "stdafx.h"
-#include "WeaselTSF.h"
-#include "Compartment.h"
 #include <resource.h>
-#include <functional>
+module Compartment;
+import WeaselTSF;
+import Compartment;
+
+CCompartment::CCompartment(IUnknown* punk, TfClientId tfClientId, REFGUID guidCompartment)
+	: _punk{ punk }, _tfClientId{ tfClientId }, _guidCompartment { guidCompartment }
+{
+	_punk->AddRef();
+}
+
+CCompartment::~CCompartment()
+{
+	_punk->Release();
+}
+
+HRESULT CCompartment::_GetCompartment(ITfCompartment** ppCompartment)
+{
+	com_ptr<ITfCompartmentMgr> pCompartmentMgr;
+
+	auto hr = _punk->QueryInterface(&pCompartmentMgr);
+	if (SUCCEEDED(hr))
+	{
+		hr = pCompartmentMgr->GetCompartment(_guidCompartment, ppCompartment);
+	}
+
+	return hr;
+}
+
+HRESULT CCompartment::_GetCompartmentBOOL(BOOL& flag)
+{
+	HRESULT hr = S_OK;
+	com_ptr<ITfCompartment> pCompartment;
+	flag = FALSE;
+
+	if ((hr = _GetCompartment(&pCompartment)) == S_OK)
+	{
+		VARIANT var;
+		if ((hr = pCompartment->GetValue(&var)) == S_OK)
+		{
+			if (var.vt == VT_I4)
+			{
+				flag = (BOOL)var.lVal; // Even VT_EMPTY, GetValue() can succeed
+			}
+			else
+			{
+				hr = S_FALSE;
+			}
+		}
+	}
+
+	return hr;
+}
+
+HRESULT CCompartment::_SetCompartmentBOOL(BOOL flag)
+{
+	com_ptr<ITfCompartment> pCompartment;
+
+	auto hr = _GetCompartment(&pCompartment);
+	if (SUCCEEDED(hr))
+	{
+		VARIANT var;
+		var.vt = VT_I4;
+		var.lVal = flag;
+		hr = pCompartment->SetValue(_tfClientId, &var);
+	}
+
+	return hr;
+}
+
+HRESULT CCompartment::_GetCompartmentDWORD(_Out_ DWORD& dw)
+{
+	com_ptr<ITfCompartment> pCompartment;
+
+	auto hr = _GetCompartment(&pCompartment);
+	if (SUCCEEDED(hr))
+	{
+		VARIANT var;
+		if ((hr = pCompartment->GetValue(&var)) == S_OK)
+		{
+			if (var.vt == VT_I4)	// Even VT_EMPTY, GetValue() can succeed
+			{
+				dw = (DWORD)var.lVal;
+			}
+			else
+			{
+				hr = S_FALSE;
+			}
+		}
+	}
+
+	return hr;
+}
+
+HRESULT CCompartment::_SetCompartmentDWORD(DWORD dw)
+{
+	com_ptr<ITfCompartment> pCompartment;
+
+	auto hr = _GetCompartment(&pCompartment);
+	if (SUCCEEDED(hr))
+	{
+		VARIANT var;
+		var.vt = VT_I4;
+		var.lVal = dw;
+		hr = pCompartment->SetValue(_tfClientId, &var);
+	}
+
+	return hr;
+}
+
+HRESULT CCompartment::_ClearCompartment()
+{
+	if (IsEqualGUID(_guidCompartment, GUID_COMPARTMENT_KEYBOARD_OPENCLOSE))
+	{
+		return S_FALSE;
+	}
+
+	com_ptr<ITfCompartmentMgr> pCompartmentMgr;
+	HRESULT hr = S_OK;
+	if ((hr = _punk->QueryInterface(&pCompartmentMgr)) == S_OK)
+	{
+		hr = pCompartmentMgr->ClearCompartment(_tfClientId, _guidCompartment);
+	}
+	
+	return hr;
+}
 
 STDAPI CCompartmentEventSink::QueryInterface(REFIID riid, _Outptr_ void **ppvObj)
 {
@@ -89,133 +212,4 @@ HRESULT CCompartmentEventSink::_Unadvise()
 	_cookie = 0;
 
 	return hr;
-}
-
-
-BOOL WeaselTSF::_IsKeyboardDisabled()
-{
-	com_ptr<ITfCompartmentMgr> pCompMgr;
-	com_ptr<ITfDocumentMgr> pDocMgrFocus;
-	com_ptr<ITfContext> pContext;
-	
-
-	if ((_pThreadMgr->GetFocus(&pDocMgrFocus) != S_OK) || (pDocMgrFocus == NULL))
-	{
-		return TRUE;
-	}
-
-	if ((pDocMgrFocus->GetTop(&pContext) != S_OK) || (pContext == NULL))
-	{
-		return TRUE;
-	}
-
-	BOOL fDisabled = FALSE;
-
-	if (pContext->QueryInterface(&pCompMgr) == S_OK)
-	{
-		com_ptr<ITfCompartment> pCompartmentDisabled;
-		com_ptr<ITfCompartment> pCompartmentEmptyContext;
-
-		/* Check GUID_COMPARTMENT_KEYBOARD_DISABLED */
-		if (pCompMgr->GetCompartment(GUID_COMPARTMENT_KEYBOARD_DISABLED, &pCompartmentDisabled) == S_OK)
-		{
-			VARIANT var;
-			if (pCompartmentDisabled->GetValue(&var) == S_OK)
-			{
-				if (var.vt == VT_I4) // Even VT_EMPTY, GetValue() can succeed
-					fDisabled = (BOOL) var.lVal;
-			}
-		}
-
-		/* Check GUID_COMPARTMENT_EMPTYCONTEXT */
-		if (pCompMgr->GetCompartment(GUID_COMPARTMENT_EMPTYCONTEXT, &pCompartmentEmptyContext)  == S_OK)
-		{
-			VARIANT var;
-			if (pCompartmentEmptyContext->GetValue(&var) == S_OK)
-			{
-				if (var.vt == VT_I4) // Even VT_EMPTY, GetValue() can succeed
-					fDisabled = (BOOL) var.lVal;
-			}
-		}
-	}
-
-	return fDisabled;
-}
-
-BOOL WeaselTSF::_IsKeyboardOpen()
-{
-	com_ptr<ITfCompartmentMgr> pCompMgr;
-	BOOL fOpen = FALSE;
-
-	if (_pThreadMgr->QueryInterface(&pCompMgr) == S_OK)
-	{
-		com_ptr<ITfCompartment> pCompartment;
-		if (pCompMgr->GetCompartment(GUID_COMPARTMENT_KEYBOARD_OPENCLOSE, &pCompartment) == S_OK)
-		{
-			VARIANT var;
-			if (pCompartment->GetValue(&var) == S_OK)
-			{
-				if (var.vt == VT_I4) // Even VT_EMPTY, GetValue() can succeed
-					fOpen = (BOOL) var.lVal;
-			}
-		}
-	}
-	return fOpen;
-}
-
-HRESULT WeaselTSF::_SetKeyboardOpen(BOOL fOpen)
-{
-	HRESULT hr = E_FAIL;
-	com_ptr<ITfCompartmentMgr> pCompMgr;
-
-	if (_pThreadMgr->QueryInterface(&pCompMgr) == S_OK)
-	{
-		com_ptr<ITfCompartment> pCompartment;
-		if (pCompMgr->GetCompartment(GUID_COMPARTMENT_KEYBOARD_OPENCLOSE, &pCompartment) == S_OK)
-		{
-			VARIANT var;
-			var.vt = VT_I4;
-			var.lVal = fOpen;
-			hr = pCompartment->SetValue(_tfClientId, &var);
-		}
-	}
-
-	return hr;
-}
-
-BOOL WeaselTSF::_InitCompartment()
-{
-	using namespace std::placeholders;
-
-	auto callback = std::bind(&WeaselTSF::_HandleCompartment, this, _1);
-	_pKeyboardCompartmentSink = new CCompartmentEventSink(callback);
-	if (!_pKeyboardCompartmentSink)
-		return FALSE;
-	DWORD hr = _pKeyboardCompartmentSink->_Advise(
-		(IUnknown *)_pThreadMgr,
-		GUID_COMPARTMENT_KEYBOARD_OPENCLOSE
-	);
-	return SUCCEEDED(hr);
-}
-
-void WeaselTSF::_UninitCompartment()
-{
-	if (_pKeyboardCompartmentSink) {
-		_pKeyboardCompartmentSink->_Unadvise();
-		_pKeyboardCompartmentSink = NULL;
-	}
-
-}
-
-HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
-{
-	if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_OPENCLOSE))
-	{
-		BOOL isOpen = _IsKeyboardOpen();
-		if (isOpen) {
-			m_client.TrayCommand(ID_WEASELTRAY_DISABLE_ASCII);
-		}
-		_EnableLanguageBar(isOpen);
-	}
-	return S_OK;
 }

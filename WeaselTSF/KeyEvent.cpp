@@ -1,5 +1,6 @@
-﻿#include "stdafx.h"
-#include "KeyEvent.h"
+﻿module;
+#include "stdafx.h"
+module KeyEvent;
 
 
 bool ConvertKeyEvent(UINT vkey, KeyInfo kinfo, const LPBYTE keyState, weasel::KeyEvent& result)

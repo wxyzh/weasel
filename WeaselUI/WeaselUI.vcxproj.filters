@@ -19,6 +19,13 @@
     <Filter Include="Source Files\Layouts">
       <UniqueIdentifier>{b6c3d107-af01-4875-aaf9-f28ba062e2ba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Module Files">
+      <UniqueIdentifier>{46016e8c-547f-433f-bf2c-bc0d215274c1}</UniqueIdentifier>
+      <Extensions>ixx</Extensions>
+    </Filter>
+    <Filter Include="Module Files\Layouts">
+      <UniqueIdentifier>{d2e19a6c-f26d-4a90-9c09-17e4f233f286}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -48,11 +55,44 @@
     <ClCompile Include="GdiplusBlur.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="fontClasses.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="VHorizontalLayout.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectWriteResources.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\WeaselCommon.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HorizontalLayout.ixx">
+      <Filter>Module Files\Layouts</Filter>
+    </ClCompile>
+    <ClCompile Include="VerticalLayout.ixx">
+      <Filter>Module Files\Layouts</Filter>
+    </ClCompile>
+    <ClCompile Include="FullScreenLayout.ixx">
+      <Filter>Module Files\Layouts</Filter>
+    </ClCompile>
+    <ClCompile Include="StandardLayout.ixx">
+      <Filter>Module Files\Layouts</Filter>
+    </ClCompile>
+    <ClCompile Include="WeaselPanel.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GdiplusBlur.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Layout.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\WeaselUI.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VHorizontalLayout.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility.ixx">
+      <Filter>Module Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -62,37 +102,7 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\WeaselCommon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WeaselPanel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\WeaselUI.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Layout.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="StandardLayout.h">
-      <Filter>Header Files\Layouts</Filter>
-    </ClInclude>
-    <ClInclude Include="VerticalLayout.h">
-      <Filter>Header Files\Layouts</Filter>
-    </ClInclude>
-    <ClInclude Include="HorizontalLayout.h">
-      <Filter>Header Files\Layouts</Filter>
-    </ClInclude>
-    <ClInclude Include="FullScreenLayout.h">
-      <Filter>Header Files\Layouts</Filter>
-    </ClInclude>
-    <ClInclude Include="GdiplusBlur.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="fontClasses.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VHorizontalLayout.h">
+    <ClInclude Include="test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -19,11 +19,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="Module Files">
+      <UniqueIdentifier>{6ead0f3e-d01c-4e14-b457-445daf01e2d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Module Files\Deserializer">
+      <UniqueIdentifier>{a42924f3-68d1-4ff9-94ba-153d70f6b538}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Deserializer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ResponseParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -51,43 +54,58 @@
     <ClCompile Include="Styler.cpp">
       <Filter>Source Files\Deserializer</Filter>
     </ClCompile>
+    <ClCompile Include="Deserializer.cpp">
+      <Filter>Source Files\Deserializer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\PipeChannel.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\ResponseParser.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WeaselClientImpl.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\WeaselIPC.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\WeaselCommon.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\WeaselUtility.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\StringAlgorithm.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ActionLoader.ixx">
+      <Filter>Module Files\Deserializer</Filter>
+    </ClCompile>
+    <ClCompile Include="Committer.ixx">
+      <Filter>Module Files\Deserializer</Filter>
+    </ClCompile>
+    <ClCompile Include="Configurator.ixx">
+      <Filter>Module Files\Deserializer</Filter>
+    </ClCompile>
+    <ClCompile Include="ContextUpdater.ixx">
+      <Filter>Module Files\Deserializer</Filter>
+    </ClCompile>
+    <ClCompile Include="Deserializer.ixx">
+      <Filter>Module Files\Deserializer</Filter>
+    </ClCompile>
+    <ClCompile Include="Styler.ixx">
+      <Filter>Module Files\Deserializer</Filter>
+    </ClCompile>
+    <ClCompile Include="WeaselSchemas.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Deserializer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\ResponseParser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WeaselClientImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\WeaselIPC.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ActionLoader.h">
-      <Filter>Header Files\Deserializer</Filter>
-    </ClInclude>
-    <ClInclude Include="Committer.h">
-      <Filter>Header Files\Deserializer</Filter>
-    </ClInclude>
-    <ClInclude Include="ContextUpdater.h">
-      <Filter>Header Files\Deserializer</Filter>
-    </ClInclude>
-    <ClInclude Include="Configurator.h">
-      <Filter>Header Files\Deserializer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\PipeChannel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Styler.h">
-      <Filter>Header Files\Deserializer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

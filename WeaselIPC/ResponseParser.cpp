@@ -1,7 +1,9 @@
+module;
 #include "stdafx.h"
-#include <StringAlgorithm.hpp>
-#include <WeaselIPC.h>
-#include "Deserializer.h"
+module ResponseParser;
+import WeaselIPC;
+import Deserializer;
+import StringAlgorithm;
 
 using namespace weasel;
 

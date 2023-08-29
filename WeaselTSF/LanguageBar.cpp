@@ -1,8 +1,17 @@
-﻿#include "stdafx.h"
-#include <resource.h>
-#include "WeaselTSF.h"
-#include "LanguageBar.h"
-#include "CandidateList.h"
+﻿module;
+#include "stdafx.h"
+#include "Globals.h"
+#include "resource.h"
+// #include "test.h"
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#endif // TEST
+module LanguageBar;
+import WeaselTSF;
+import CandidateList;
 
 static const DWORD LANGBARITEMSINK_COOKIE = 0x42424242;
 
@@ -10,11 +19,16 @@ static void HMENU2ITfMenu(HMENU hMenu, ITfMenu *pTfMenu)
 {
 	/* NOTE: Only limited functions are supported */
 	int N = GetMenuItemCount(hMenu);
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From HMENU2ITfMenu.");
+#endif // _M_X64
+#endif // TEST
 	for (int i = 0; i < N; i++)
 	{
 		MENUITEMINFO mii;
 		mii.cbSize = sizeof(MENUITEMINFO);
-		mii.fMask = MIIM_FTYPE | MIIM_ID | MIIM_STRING;
+		mii.fMask = MIIM_FTYPE | MIIM_ID;
 		mii.dwTypeData = NULL;
 		if (GetMenuItemInfo(hMenu, i, TRUE, &mii))
 		{
@@ -26,7 +40,9 @@ static void HMENU2ITfMenu(HMENU hMenu, ITfMenu *pTfMenu)
 				mii.dwTypeData = (LPWSTR) malloc(sizeof(WCHAR) * (mii.cch + 1));
 				mii.cch++;
 				if (GetMenuItemInfo(hMenu, i, TRUE, &mii))
+				{
 					pTfMenu->AddMenuItem(id, 0, NULL, NULL, mii.dwTypeData, mii.cch, NULL);
+				}
 				free(mii.dwTypeData);
 			}
 		}
@@ -122,22 +138,18 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click, POINT pt, const RECT *prcAr
 	}
 	else if (click == TF_LBI_CLK_RIGHT)
 	{
-		/* Open menu */
-		HWND hwnd = _textService._GetFocusedContextWindow();
-		if (hwnd != NULL)
-		{
-			HMENU menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP));
-			HMENU popupMenu = GetSubMenu(menu, 0);
-			UINT wID = TrackPopupMenuEx(popupMenu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x, pt.y, hwnd, NULL);
-			DestroyMenu(menu);
-			_textService._HandleLangBarMenuSelect(wID);
-		}
+		RightClick(pt);
 	}
 	return S_OK;
 }
 
 STDAPI CLangBarItemButton::InitMenu(ITfMenu *pMenu)
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From CLangBarItemButton::InitMenu. _daemon_enable = {}", _textService.GetBit(0));
+#endif // _M_X64
+#endif // TEST
 	HMENU menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP));
 	HMENU popupMenu = GetSubMenu(menu, 0);
 	HMENU2ITfMenu(popupMenu, pMenu);
@@ -220,7 +232,7 @@ STDAPI CLangBarItemButton::UnadviseSink(DWORD dwCookie)
 {
 	if (dwCookie != LANGBARITEMSINK_COOKIE || _pLangBarItemSink == NULL)
 		return CONNECT_E_NOCONNECTION;
-	_pLangBarItemSink = NULL;
+	_pLangBarItemSink == NULL;
 	return S_OK;
 }
 
@@ -244,7 +256,6 @@ void CLangBarItemButton::UpdateWeaselStatus(weasel::Status stat)
 			_pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
 		}
 	}
-
 }
 
 void CLangBarItemButton::SetLangbarStatus(DWORD dwStatus, BOOL fSet)
@@ -276,95 +287,43 @@ void CLangBarItemButton::SetLangbarStatus(DWORD dwStatus, BOOL fSet)
 	return;
 }
 
-
-void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
+void CLangBarItemButton::RightClick(POINT& pt)
 {
-	m_client.TrayCommand(wID);
-}
-
-HWND WeaselTSF::_GetFocusedContextWindow()
-{
-	HWND hwnd = NULL;
-	ITfDocumentMgr *pDocMgr;
-	if (_pThreadMgr->GetFocus(&pDocMgr) == S_OK && pDocMgr != NULL)
+	/* Open menu */
+	HWND hwnd = _textService._GetFocusedContextWindow();
+	if (hwnd != NULL)
 	{
-		ITfContext *pContext;
-		if (pDocMgr->GetTop(&pContext) == S_OK && pContext != NULL)
+		HMENU menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP));
+		HMENU popupMenu = GetSubMenu(menu, 0);
+		std::wstring temp(16, 0);
+		MENUITEMINFO mii;
+		mii.cbSize = sizeof(MENUITEMINFO);
+		mii.fMask = MIIM_FTYPE | MIIM_ID | MIIM_STRING | MIIM_SUBMENU | MIIM_CHECKMARKS;
+		mii.dwTypeData = temp.data();
+		mii.cch = temp.capacity();
+		if (GetMenuItemInfo(popupMenu, 0, TRUE, &mii))
 		{
-			ITfContextView *pContextView;
-			if (pContext->GetActiveView(&pContextView) == S_OK && pContextView != NULL)
-			{
-				pContextView->GetWnd(&hwnd);
-				pContextView->Release();
-			}
-			pContext->Release();
+			temp = temp.data();
+			temp[4] = _textService.GetBit(2) ? L'全' : L'半';		// _bitset[2]:  _full_shape
+			ModifyMenu(mii.hSubMenu, _textService.GetBit(2) ? 1 : 0, MF_BYPOSITION | MF_CHECKED, 0, _textService.GetBit(2) ? L"全角" : L"半角");	// _bitset[2]:  _full_shape
 		}
-		pDocMgr->Release();
+		SetMenuItemInfo(popupMenu, 0, true, &mii);
+		VARIANT var{};
+		if (SUCCEEDED(_textService._GetGlobalCompartmentDaemon()->GetValue(&var)))
+		{
+			if (var.vt == VT_I4)
+			{
+				_textService.SetBit(0, var.bVal);					// _bitset[0]: _daemon_enable
+			}
+		}
+		CheckMenuItem(popupMenu, ID_WEASELTRAY_DAEMON_ENABLE, MF_BYCOMMAND | (_textService.GetBit(0) ? MF_CHECKED : MF_UNCHECKED));					// _bitset[0]: _daemon_enable
+		UINT wID = TrackPopupMenuEx(popupMenu, TPM_CENTERALIGN | TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x, pt.y - 32, hwnd, NULL);
+#ifdef TEST
+#ifdef _M_X64
+		LOG(INFO) << std::format("From CLangBarItemButton::OnClick. _daemon_enable = {}, wID = {}, var.lval = {:#x}", _textService.GetBit(0), wID, var.lVal);
+#endif // _M_X64
+#endif // TEST			
+		DestroyMenu(menu);
+		_textService._HandleLangBarMenuSelect(wID);
 	}
-
-	if (hwnd == NULL)
-	{
-		HWND hwndForeground = GetForegroundWindow();
-		if (GetWindowThreadProcessId(hwndForeground, NULL) == GetCurrentThreadId())
-			hwnd = hwndForeground;
-	}
-
-	return hwnd;
-}
-
-BOOL WeaselTSF::_InitLanguageBar()
-{
-	com_ptr<ITfLangBarItemMgr> pLangBarItemMgr;
-	BOOL fRet = FALSE;
-
-	if (_pThreadMgr->QueryInterface(&pLangBarItemMgr) != S_OK)
-		return FALSE;
-
-	if ((_pLangBarButton = new CLangBarItemButton(*this, GUID_LBI_INPUTMODE, _cand->style())) == NULL)
-		return FALSE;
-
-	if (pLangBarItemMgr->AddItem(_pLangBarButton) != S_OK)
-	{
-		_pLangBarButton = NULL;
-		return FALSE;
-	}
-
-	_pLangBarButton->Show(TRUE);
-	fRet = TRUE;
-
-	return fRet;
-}
-
-void WeaselTSF::_UninitLanguageBar()
-{
-	com_ptr<ITfLangBarItemMgr> pLangBarItemMgr;
-
-	if (_pLangBarButton == NULL)
-		return;
-
-	if (_pThreadMgr->QueryInterface(&pLangBarItemMgr) == S_OK)
-	{
-		pLangBarItemMgr->RemoveItem(_pLangBarButton);
-	}
-
-	_pLangBarButton = NULL;
-}
-
-void WeaselTSF::_UpdateLanguageBar(weasel::Status stat)
-{
-	if (!_pLangBarButton) return;
-	_pLangBarButton->UpdateWeaselStatus(stat);
-}
-
-void WeaselTSF::_ShowLanguageBar(BOOL show)
-{
-	if (!_pLangBarButton) return;
-	_pLangBarButton->Show(show);
-
-}
-
-void WeaselTSF::_EnableLanguageBar(BOOL enable)
-{
-	if (!_pLangBarButton) return;
-	_pLangBarButton->SetLangbarStatus(TF_LBI_STATUS_DISABLED, !enable);
 }

@@ -1,11 +1,13 @@
 ﻿#include "stdafx.h"
 #include <string>
 #include <vector>
-#include <StringAlgorithm.hpp>
-#include <WeaselCommon.h>
 #include <msctf.h>
 #include <strsafe.h>
+#include <filesystem>
+import StringAlgorithm;
+import WeaselCommon;
 
+namespace fs = std::filesystem;
 
 // {A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}
 static const GUID c_clsidTextService = 
@@ -211,7 +213,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 
 	if (register_ime)
 	{
-		HKL hKL = ImmInstallIME(ime_path.c_str(), WEASEL_IME_NAME);
+		HKL hKL = ImmInstallIME(ime_path.c_str(), WEASEL_IME_NAME.data());
 		if (!hKL)
 		{
 			// manually register ime
@@ -250,8 +252,8 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 							RegSetValueEx(hSubKey, L"Ime File", 0, REG_SZ, (LPBYTE)ime_file, sizeof(ime_file));
 							const WCHAR layout_file[] = L"kbdus.dll";
 							RegSetValueEx(hSubKey, L"Layout File", 0, REG_SZ, (LPBYTE)layout_file, sizeof(layout_file));
-							const WCHAR layout_text[] = WEASEL_IME_NAME;
-							RegSetValueEx(hSubKey, L"Layout Text", 0, REG_SZ, (LPBYTE)layout_text, sizeof(layout_text));
+							const std::wstring layout_text{ WEASEL_IME_NAME };
+							RegSetValueEx(hSubKey, L"Layout Text", 0, REG_SZ, (LPBYTE)layout_text.data(), sizeof(layout_text));
 							RegCloseKey(hSubKey);
 							hKL = (HKL)k;
 						}
@@ -464,11 +466,11 @@ int install(bool hant, bool silent)
 
 	// 写注册表
 	HKEY hKey;
-	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY,
+	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY.data(),
 		                         0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		if (!silent) MessageBox(NULL, WEASEL_REG_KEY, L"安装失败", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, WEASEL_REG_KEY.data(), L"安装失败", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -505,17 +507,20 @@ int install(bool hant, bool silent)
 	return 0;
 }
 
-int uninstall(bool silent)
+int uninstall(bool silent, bool ime)
 {
 	// 注销输入法
 	int retval = 0;	
-	// 不安装ime模块
-	// retval += uninstall_ime_file(L".ime", silent, &register_ime);
+	// 检测系统是否安装老版本的IME模块
+	if (ime)
+	{
+		retval += uninstall_ime_file(L".ime", silent, &register_ime);
+	}
 	retval += uninstall_ime_file(L".dll", silent, &register_text_service);
 
 	// 清除注册信息
-	RegDeleteKey(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY);
-	RegDeleteKey(HKEY_LOCAL_MACHINE, RIME_REG_KEY);
+	RegDeleteKey(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY.data());
+	RegDeleteKey(HKEY_LOCAL_MACHINE, RIME_REG_KEY.data());
 
 	if (retval)
 		return 1;
@@ -524,10 +529,9 @@ int uninstall(bool silent)
 	return 0;
 }
 
-bool has_installed() {
+bool has_installed(bool& ime) {
 	WCHAR path[MAX_PATH];
-	GetSystemDirectory(path, _countof(path));
-	std::wstring sysPath(path);
-	DWORD attr = GetFileAttributesW((sysPath + L"\\weasel.dll").c_str()); // 将测试安装的weasel.ime改为了weasel.dll
-	return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+	GetSystemDirectory(path, _countof(path));	
+	ime = fs::exists(fs::path(std::format(LR"({}\weasel.ime)", path)));
+	return fs::exists(fs::path(std::format(LR"({}\weasel.dll)", path))) || ime;	// 将测试安装的weasel.ime改为了weasel.dll
 }

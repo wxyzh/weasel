@@ -1,8 +1,8 @@
+module;
 #include "stdafx.h"
-
-#include "EnumDisplayAttributeInfo.h"
 #include "Globals.h"
-#include "DisplayAttributeInfo.h"
+module EnumDisplayAttributeInfo;
+import DisplayAttributeInfo;
 
 CEnumDisplayAttributeInfo::CEnumDisplayAttributeInfo()
 {

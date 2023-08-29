@@ -1,5 +1,6 @@
+module;
 #include "stdafx.h"
-#include "WeaselTSF.h"
+module WeaselTSF;
 
 BOOL WeaselTSF::_InitActiveLanguageProfileNotifySink()
 {

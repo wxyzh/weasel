@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "InstallOptionsDialog.h"
 
-int uninstall(bool silent);
+int uninstall(bool silent, bool ime = false);
 
 InstallOptionsDialog::InstallOptionsDialog()
-	: installed(false), hant(false), user_dir()
+	: installed{}, hant{}, ime{}, user_dir{}
 {
 }
 
@@ -61,7 +61,7 @@ LRESULT InstallOptionsDialog::OnOK(WORD, WORD code, HWND, BOOL&)
 
 LRESULT InstallOptionsDialog::OnRemove(WORD, WORD code, HWND, BOOL&) {
 	const bool non_silent = false;
-	uninstall(non_silent);
+	uninstall(non_silent, ime);
 	installed = false;
 	cn_.EnableWindow(!installed);
 	tw_.EnableWindow(!installed);

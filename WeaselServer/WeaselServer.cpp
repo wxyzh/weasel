@@ -4,11 +4,6 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include "WeaselService.h"
-#include <WeaselIPC.h>
-#include <WeaselUI.h>
-#include <RimeWithWeasel.h>
-#include <WeaselUtility.h>
 #include <winsparkle.h>
 #include <functional>
 #include <ShellScalingApi.h>
@@ -16,16 +11,20 @@
 #include <memory>
 #include <format>
 #pragma comment(lib, "Shcore.lib")
+
+import WeaselService;
+import WeaselServerApp;
+import WeaselUtility;
+
 CAppModule _Module;
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
-	if( !IsWindowsBlueOrLaterEx() )
+	if (!IsWindowsBlueOrLaterEx())
 	{
 		::MessageBox(NULL, L"仅支持Windows 8.1或更高版本系统", L"系统版本过低", MB_ICONERROR);
 		return 0;
 	}
-	SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 
 	// 防止服务进程开启输入法
 	ImmDisableIME(-1);
@@ -54,7 +53,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	if (!wcscmp(L"/userdir", lpstrCmdLine))
 	{
-		CreateDirectory(WeaselUserDataPath().c_str(), NULL);
+		CreateDirectory(WeaselUserDataPath().data(), NULL);
 		WeaselServerApp::explore(WeaselUserDataPath());
 		return 0;
 	}
@@ -86,21 +85,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	CreateDirectory(WeaselUserDataPath().c_str(), NULL);
 
 	int nRet = 0;
-	// named mutex to ensure only instance running
-	HANDLE hMutex = ::CreateMutex(nullptr, FALSE, L"WeaselServerNamedMutex");
-	if (!hMutex)
-	{
-		::MessageBox(nullptr, std::format(L"创建互斥量失败！(代码：{})", GetLastError()).data(),
-			L"算法服务", MB_OK);
-		return 0;
-	}
-
-	if (GetLastError() == ERROR_ALREADY_EXISTS)
-	{
-		::MessageBox(nullptr, L"已有算法服务实例正在进行", L"即将退出", MB_ICONINFORMATION);
-		return 0;
-	}
-
 	try
 	{
 		WeaselServerApp app;
@@ -116,6 +100,5 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	_Module.Term();
 	::CoUninitialize();
 
-	::CloseHandle(hMutex);
 	return nRet;
 }

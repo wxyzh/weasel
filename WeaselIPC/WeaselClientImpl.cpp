@@ -1,6 +1,8 @@
-﻿#include "stdafx.h"
-#include "WeaselClientImpl.h"
-#include <StringAlgorithm.hpp>
+﻿module;
+#include "stdafx.h"
+#include <Windows.h>
+module WeaselClientImpl;
+import StringAlgorithm;
 
 using namespace weasel;
 
@@ -90,6 +92,15 @@ bool ClientImpl::ClearComposition()
 		return false;
 
 	auto ret = _SendMessage(WEASEL_IPC_CLEAR_COMPOSITION, 0, session_id);
+	return ret != 0;
+}
+
+bool weasel::ClientImpl::SelectCandidateOnCurrentPage(const size_t index)
+{
+	if (!_Active())
+		return false;
+	auto ret = _SendMessage(WEASEL_IPC_SELECT_CANDIDATE_ON_CURRENT_PAGE, index, session_id);
+
 	return ret != 0;
 }
 
@@ -244,6 +255,11 @@ bool Client::ClearComposition()
 	return m_pImpl->ClearComposition();
 }
 
+bool weasel::Client::SelectCandidateOnCurrentPage(const size_t index)
+{
+	return m_pImpl->SelectCandidateOnCurrentPage(index);
+}
+
 void Client::UpdateInputPosition(RECT const& rc)
 {
 	m_pImpl->UpdateInputPosition(rc);
@@ -279,7 +295,7 @@ void Client::EndMaintenance()
 	m_pImpl->EndMaintenance();
 }
 
-void Client::TrayCommand(UINT menuId)
+void Client::TrayCommand(PARAM menuId)
 {
 	m_pImpl->TrayCommand(menuId);
 }

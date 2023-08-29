@@ -1,7 +1,10 @@
+module;
 #include "stdafx.h"
-#include "WeaselTSF.h"
-#include "CandidateList.h"
-#include "ResponseParser.h"
+module WeaselTSF;
+import CandidateList;
+import ResponseParser;
+import WeaselUtility;
+import Compartment;
 
 STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 {
@@ -12,7 +15,6 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	weasel::ResponseParser parser(&commit, context.get(), &_status, &config, &_cand->style());
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
-
 	_UpdateLanguageBar(_status);
 
 	if (ok)
@@ -34,14 +36,15 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 		else if (!_status.composing && _IsComposing())
 		{
 			_EndComposition(_pEditSessionContext, true);
-		}
-		_UpdateCompositionWindow(_pEditSessionContext);
+		}		
 		if (_IsComposing() && config.inline_preedit)
 		{
 			_ShowInlinePreedit(_pEditSessionContext, context);
+			SetBit(5);					// _bitset[5]: _InlinePreedit
 		}
+		_UpdateCompositionWindow(_pEditSessionContext);
+		SetBit(2, _status.full_shape);	// _bitset[2]:  _full_shape
 	}
-
 	_UpdateUI(*context, _status);
 
 	return TRUE;

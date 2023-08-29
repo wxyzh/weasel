@@ -1,14 +1,23 @@
 // WeaselDeployer.cpp : Defines the entry point for the application.
 //
 #include "stdafx.h"
-#include <WeaselUtility.h>
-#include <fstream>
 #include "WeaselDeployer.h"
-#include "Configurator.h"
+import Config;
+import WeaselUtility;
+
+#pragma data_seg("Shared")
+HWND g_hwnd{ nullptr };
+#pragma data_seg()
+
+#pragma comment(linker, "/SECTION:Shared,RWS")
+
+#define WM_NOTIFY_INSTANCE (WM_USER + 100)
 
 CAppModule _Module;
 
 static int Run(LPTSTR lpCmdLine);
+
+void NotifyOtherInstance();
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -41,6 +50,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	}
 	else if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
+		NotifyOtherInstance();
 		ret = 1;
 	}
 	else
@@ -82,4 +92,11 @@ static int Run(LPTSTR lpCmdLine)
 
 	bool installing = !wcscmp(L"/install", lpCmdLine);
 	return configurator.Run(installing);
+}
+
+void NotifyOtherInstance()
+{
+	::PostMessage(g_hwnd, WM_NOTIFY_INSTANCE, ::GetCurrentProcessId(), 0);
+	::ShowWindow(g_hwnd, SW_NORMAL);
+	::SetForegroundWindow(g_hwnd);
 }

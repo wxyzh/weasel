@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <format>
+#include <functional>
 
 template<typename I>
 using com_ptr = CComPtr<I>;

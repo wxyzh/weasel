@@ -1,6 +1,16 @@
+module;
 #include "stdafx.h"
-#include <WeaselUI.h>
-#include "WeaselPanel.h"
+#include "test.h"
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#else
+#include "logging.h"
+#endif // TEST
+module WeaselUI;
+import WeaselPanel;
 
 using namespace weasel;
 
@@ -9,13 +19,18 @@ public:
 	WeaselPanel panel;
 
 	UIImpl(weasel::UI &ui)
-		: panel(ui), shown(false) {}
+		: panel(ui), shown(false) 
+	{
+	}
 	~UIImpl()
 	{
-		// ensure destroy heap resources of panel
-		panel.CleanUp();
 	}
-	void Refresh() {
+	void Refresh(bool from_server) {
+#ifdef TEST
+#ifdef _M_X64
+		LOG(INFO) << std::format("From UIImpl::Refresh. panel.IsWindow() = {}", panel.IsWindow());
+#endif // _M_X64
+#endif // TEST
 		if (!panel.IsWindow()) return;
 		if (timer)
 		{
@@ -23,7 +38,7 @@ public:
 			KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
 			timer = 0;
 		}
-		panel.Refresh();
+		panel.Refresh(from_server);
 	}
 	void Show();
 	void Hide();
@@ -45,6 +60,11 @@ UINT_PTR UIImpl::timer = 0;
 
 void UIImpl::Show()
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From UIImpl::Show. panel.IsWindow() = {}", panel.IsWindow());
+#endif // _M_X64
+#endif // TEST
 	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_SHOWNA);
 	shown = true;
@@ -96,12 +116,17 @@ VOID CALLBACK UIImpl::OnTimer(
 
 bool UI::Create(HWND parent)
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From UI::Create.");
+#endif // _M_X64
+#endif // TEST
 	if (pimpl_)
 	{
 		// re create panel cause destroied before
 		if(pimpl_->panel.IsWindow())
 			pimpl_->panel.DestroyWindow();
-		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_LAYERED | WS_EX_TRANSPARENT, 0U, 0);
+		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE/* | WS_EX_LAYERED*/ | WS_EX_TRANSPARENT, 0U, 0);
 		return true;
 	}
 
@@ -109,36 +134,40 @@ bool UI::Create(HWND parent)
 	if (!pimpl_)
 		return false;
 
-	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_LAYERED | WS_EX_TRANSPARENT, 0U, 0);
+	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE/* | WS_EX_LAYERED*/ | WS_EX_TRANSPARENT, 0U, 0);
 	return true;
 }
 
 // for ending of composition
-void UI::Destroy()
+void UI::Destroy(bool full)
 {
 	if (pimpl_)
 	{
-		// destroy panel not delete it, avoiding re initialization font resources
+		// destroy panel
 		if (pimpl_->panel.IsWindow())
 		{
 			pimpl_->panel.DestroyWindow();
+#ifdef TEST
+#ifdef _M_X64
+			LOG(INFO) << std::format("From UI::Destroy. pimpl_->panel.DestroyWindow()");
+#endif // _M_X64
+#endif // TEST
 		}
-	}
-}
-// for ending of app, destroy pimpl_
-void UI::DestroyAll()
-{
-	if (pimpl_)
-	{
-		if (pimpl_->panel.IsWindow())
-			pimpl_->panel.DestroyWindow();
-		delete pimpl_;
-		pimpl_ = 0;
+		if (full)
+		{
+			delete pimpl_;
+			pimpl_ = nullptr;
+		}
 	}
 }
 
 void UI::Show()
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From UI::Show.");
+#endif // _M_X64
+#endif // TEST
 	if (pimpl_)
 	{
 		pimpl_->Show();
@@ -171,11 +200,11 @@ bool UI::IsShown() const
 	return pimpl_ && pimpl_->IsShown();
 }
 
-void UI::Refresh()
+void UI::Refresh(bool from_server)
 {
 	if (pimpl_)
 	{
-		pimpl_->Refresh();
+		pimpl_->Refresh(from_server);
 	}
 }
 
@@ -187,9 +216,9 @@ void UI::UpdateInputPosition(RECT const& rc)
 	}
 }
 
-void UI::Update(const Context &ctx, const Status &status)
+void UI::Update(const Context &ctx, const Status &status, bool from_server)
 {
 	ctx_ = ctx;
 	status_ = status;
-	Refresh();
+	Refresh(from_server);
 }

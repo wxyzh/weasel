@@ -13,6 +13,10 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="Module Files">
+      <UniqueIdentifier>{1cac7023-185c-4284-877f-6c6d18cf64b8}</UniqueIdentifier>
+      <Extensions>ixx</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -51,9 +55,6 @@
     <ClCompile Include="EditSession.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Composition.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LanguageBar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -72,6 +73,57 @@
     <ClCompile Include="DisplayAttribute.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CompartmentTSF.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CompositionTSF.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LanguageBarTSF.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CandidateListTSF.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CandidateList.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Compartment.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DisplayAttributeInfo.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EditSession.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EnumDisplayAttributeInfo.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyEvent.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LanguageBar.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Register.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Composition.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ActiveLanguageProfileNotifySink.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WeaselTSF.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadFocusSink.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StatusSink.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -83,34 +135,13 @@
     <ClInclude Include="Globals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Register.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WeaselTSF.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="KeyEvent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EditSession.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CandidateList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ctffunc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Compartment.h">
+    <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LanguageBar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DisplayAttributeInfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EnumDisplayAttributeInfo.h">
+    <ClInclude Include="test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

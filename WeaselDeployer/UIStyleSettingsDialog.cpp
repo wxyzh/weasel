@@ -1,8 +1,11 @@
+module;
 #include "stdafx.h"
-#include "UIStyleSettingsDialog.h"
-#include "UIStyleSettings.h"
-#include "Configurator.h"
-#include <WeaselUtility.h>
+#include "resource.h"
+#include "WeaselDeployer.h"
+module UIStyleSettingsDialog;
+import UIStyleSettings;
+import Config;
+import WeaselUtility;
 
 
 UIStyleSettingsDialog::UIStyleSettingsDialog(UIStyleSettings* settings)
@@ -14,6 +17,7 @@ UIStyleSettingsDialog::UIStyleSettingsDialog(UIStyleSettings* settings)
 UIStyleSettingsDialog::~UIStyleSettingsDialog()
 {
 	image_.Destroy();
+	g_hwnd = nullptr;
 }
 
 
@@ -41,10 +45,11 @@ LRESULT UIStyleSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	select_font_.Attach(GetDlgItem(IDC_SELECT_FONT));
 	select_font_.EnableWindow(FALSE);
 	
-	Populate();
+	Populate();	
 	
 	CenterWindow();
 	BringWindowToTop();
+	g_hwnd = m_hWnd;
 	return TRUE;
 }
 

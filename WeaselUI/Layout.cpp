@@ -1,5 +1,8 @@
+module;
 #include "stdafx.h"
-#include "Layout.h"
+module Layout;
+
+using namespace weasel;
 
 Layout::Layout(const UIStyle& style, const Context& context, const Status& status)
 	: _style(style), _context(context), _status(status), 
@@ -8,8 +11,8 @@ Layout::Layout(const UIStyle& style, const Context& context, const Status& statu
 	labels(_context.cinfo.labels),
 	id(_context.cinfo.highlighted),
 	candidates_count(candidates.size()),
-	real_margin_x((abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding),
-	real_margin_y((abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding),
+	real_margin_x((abs(_style.margin_x) > _style.hilite_padding_x) ? abs(_style.margin_x) : _style.hilite_padding_x),
+	real_margin_y((abs(_style.margin_y) > _style.hilite_padding_y) ? abs(_style.margin_y) : _style.hilite_padding_y),
 	labelFontValid(!!(_style.label_font_point > 0)),
 	textFontValid(!!(_style.font_point > 0)),
 	cmtFontValid(!!(_style.comment_font_point > 0))

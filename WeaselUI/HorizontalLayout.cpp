@@ -1,10 +1,23 @@
+module;
 #include "stdafx.h"
-#include "HorizontalLayout.h"
+#include "test.h"
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#endif // TEST
+module HorizontalLayout;
 
 using namespace weasel;
 
-void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
+void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From HorizontalLayout::DoLayout.");
+#endif // DEBUG
+#endif // TEST
 	CSize size;
 	int width = offsetX + real_margin_x, height = offsetY + real_margin_y;
 	int w = offsetX + real_margin_x;
@@ -25,7 +38,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
 	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
-	int pgw = page_en ? (pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding * 2) : 0;
+	int pgw = page_en ? (pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding_x * 2) : 0;
 	int pgh = page_en ? max(pgszl.cy, pgszr.cy) : 0;
 
 	/* Preedit */
@@ -60,6 +73,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	// only when there are candidates
 	if(candidates_count)
 	{
+#ifdef TEST
+#ifdef _M_X64
+		LOG(INFO) << std::format("From HorizontalLayout::DoLayout. candidates_count = {}", candidates_count);
+#endif // DEBUG
+#endif // TEST
 		w = offsetX + real_margin_x;
 		for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
@@ -173,14 +191,14 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		}
 	}
 	_highlightRect = _candidateRects[id];
-	UpdateStatusIconLayout(&width, &height);
+	UpdateStatusIconLayout(width, height);
 	_contentSize.SetSize(width + offsetX, height + 2 * offsetY);
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 
 	// calc page indicator 
 	if(page_en && candidates_count && !_style.inline_preedit)
 	{
-		int _prex = _contentSize.cx - offsetX - real_margin_x + _style.hilite_padding - pgw;
+		int _prex = _contentSize.cx - offsetX - real_margin_x + _style.hilite_padding_x - pgw;
 		int _prey = (_preeditRect.top + _preeditRect.bottom) / 2 - pgszl.cy / 2;
 		_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
 		_nextPageRect.SetRect(_prePageRect.right + _style.hilite_spacing, 

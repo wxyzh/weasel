@@ -1,11 +1,23 @@
-
+module;
 #include "stdafx.h"
-#include "VHorizontalLayout.h"
+#include "test.h"
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#endif // TEST
+module VHorizontalLayout;
 
 using namespace weasel;
 
-void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
+void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From VHorizontalLayout::DoLayout.");
+#endif // DEBUG
+#endif // TEST
 	if(_style.vertical_text_with_wrap)
 	{
 		DoLayoutWithWrap(dc, pDWR);
@@ -31,7 +43,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
 	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
-	int pgh = page_en ? (pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2) : 0;
+	int pgh = page_en ? (pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding_y * 2) : 0;
 	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
 
 	/* Preedit */
@@ -153,7 +165,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		{
 			// re position right to left
 			int base_left;
-			if ((!IsInlinePreedit() && !_context.preedit.str.empty()))
+			if (!IsInlinePreedit() && !_context.preedit.str.empty())
 				base_left = _preeditRect.left;
 			else if( !_context.aux.str.empty())
 				base_left = _auxiliaryRect.left;	
@@ -182,13 +194,13 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 
 	height += real_margin_y;
 	_highlightRect = _candidateRects[id];
-	UpdateStatusIconLayout(&width, &height);
+	UpdateStatusIconLayout(width, height);
 	_contentSize.SetSize(width + offsetX, height + offsetY);
 
 	// calc page indicator 
 	if(page_en && candidates_count && !_style.inline_preedit)
 	{
-		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding - pgh;
+		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding_y - pgh;
 		int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;
 		_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
 		_nextPageRect.SetRect(_prex, _prePageRect.bottom + _style.hilite_spacing, 
@@ -215,7 +227,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
 }
 
-void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDWR)
+void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 {
 	CSize size;
 	int height = offsetY, width = offsetX + real_margin_x;
@@ -236,7 +248,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
 	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
-	int pgh = page_en ? (pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2) : 0;
+	int pgh = page_en ? (pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding_y * 2) : 0;
 	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
 
 	/* Preedit */
@@ -371,7 +383,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	{
 		// re position right to left
 		int base_left;
-		if ((!IsInlinePreedit() && !_context.preedit.str.empty()))
+		if (!IsInlinePreedit() && !_context.preedit.str.empty())
 			base_left = _preeditRect.left;
 		else if( !_context.aux.str.empty())
 			base_left = _auxiliaryRect.left;	
@@ -424,14 +436,14 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 		width = max(width, _style.min_width);
 		height = max(height, _style.min_height);
 	}
-	UpdateStatusIconLayout(&width, &height);
+	UpdateStatusIconLayout(width, height);
 	_contentSize.SetSize(width + 2 * offsetX, height + offsetY);
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 
 	// calc page indicator 
 	if(page_en && candidates_count && !_style.inline_preedit)
 	{
-		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding - pgh;
+		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding_y - pgh;
 		int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;
 		_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
 		_nextPageRect.SetRect(_prex, _prePageRect.bottom + _style.hilite_spacing, 

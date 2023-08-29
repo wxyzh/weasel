@@ -1,6 +1,7 @@
+module;
 #include "stdafx.h"
 #include "resource.h"
-#include "ConfiguratorDialog.h"
+module ConfiguratorDialog;
 
 const double AdjustParam{ 1.6 };
 const double AdjustParam2{ 0.6 };

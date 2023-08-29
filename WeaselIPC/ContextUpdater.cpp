@@ -1,9 +1,9 @@
+module;
 #include "stdafx.h"
-#include <StringAlgorithm.hpp>
-#include <WeaselUtility.h>
-
-#include "Deserializer.h"
-#include "ContextUpdater.h"
+module ContextUpdater;
+import WeaselUtility;
+import StringAlgorithm;
+import Deserializer;
 
 using namespace weasel;
 
@@ -83,9 +83,9 @@ void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, std::wstr
 
 void ContextUpdater::_StoreCand(Deserializer::KeyType k, std::wstring const& value)
 {
-	CandidateInfo& cinfo = m_pTarget->p_context->cinfo;
-	std::wstringstream ss(value);
-	boost::archive::text_wiarchive ia(ss);
+	auto& cinfo = m_pTarget->p_context->cinfo;
+	std::wstringstream ss{ value };
+	boost::archive::text_wiarchive ia{ ss };
 
 	ia >> cinfo;
 }
@@ -113,10 +113,21 @@ void StatusUpdater::Store(Deserializer::KeyType const& k, std::wstring const& va
 
 	bool bool_value = (!value.empty() && value != L"0");
 
+	if (k[1] == L"schema_id")
+	{
+		m_pTarget->p_status->schema_id = value;
+		return;
+	}
+
 	if (k[1] == L"ascii_mode")
 	{
 		m_pTarget->p_status->ascii_mode = bool_value;
 		return;
+	}
+
+	if (k[1] == L"full_shape")
+	{
+		m_pTarget->p_status->full_shape = bool_value;
 	}
 
 	if (k[1] == L"composing")
@@ -128,6 +139,12 @@ void StatusUpdater::Store(Deserializer::KeyType const& k, std::wstring const& va
 	if (k[1] == L"disabled")
 	{
 		m_pTarget->p_status->disabled = bool_value;
+		return;
+	}
+
+	if (k[1] == L"ascii_punct")
+	{
+		m_pTarget->p_status->ascii_punct = bool_value;
 		return;
 	}
 }

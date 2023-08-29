@@ -1,9 +1,10 @@
+module;
 #include "stdafx.h"
-#include "VerticalLayout.h"
+module VerticalLayout;
 
 using namespace weasel;
 
-void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
+void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 {
 	const int space = _style.hilite_spacing;
 	int width = 0, height = real_margin_y;
@@ -23,7 +24,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
 	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
-	int pgw = page_en ? (pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding * 2) : 0;
+	int pgw = page_en ? (pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding_x * 2) : 0;
 	int pgh = page_en ? max(pgszl.cy, pgszr.cy) : 0;
 
 	/*  preedit and auxiliary rectangle calc start */
@@ -169,7 +170,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		width = max(width, _style.min_width);
 		height = max(height, _style.min_height);
 	}
-	UpdateStatusIconLayout(&width, &height);
+	UpdateStatusIconLayout(width, height);
 	// candidate rectangle always align to right side, margin_x to the right edge
 	for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		_candidateRects[i].right = max(_candidateRects[i].right, _candidateRects[i].left - real_margin_x + width - real_margin_x);
@@ -182,7 +183,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	// calc page indicator 
 	if(page_en && candidates_count && !_style.inline_preedit)
 	{
-		int _prex = _contentSize.cx - offsetX - real_margin_x + _style.hilite_padding - pgw;
+		int _prex = _contentSize.cx - offsetX - real_margin_x + _style.hilite_padding_x - pgw;
 		int _prey = (_preeditRect.top + _preeditRect.bottom) / 2 - pgszl.cy / 2;
 		_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
 		_nextPageRect.SetRect(_prePageRect.right + _style.hilite_spacing, 

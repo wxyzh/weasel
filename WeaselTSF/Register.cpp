@@ -1,7 +1,9 @@
+module;
 #include "stdafx.h"
-#include "Register.h"
 #include <strsafe.h>
 #include <Msctf.h>
+#include "Globals.h"
+module Register;
 
 #define CLSID_STRLEN 38  // strlen("{xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx}")
 
@@ -55,8 +57,8 @@ BOOL RegisterProfiles()
 			c_clsidTextService,
 			TEXTSERVICE_LANGID,
 			c_guidProfile,
-			TEXTSERVICE_DESC,
-			(ULONG)wcslen(TEXTSERVICE_DESC),
+			TEXTSERVICE_DESC.data(),
+			(ULONG)wcslen(TEXTSERVICE_DESC.data()),
 			achIconFile,
 			cchIconFile,
 			TEXTSERVICE_ICON_INDEX,

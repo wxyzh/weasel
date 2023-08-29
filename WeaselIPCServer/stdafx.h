@@ -18,3 +18,6 @@
 #include <wtl/atlframe.h>
 
 #include <boost/thread.hpp>
+
+#include <map>
+#include <thread>

@@ -13,6 +13,9 @@
       <UniqueIdentifier>{cdf05528-dd52-45e1-8ae4-63e02af799fb}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;jpg;jpeg;jpe;manifest</Extensions>
     </Filter>
+    <Filter Include="Module Files">
+      <UniqueIdentifier>{ad751bc2-a2e1-494c-9b5a-cefb6aadfcf2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -33,21 +36,21 @@
     <ClCompile Include="WeaselTrayIcon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WeaselServerApp.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WeaselService.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WeaselTrayIcon.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WeaselService.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WeaselServerApp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SystemTraySDK.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WeaselTrayIcon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">

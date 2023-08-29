@@ -1,5 +1,18 @@
+module;
 #include "stdafx.h"
-#include "StandardLayout.h"
+#include <d2d1.h>
+#include <dwrite.h>
+#include "test.h"
+
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#endif // TEST
+#define IS_FULLSCREENLAYOUT(style)	(style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+#define NOT_FULLSCREENLAYOUT(style)	(style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN && style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+module StandardLayout;
 
 using namespace weasel;
 
@@ -10,7 +23,7 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 	return std::wstring(buffer);
 }
 
-void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, DirectWriteResources* pDWR,  LPSIZE lpSize) const
+void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, PDWR pDWR,  LPSIZE lpSize) const
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
@@ -78,7 +91,7 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 	SafeRelease(&pDWR->pTextLayout);
 }
 
-CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat1* pTextFormat, DirectWriteResources* pDWR) const
+CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat1* pTextFormat, PDWR pDWR) const
 {
 	const std::wstring& preedit = text.str;
 	const std::vector<weasel::TextAttribute> &attrs = text.attributes;
@@ -160,7 +173,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 	if(!_style.inline_preedit)
 	{
 		CRect textRect(_preeditRect);
-		textRect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+		textRect.InflateRect(_style.hilite_padding_x, _style.hilite_padding_y);
 		textHemispherical = _IsHighlightOverCandidateWindow(textRect, dc);
 		const bool hilite_rd_info[3][2][4] = {
 			// vertical
@@ -195,7 +208,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 	if(candidates_count)
 	{
 		CRect cand0Rect(_candidateRects[0]);
-		cand0Rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+		cand0Rect.InflateRect(_style.hilite_padding_x, _style.hilite_padding_y);
 		cand0Hemispherical = _IsHighlightOverCandidateWindow(cand0Rect, dc);
 		if(textHemispherical || cand0Hemispherical)
 		{
@@ -261,7 +274,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 			for (auto i = 0; i < candidates_count; i++)
 			{
 				CRect hilite_rect(_candidateRects[i]);
-				hilite_rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+				hilite_rect.InflateRect(_style.hilite_padding_x, _style.hilite_padding_y);
 				bool current_hemispherical_dome_status = _IsHighlightOverCandidateWindow(hilite_rect, dc);
 				int type = 0;	// default FIRST_CAND
 				if (candidates_count == 1)	// ONLY_CAND
@@ -308,8 +321,13 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 	}
 }
 
-void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
+void StandardLayout::UpdateStatusIconLayout(int& width, int& height)
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From StandardLayout::UpdateStatusIconLayout.");
+#endif // DEBUG
+#endif // TEST
 	// rule 1. status icon is middle-aligned with preedit text or auxiliary text, whichever comes first
 	// rule 2. there is a spacing between preedit/aux text and the status icon
 	// rule 3. status icon is right aligned in WeaselPanel, when [margin_x + width(preedit/aux) + spacing + width(icon) + margin_x] < style.min_width
@@ -330,10 +348,10 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 			}
 			if(top && middle)
 			{
-				int bottom_alignment = *height - real_margin_y - STATUS_ICON_SIZE;
+				int bottom_alignment = height - real_margin_y - STATUS_ICON_SIZE;
 				if( top > bottom_alignment )
 				{
-					*height = top + STATUS_ICON_SIZE + real_margin_y;
+					height = top + STATUS_ICON_SIZE + real_margin_y;
 				}
 				else
 				{
@@ -345,8 +363,8 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 			{
 				_statusIconRect.SetRect(0,0, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
 				_statusIconRect.OffsetRect(offsetX, offsetY);
-				*width = STATUS_ICON_SIZE ;
-				*height = (_style.vertical_text_with_wrap? offsetY : 0) + STATUS_ICON_SIZE;
+				width = STATUS_ICON_SIZE ;
+				height = (_style.vertical_text_with_wrap? offsetY : 0) + STATUS_ICON_SIZE;
 			}
 		}
 		else
@@ -364,10 +382,10 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 			}
 			if (left && middle)
 			{
-				int right_alignment = *width - real_margin_x - STATUS_ICON_SIZE;
+				int right_alignment = width - real_margin_x - STATUS_ICON_SIZE;
 				if (left > right_alignment)
 				{
-					*width = left + STATUS_ICON_SIZE + real_margin_x;
+					width = left + STATUS_ICON_SIZE + real_margin_x;
 				}
 				else
 				{
@@ -379,7 +397,7 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 			{
 				_statusIconRect.SetRect(0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
 				_statusIconRect.OffsetRect(offsetX, offsetY);
-				*width = *height = STATUS_ICON_SIZE;
+				width = height = STATUS_ICON_SIZE;
 			}
 		}
 	}
@@ -399,5 +417,11 @@ bool StandardLayout::ShouldDisplayStatusIcon() const
 	// rule 2. show status icon when switching mode
 	// rule 3. always show status icon with tips 
 	// rule 4. rule 3 excluding tips FullScreenLayout with strings
-	return (_status.ascii_mode || !_status.composing || !_context.aux.empty()) && !((_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || _style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN) && !_context.aux.empty());
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From StandardLayout::ShouldDisplayStatusIcon.");
+	LOG(INFO) << std::format("ascii_mode = {}, inline_preedit = {}, composing = {}, aux.empty() = {}, layout_type = {}", _status.ascii_mode, _style.inline_preedit, _status.composing, _context.aux.empty(), (int)_style.layout_type);
+#endif // DEBUG
+#endif // TEST
+	return ((_status.ascii_mode && !_style.inline_preedit) || !_status.composing || !_context.aux.empty()) && ((_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && _style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN) || _context.aux.empty());
 }

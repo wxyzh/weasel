@@ -1,7 +1,12 @@
 ﻿#include "stdafx.h"
-#include "WeaselServerImpl.h"
 #include <Windows.h>
+// #include <Winnt.h> // for security attributes constants
+// #include <aclapi.h> // for ACL
 #include <resource.h>
+#include "WeaselServerImpl.h"
+import WeaselIPC;
+import PipeChannel;
+import WeaselUtility;
 
 namespace weasel {
 	class PipeServer : public PipeChannel<size_t, PipeMessage>
@@ -22,7 +27,6 @@ namespace weasel {
 	};
 }
 
-
 using namespace weasel;
 
 extern CAppModule _Module;
@@ -41,8 +45,8 @@ ServerImpl::~ServerImpl()
 
 void ServerImpl::_Finailize()
 {
-	if (pipeThread != nullptr) {
-		pipeThread->interrupt();
+	if (pipeThread != nullptr) 
+	{
 		pipeThread = nullptr;
 	}
 	else {
@@ -100,6 +104,12 @@ LRESULT ServerImpl::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	case ID_WEASELTRAY_DISABLE_ASCII:
 		m_pRequestHandler->SetOption(lParam, "ascii_mode", false);
 		return 0;
+	case ID_WEASELTRAY_HALF_SHAPE:
+		m_pRequestHandler->SetOption(lParam, "full_shape", false);
+		return 0;
+	case ID_WEASELTRAY_FULL_SHAPE:
+		m_pRequestHandler->SetOption(lParam, "full_shape", true);
+		return 0;
 	default:;
 	}
 
@@ -113,7 +123,7 @@ LRESULT ServerImpl::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	return 0;
 }
 
-PARAM ServerImpl::OnCommand(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam)
+PARAM ServerImpl::OnCommand_(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam)
 {
 	BOOL handled = TRUE;
 	OnCommand(uMsg, wParam, lParam, handled);
@@ -160,9 +170,10 @@ int ServerImpl::Run()
 	auto listener = [this](PipeMessage msg, PipeServer::Respond resp) -> void {
 		HandlePipeMessage(msg, resp);
 	};
-	pipeThread = std::make_unique<boost::thread>([this, &listener]() {
+	pipeThread = std::make_unique<std::thread>([this, &listener]() {
 		channel->Listen(listener);
 	});
+	pipeThread->detach();
 
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
@@ -170,8 +181,6 @@ int ServerImpl::Run()
 	_Module.RemoveMessageLoop();
 	return nRet;
 }
-
-
 
 PARAM ServerImpl::OnEcho(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam)
 {
@@ -301,6 +310,15 @@ PARAM ServerImpl::OnClearComposition(WEASEL_IPC_COMMAND uMsg, PARAM wParam, Rime
 	return 0;
 }
 
+PARAM weasel::ServerImpl::OnSelectCandidateOnCurrentPage(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam)
+{
+	if (m_pRequestHandler)
+	{
+		m_pRequestHandler->SelectCandidateOnCurrentPage(wParam, lParam);
+	}
+	return 0;
+}
+
 #define MAP_PIPE_MSG_HANDLE(__msg, __wParam, __lParam) {\
 auto lParam = __lParam;\
 auto wParam = __wParam;\
@@ -332,7 +350,8 @@ void ServerImpl::HandlePipeMessage(PipeMessage pipe_msg, _Resp resp)
 		PIPE_MSG_HANDLE(WEASEL_IPC_END_MAINTENANCE, OnEndMaintenance)
 		PIPE_MSG_HANDLE(WEASEL_IPC_COMMIT_COMPOSITION, OnCommitComposition)
 		PIPE_MSG_HANDLE(WEASEL_IPC_CLEAR_COMPOSITION, OnClearComposition);
-		PIPE_MSG_HANDLE(WEASEL_IPC_TRAY_COMMAND, OnCommand);
+		PIPE_MSG_HANDLE(WEASEL_IPC_SELECT_CANDIDATE_ON_CURRENT_PAGE, OnSelectCandidateOnCurrentPage);
+		PIPE_MSG_HANDLE(WEASEL_IPC_TRAY_COMMAND, OnCommand_);
 	END_MAP_PIPE_MSG_HANDLE(result);
 
 	resp(result);

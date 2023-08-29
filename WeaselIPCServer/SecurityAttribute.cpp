@@ -1,6 +1,7 @@
+module;
 #include "stdafx.h"
-#include "SecurityAttribute.h"
 #include <Sddl.h>
+module SecurityAttribute;
 
 #ifndef SDDL_ALL_APP_PACKAGES
 #define SDDL_ALL_APP_PACKAGES TEXT("AC")

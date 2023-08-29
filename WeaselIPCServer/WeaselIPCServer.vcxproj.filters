@@ -13,6 +13,10 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="Module Files">
+      <UniqueIdentifier>{a53434e2-0276-4e4c-8871-04009a18b8a6}</UniqueIdentifier>
+      <Extensions>ixx</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -24,6 +28,21 @@
     <ClCompile Include="SecurityAttribute.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\include\PipeChannel.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SecurityAttribute.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\WeaselIPC.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\WeaselCommon.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\WeaselUtility.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -32,13 +51,7 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\WeaselIPC.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WeaselServerImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SecurityAttribute.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,15 +1,20 @@
+module;
 #include "stdafx.h"
+#include "test.h"
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#endif // TEST
+module CandidateList;
+import WeaselUtility;
 
-#include "WeaselTSF.h"
-#include "CandidateList.h"
-
-
-using namespace std;
 using namespace weasel;
 
-CCandidateList::CCandidateList(WeaselTSF& pTextService)
-	: _ui(make_unique<UI>())
-	, _tsf(pTextService)
+CCandidateList::CCandidateList(WeaselTSF& textService)
+	: _ui(std::make_unique<UI>())
+	, _tsf(textService)
 	, _pbShow(TRUE)
 {
 	_cRef = 1;
@@ -224,6 +229,14 @@ STDMETHODIMP CCandidateList::FinalizeExactCompositionString()
 
 void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From CCandidateList::UpdateUI. ctx.empty() = {}, ctx.cinfo.empty() = {}", ctx.empty(), ctx.cinfo.empty());
+	if (!ctx.cinfo.candies.empty())
+		LOG(INFO) << std::format("From CCandidateList::UpdateUI. _pbShow = {}, status.composing = {}, cand = {}", _pbShow, status.composing, to_string(ctx.cinfo.candies[0].str, CP_UTF8));
+#endif // _M_X64
+#endif // TEST
+
 	if (_ui->style().inline_preedit) {
 		_ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
 	}
@@ -231,15 +244,17 @@ void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 		_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
 	}
 
-	/// In UWP, candidate window will only be shown
-	/// if it is owned by active view window
+	// In UWP, candidate window will only be shown
+	// if it is owned by active view window
 	//_UpdateOwner();
 	_ui->Update(ctx, status);
 	if (_pbShow == FALSE)
 		_UpdateUIElement();
 
 	if (status.composing)
+	{
 		Show(_pbShow);
+	}
 	else
 		Show(FALSE);
 }
@@ -287,9 +302,17 @@ HWND CCandidateList::_GetActiveWnd()
 		// Set current context
 		_pContextDocument = pContext;
 		pContextView->GetWnd(&w);
+#ifdef TEST
+#ifdef _M_X64
+		LOG(INFO) << std::format("From CCandidateList::_GetActiveWnd. hwnd = {:#x}, pContext = {:#x}, _pDocumentMgr = {:#x}", (size_t)w, (size_t)pContext.p, (size_t)pDocumentMgr.p);
+#endif // _M_X64
+#endif // TEST
 	}
 
-	if (w == NULL) w = ::GetFocus();
+	if (w == NULL)
+	{
+		w = ::GetFocus();
+	}
 	return w;
 }
 
@@ -303,7 +326,7 @@ HRESULT CCandidateList::_UpdateUIElement()
 	{
 		return S_OK;
 	}
-	hr = pThreadMgr->QueryInterface(IID_ITfUIElementMgr, (void **)&pUIElementMgr);
+	hr = pThreadMgr->QueryInterface(&pUIElementMgr);
 
 	if (hr == S_OK)
 	{
@@ -326,8 +349,16 @@ void CCandidateList::StartUI()
 		return;
 	}
 
+	_ui->SetSelectCallback([this](std::wstring_view str, const size_t index) { _tsf.InsertText(str, index); });
+	// ToDo: send select candidate info back to rime
+
 	pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
 	//pUIElementMgr->UpdateUIElement(uiid);
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From CCandidateList::StartUI. _pbShow = {}", _pbShow);
+#endif // _M_X64
+#endif // TEST
 	if (_pbShow)
 	{
 		_ui->style() = _style;
@@ -374,46 +405,11 @@ void CCandidateList::_DisposeUIWindowAll()
 	}
 
 	// call _ui->DestroyAll() to clean resources
-	_ui->DestroyAll();
+	_ui->Destroy(true);
 }
 
 void CCandidateList::_MakeUIWindow()
 {
 	HWND p = _GetActiveWnd();
 	_ui->Create(p);
-}
-
-void WeaselTSF::_UpdateUI(const Context & ctx, const Status & status)
-{
-	_cand->UpdateUI(ctx, status);
-}
-
-void WeaselTSF::_StartUI()
-{
-	_cand->StartUI();
-}
-
-void WeaselTSF::_EndUI()
-{
-	_cand->EndUI();
-}
-
-void WeaselTSF::_ShowUI()
-{
-	_cand->Show(TRUE);
-}
-
-void WeaselTSF::_HideUI()
-{
-	_cand->Show(FALSE);
-}
-
-com_ptr<ITfContext> WeaselTSF::_GetUIContextDocument()
-{
-	return _cand->GetContextDocument();
-}
-
-void WeaselTSF::_DeleteCandidateList()
-{
-	_cand->Destroy();
 }

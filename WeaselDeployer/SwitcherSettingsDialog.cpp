@@ -1,11 +1,13 @@
-﻿#include "stdafx.h"
-#include "SwitcherSettingsDialog.h"
-#include "Configurator.h"
-#include <algorithm>
-#include <set>
+﻿module;
+#include "stdafx.h"
 #include <rime_levers_api.h>
-#include <WeaselUtility.h>
-
+#include "WeaselDeployer.h"
+#include "resource.h"
+module SwitcherSettingsDialog;
+import <algorithm>;
+import <set>;
+import WeaselUtility;
+import Config;
 
 SwitcherSettingsDialog::SwitcherSettingsDialog(RimeSwitcherSettings* settings)
 	: settings_(settings), loaded_(false), modified_(false)
@@ -16,6 +18,7 @@ SwitcherSettingsDialog::SwitcherSettingsDialog(RimeSwitcherSettings* settings)
 
 SwitcherSettingsDialog::~SwitcherSettingsDialog()
 {
+	g_hwnd = nullptr;
 }
 
 void SwitcherSettingsDialog::Populate() {
@@ -86,12 +89,13 @@ LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	hotkeys_.EnableWindow(FALSE);
 
 	get_schemata_.Attach(GetDlgItem(IDC_GET_SCHEMATA));
-	get_schemata_.EnableWindow(TRUE);
+	get_schemata_.EnableWindow(TRUE);	
 	
 	Populate();
 	
 	CenterWindow();
 	BringWindowToTop();
+	g_hwnd = m_hWnd;
 	return TRUE;
 }
 

@@ -24,5 +24,6 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 
 using boost::interprocess::wbufferstream;

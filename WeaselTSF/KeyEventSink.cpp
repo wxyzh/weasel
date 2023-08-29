@@ -1,9 +1,18 @@
+module;
 #include "stdafx.h"
-#include "WeaselIPC.h"
-#include "WeaselTSF.h"
-#include "KeyEvent.h"
+#include "test.h"
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#endif // TEST
+module WeaselTSF;
+import WeaselIPC;
+import KeyEvent;
+import CandidateList;
 
-void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 {
 	if (!_IsKeyboardOpen())
 		return;
@@ -17,15 +26,22 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 		*pfEaten = FALSE;
 	}
 	else
-    {
-		*pfEaten = (BOOL) m_client.ProcessKeyEvent(ke);
-    }
+	{
+		*pfEaten = (BOOL)m_client.ProcessKeyEvent(ke);
+	}
 }
 
 STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
 {
 	if (fForeground)
+	{
 		m_client.FocusIn();
+#ifdef TEST
+#ifdef _M_X64
+		LOG(INFO) << std::format("From OnSetFocus. fForeground = {}", fForeground);
+#endif // _M_X64
+#endif // TEST
+	}
 	else {
 		m_client.FocusOut();
 		_AbortComposition();
@@ -43,40 +59,56 @@ STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
  *  and for OnKeyDown() to check if the key has already been sent to the server.
  */
 
-STDAPI WeaselTSF::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 {
-	_fTestKeyUpPending = FALSE;
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From OnTestKeyDown. wParam = {:#x}, lParam = {:#x}, pContext = {:#x}", wParam, lParam, (size_t)pContext);
+#endif // _M_X64
+#endif // TEST
+	_fTestKeyUpPending = false;	
 	if (_fTestKeyDownPending)
 	{
 		*pfEaten = TRUE;
 		return S_OK;
 	}
 	_ProcessKeyEvent(wParam, lParam, pfEaten);
-	_UpdateComposition(pContext);
 	if (*pfEaten)
-		_fTestKeyDownPending = TRUE;
+	{
+		_fTestKeyDownPending = true;
+	}
 	return S_OK;
 }
 
-STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 {
-	_fTestKeyUpPending = FALSE;
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From OnKeyDown. _fTestKeyDownPending = {}, wParam = {:#x}, lParam = {:#x}, pContext = {:#x}", _fTestKeyDownPending, wParam, lParam, (size_t)pContext);
+#endif // _M_X64
+#endif // TEST
+	_fTestKeyUpPending = false;
 	if (_fTestKeyDownPending)
-    {
-		_fTestKeyDownPending = FALSE;
+	{
+		_fTestKeyDownPending = false;
 		*pfEaten = TRUE;
-    }
+	}
 	else
-    {
-		_ProcessKeyEvent(wParam, lParam, pfEaten);
-	    _UpdateComposition(pContext);
-    }
+	{
+		_ProcessKeyEvent(wParam, lParam, pfEaten);		
+	}
+	_UpdateComposition(pContext);
 	return S_OK;
-} 
+}
 
-STDAPI WeaselTSF::OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+STDAPI WeaselTSF::OnTestKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 {
-	_fTestKeyDownPending = FALSE;
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From OnTestKeyUp. wParam = {:#x}, lParam = {:#x}, pContext = {:#x}", wParam, (unsigned)lParam, (size_t)pContext);
+#endif // _M_X64
+#endif // TEST
+	_fTestKeyDownPending = false;
 	if (_fTestKeyUpPending)
 	{
 		*pfEaten = TRUE;
@@ -85,27 +117,34 @@ STDAPI WeaselTSF::OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam
 	_ProcessKeyEvent(wParam, lParam, pfEaten);
 	_UpdateComposition(pContext);
 	if (*pfEaten)
-		_fTestKeyUpPending = TRUE;
+	{
+		_fTestKeyUpPending = true;
+	}
 	return S_OK;
 }
 
-STDAPI WeaselTSF::OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 {
-	_fTestKeyDownPending = FALSE;
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From OnKeyUp. wParam = {:#x}, lParam = {:#x}", wParam, (unsigned)lParam);
+#endif // _M_X64
+#endif // TEST
+	_fTestKeyDownPending = false;
 	if (_fTestKeyUpPending)
-    {
-		_fTestKeyUpPending = FALSE;
+	{
+		_fTestKeyUpPending = false;
 		*pfEaten = TRUE;
-    }
+	}
 	else
-    {
+	{
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
-        _UpdateComposition(pContext);
-    }
+		_UpdateComposition(pContext);
+	}
 	return S_OK;
 }
 
-STDAPI WeaselTSF::OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten)
+STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEaten)
 {
 	*pfEaten = FALSE;
 	return S_OK;
@@ -119,15 +158,15 @@ BOOL WeaselTSF::_InitKeyEventSink()
 	if (_pThreadMgr->QueryInterface(&pKeystrokeMgr) != S_OK)
 		return FALSE;
 
-	hr = pKeystrokeMgr->AdviseKeyEventSink(_tfClientId, (ITfKeyEventSink *) this, TRUE);
-	
+	hr = pKeystrokeMgr->AdviseKeyEventSink(_tfClientId, (ITfKeyEventSink*)this, TRUE);
+
 	return (hr == S_OK);
 }
 
 void WeaselTSF::_UninitKeyEventSink()
 {
 	com_ptr<ITfKeystrokeMgr> pKeystrokeMgr;
-	
+
 	if (_pThreadMgr->QueryInterface(&pKeystrokeMgr) != S_OK)
 		return;
 
@@ -153,7 +192,7 @@ BOOL WeaselTSF::_InitPreservedKey()
 		_tfClientId,
 		GUID_IME_MODE_PRESERVED_KEY,
 		&preservedKeyImeMode, L"", 0);
-	
+
 	return SUCCEEDED(hr);
 #endif
 }

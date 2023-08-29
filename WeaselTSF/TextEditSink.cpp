@@ -1,11 +1,19 @@
+module;
 #include "stdafx.h"
-#include "WeaselTSF.h"
+#include "test.h"
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#endif // TEST
+module WeaselTSF;
 
 static BOOL IsRangeCovered(TfEditCookie ec, ITfRange *pRangeTest, ITfRange *pRangeCover)
 {
 	LONG lResult;
 
-	if (pRangeCover->CompareStart(ec, pRangeTest, TF_ANCHOR_START, &lResult) != S_OK || lResult > 0)
+	if (pRangeCover->CompareStart(ec, pRangeTest, TF_ANCHOR_START, &lResult) != S_OK || 0 < lResult)
 		return FALSE;
 	if (pRangeCover->CompareEnd(ec, pRangeTest, TF_ANCHOR_END, &lResult) != S_OK || lResult < 0)
 		return FALSE;
@@ -14,11 +22,14 @@ static BOOL IsRangeCovered(TfEditCookie ec, ITfRange *pRangeTest, ITfRange *pRan
 
 STDAPI WeaselTSF::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord)
 {
-	BOOL fSelectionChanged;
-	IEnumTfRanges *pEnumTextChanges;
-	ITfRange *pRange;
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::OnEndEdit.");
+#endif // _M_X64
+#endif // TEST
 
 	/* did the selection change? */
+	BOOL fSelectionChanged;
 	if (pEditRecord->GetSelectionStatus(&fSelectionChanged) == S_OK && fSelectionChanged)
 	{
 		if (_IsComposing())
@@ -29,52 +40,74 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEd
 
 			if (pContext->GetSelection(ecReadOnly, TF_DEFAULT_SELECTION, 1, &tfSelection, &cFetched) == S_OK && cFetched == 1)
 			{
-				ITfRange *pRangeComposition;
+				com_ptr<ITfRange> pRangeComposition;
 				if (_pComposition->GetRange(&pRangeComposition) == S_OK)
 				{
 					if (!IsRangeCovered(ecReadOnly, tfSelection.range, pRangeComposition))
+					{
 						_EndComposition(pContext, true);
-					pRangeComposition->Release();
+					}
 				}
 			}
 		}
 	}
 
 	/* text modification? */
+	com_ptr<IEnumTfRanges> pEnumTextChanges;
+	com_ptr<ITfRange> pRange;
 	if (pEditRecord->GetTextAndPropertyUpdates(TF_GTP_INCL_TEXT, NULL, 0, &pEnumTextChanges) == S_OK)
 	{
-		if (pEnumTextChanges->Next(1, &pRange, NULL) == S_OK)
+		if (FAILED(pEnumTextChanges->Next(1, &pRange, NULL)))
 		{
-			pRange->Release();
+			return E_FAIL;
 		}
-		pEnumTextChanges->Release();
+#ifdef TEST
+#ifdef _M_X64
+		LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. pEditRecord->GetTextAndPropertyUpdates.");
+#endif // _M_X64
+#endif // TEST
 	}
 	return S_OK;
 }
 
 STDAPI WeaselTSF::OnLayoutChange(ITfContext *pContext, TfLayoutCode lcode, ITfContextView *pContextView)
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::OnLayoutChange. lcode = {:#x}", (unsigned)lcode);
+#endif // _M_X64
+#endif // TEST
 	if (!_IsComposing())
 		return S_OK;
 
 	if (pContext != _pTextEditSinkContext)
 		return S_OK;
 
-	if (lcode == TF_LC_CHANGE)
+	switch (lcode)
+	{
+	case TF_LC_CREATE:
+		break;
+
+	case TF_LC_CHANGE:
 		_UpdateCompositionWindow(pContext);
+		break;
+
+	case TF_LC_DESTROY:
+		break;
+	}
+
 	return S_OK;
 }
 
-BOOL WeaselTSF::_InitTextEditSink(com_ptr<ITfDocumentMgr> pDocMgr)
+BOOL WeaselTSF::_InitTextEditSink(ITfDocumentMgr* pDocMgr)
 {
 	com_ptr<ITfSource> pSource;
-	BOOL fRet;
+	BOOL fRet{};
 
 	/* clear out any previous sink first */
 	if (_dwTextEditSinkCookie != TF_INVALID_COOKIE)
 	{
-		_pTextEditSinkContext->QueryInterface(&pSource);
-		if (pSource != nullptr)
+		if (SUCCEEDED(_pTextEditSinkContext->QueryInterface(&pSource)))
 		{
 			pSource->UnadviseSink(_dwTextEditSinkCookie);
 			pSource->UnadviseSink(_dwTextLayoutSinkCookie);
@@ -85,23 +118,19 @@ BOOL WeaselTSF::_InitTextEditSink(com_ptr<ITfDocumentMgr> pDocMgr)
 	if (pDocMgr == NULL)
 		return TRUE;
 
-	if (pDocMgr->GetTop(&_pTextEditSinkContext) != S_OK)
+	if (FAILED(pDocMgr->GetTop(&_pTextEditSinkContext)))
 		return FALSE;
 
 	if (_pTextEditSinkContext == NULL)
 		return TRUE;
 
-	fRet = FALSE;
-
-	pSource.Release();
-
-	if (_pTextEditSinkContext->QueryInterface(&pSource) == S_OK)
+	if (SUCCEEDED(_pTextEditSinkContext->QueryInterface(&pSource)))
 	{
-		if (pSource->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink *) this, &_dwTextEditSinkCookie) == S_OK)
+		if (SUCCEEDED(pSource->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink *) this, &_dwTextEditSinkCookie)))
 			fRet = TRUE;
 		else
 			_dwTextEditSinkCookie = TF_INVALID_COOKIE;
-		if (pSource->AdviseSink(IID_ITfTextLayoutSink, (ITfTextLayoutSink *) this, &_dwTextLayoutSinkCookie) == S_OK)
+		if (SUCCEEDED(pSource->AdviseSink(IID_ITfTextLayoutSink, (ITfTextLayoutSink *) this, &_dwTextLayoutSinkCookie)))
 		{
 			fRet = TRUE;
 		}
@@ -112,6 +141,12 @@ BOOL WeaselTSF::_InitTextEditSink(com_ptr<ITfDocumentMgr> pDocMgr)
 	{
 		_pTextEditSinkContext = nullptr;
 	}
+
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::_InitTextEditSink. pDocMgr = {:#x}, _dwTextEditSinkCookie = {:#x}, _dwTextLayoutSinkCookie = {:#x}", (size_t)pDocMgr, (unsigned)_dwTextEditSinkCookie, (unsigned)_dwTextLayoutSinkCookie);
+#endif // _M_X64
+#endif // TEST
 
 	return fRet;
 }

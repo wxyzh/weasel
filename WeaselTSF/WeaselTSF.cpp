@@ -1,11 +1,32 @@
-﻿#include "stdafx.h"
+﻿module;
+#include "stdafx.h"
+#include "Globals.h"
+#include <resource.h>
+#include <psapi.h>
+#include "test.h"
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#include <filesystem>
+#pragma comment(lib, "psapi.lib")
+namespace fs = std::filesystem;
+#endif // _M_X64
+#endif // TEST
 
-#include "WeaselTSF.h"
-#include "WeaselCommon.h"
-#include "CandidateList.h"
-#include "LanguageBar.h"
-#include "Compartment.h"
-#include "ResponseParser.h"
+//#pragma data_seg("Shared")
+//bool g_checked = true;
+//#pragma data_seg()
+//
+//#pragma comment(linker, "/SECTION:Shared,RWS")
+module WeaselTSF;
+import WeaselCommon;
+import CandidateList;
+import LanguageBar;
+import Compartment;
+import ResponseParser;
+import WeaselUtility;
+// import GenerateDump;
 
 static void error_message(const WCHAR *msg)
 {
@@ -14,7 +35,7 @@ static void error_message(const WCHAR *msg)
 	if (now > next_tick)
 	{
 		next_tick = now + 10000;  // (ms)
-		MessageBox(NULL, msg, TEXTSERVICE_DESC, MB_ICONERROR | MB_OK);
+		MessageBox(NULL, msg, TEXTSERVICE_DESC.data(), MB_ICONERROR | MB_OK);
 	}
 }
 
@@ -26,14 +47,29 @@ WeaselTSF::WeaselTSF()
 
 	_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 	_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
-	_fTestKeyDownPending = FALSE;
-	_fTestKeyUpPending = FALSE;
+	_activeLanguageProfileNotifySinkCookie = TF_INVALID_COOKIE;
 
-	_fCUASWorkaroundTested = _fCUASWorkaroundEnabled = FALSE;
-
-	_cand = new CCandidateList(*this);
-
+	_cand.Attach(new CCandidateList(*this));
+	SetBit(8);	// _bitset[8]: _SupportDisplayAttribute
+	
 	DllAddRef();
+	// CatchUnhandledException();
+
+#ifdef TEST
+#ifdef _M_X64
+	auto pid = GetCurrentProcessId();
+
+	auto hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+
+	std::wstring name;
+	name.reserve(MAX_PATH);
+
+	GetProcessImageFileName(hProcess, name.data(), name.capacity());
+	CloseHandle(hProcess);
+	name = name.data();
+	LOG(INFO) << std::format("Process {} starting log. AppName: {}", pid, fs::path(name).filename().string()).data();
+#endif // _M_X64
+#endif // TEST
 }
 
 WeaselTSF::~WeaselTSF()
@@ -60,6 +96,8 @@ STDAPI WeaselTSF::QueryInterface(REFIID riid, void **ppvObject)
 		*ppvObject = (ITfTextLayoutSink*)this;
 	else if (IsEqualIID(riid, IID_ITfKeyEventSink))
 		*ppvObject = (ITfKeyEventSink*)this;
+	else if (IsEqualIID(riid, IID_ITfActiveLanguageProfileNotifySink))
+		*ppvObject = (ITfActiveLanguageProfileNotifySink*)this;
 	else if (IsEqualIID(riid, IID_ITfCompositionSink))
 		*ppvObject = (ITfCompositionSink*)this;
 	else if (IsEqualIID(riid, IID_ITfEditSession))
@@ -103,7 +141,9 @@ STDAPI WeaselTSF::Deactivate()
 {
 	m_client.EndSession();
 
-	_InitTextEditSink(com_ptr<ITfDocumentMgr>());
+	_InitTextEditSink();
+
+	_UninitActiveLanguageProfileNotifySink();
 
 	_UninitThreadMgrEventSink();
 
@@ -113,8 +153,6 @@ STDAPI WeaselTSF::Deactivate()
 	_UninitLanguageBar();
 
 	_UninitCompartment();
-
-	_pThreadMgr = NULL;
 
 	_tfClientId = TF_CLIENTID_NULL;
 
@@ -127,9 +165,9 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 {
 	com_ptr<ITfDocumentMgr> pDocMgrFocus;
 	_activateFlags = dwFlags;
-
+	
 	_pThreadMgr = pThreadMgr;
-	_tfClientId = tfClientId;
+	_tfClientId = tfClientId;	
 
 	if (!_InitThreadMgrEventSink())
 		goto ExitError;
@@ -142,9 +180,14 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	if (!_InitKeyEventSink())
 		goto ExitError;
 
+	if (!_InitActiveLanguageProfileNotifySink())
+	{
+		goto ExitError;
+	}
+
 	if (!_InitDisplayAttributeGuidAtom())
 	{
-		_isSupportDisplayAttribute = false;
+		ReSetBit(8);	// _bitset[8]: _SupportDisplayAttribute
 	}
 
 	if (!_InitPreservedKey())
@@ -159,6 +202,9 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	if (!_InitCompartment())
 		goto ExitError;
 
+	_InitGlobalCompartment();
+	_pCompartmentConversion = std::make_unique<CCompartment>(pThreadMgr, tfClientId, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
+
 	_EnsureServerConnected();
 
 	return S_OK;
@@ -166,16 +212,6 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 ExitError:
 	Deactivate();
 	return E_FAIL;
-}
-
-STDMETHODIMP WeaselTSF::OnSetThreadFocus()
-{
-	return S_OK;
-}
-STDMETHODIMP WeaselTSF::OnKillThreadFocus()
-{
-	_AbortComposition();
-	return S_OK;
 }
 
 STDMETHODIMP WeaselTSF::OnActivated(REFCLSID clsid, REFGUID guidProfile, BOOL isActivated)
@@ -205,7 +241,22 @@ void WeaselTSF::_EnsureServerConnected()
 		weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
 		bool ok = m_client.GetResponseData(std::ref(parser));
 		if (ok) {
-			_UpdateLanguageBar(_status);
+			_UpdateLanguageBar(_status);			
+		}
+		if (!m_client.Echo())
+		{
+			VARIANT var{};
+			if (SUCCEEDED(_GetGlobalCompartmentDaemon()->GetValue(&var)))
+			{
+				if (var.vt == VT_I4)
+				{
+					SetBit(0, var.bVal);	// _bitset[0]: _daemon_enable
+				}
+			}
+			if (GetBit(0))					// _bitset[0]: _daemon_enable
+			{
+				execute(std::format(LR"({}\WeaselServer.exe)", WeaselRootPath()), nullptr);
+			}
 		}
 	}
 }

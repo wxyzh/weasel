@@ -1,23 +1,20 @@
-﻿#include "stdafx.h"
-#include "WeaselDeployer.h"
-#include "Configurator.h"
-#include "SwitcherSettingsDialog.h"
-#include "UIStyleSettings.h"
-#include "UIStyleSettingsDialog.h"
-#include "DictManagementDialog.h"
-#include <WeaselCommon.h>
-#include <WeaselIPC.h>
-#include <WeaselUtility.h>
+﻿module;
+#include "stdafx.h"
 #include <WeaselVersion.h>
+#include "WeaselDeployer.h"
+#include "resource.h"
 #pragma warning(disable: 4005)
 #include <rime_api.h>
 #include <rime_levers_api.h>
 #pragma warning(default: 4005)
-#include <fstream>
-
-Configurator::Configurator()
-{
-}
+module Config;
+import SwitcherSettingsDialog;
+import UIStyleSettings;
+import UIStyleSettingsDialog;
+import DictManagementDialog;
+import WeaselCommon;
+import WeaselIPC;
+import WeaselUtility;
 
 void Configurator::Initialize()
 {
@@ -28,7 +25,7 @@ void Configurator::Initialize()
 	const int len = 20;
 	char utf8_str[len];
 	memset(utf8_str, 0, sizeof(utf8_str));
-	WideCharToMultiByte(CP_UTF8, 0, WEASEL_IME_NAME, -1, utf8_str, len - 1, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, WEASEL_IME_NAME.data(), -1, utf8_str, len - 1, NULL, NULL);
 	weasel_traits.distribution_name = utf8_str;
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;

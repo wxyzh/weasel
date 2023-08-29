@@ -1,18 +1,15 @@
-#pragma once
-#include <WeaselIPC.h>
-#include <map>
-#include <Winnt.h> // for security attributes constants
-#include <aclapi.h> // for ACL
-#include <boost/thread.hpp>
-#include <PipeChannel.h>
+#pragma
+import WeaselIPC;
+import PipeChannel;
+import SecurityAttribute;
 
-#include "SecurityAttribute.h"
+#define WEASEL_IPC_WINDOW		L"WeaselIPCWindow_1.0"
+#define WEASEL_IPC_PIPE_NAME	L"WeaselNamedPipe"
 
 namespace weasel
 {
 	class PipeServer;
-
-	typedef CWinTraits<WS_DISABLED, WS_EX_TRANSPARENT> ServerWinTraits;
+	using ServerWinTraits = CWinTraits<WS_DISABLED, WS_EX_TRANSPARENT>;
 
 	class ServerImpl :
 		public CWindowImpl<ServerImpl, CWindow, ServerWinTraits>
@@ -36,7 +33,7 @@ namespace weasel
 		LRESULT OnQueryEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		PARAM OnCommand(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
+		PARAM OnCommand_(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
 		PARAM OnEcho(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
 		PARAM OnStartSession(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
 		PARAM OnEndSession(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
@@ -49,6 +46,7 @@ namespace weasel
 		PARAM OnEndMaintenance(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
 		PARAM OnCommitComposition(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
 		PARAM OnClearComposition(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
+		PARAM OnSelectCandidateOnCurrentPage(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
 
 	public:
 		ServerImpl();
@@ -73,12 +71,10 @@ namespace weasel
 		void HandlePipeMessage(PipeMessage pipe_msg, _Resp resp);
 
 		std::unique_ptr<PipeServer> channel;
-		std::unique_ptr<boost::thread> pipeThread;
+		std::unique_ptr<std::thread> pipeThread;
 		RequestHandler *m_pRequestHandler;  // reference
 		std::map<UINT, CommandHandler> m_MenuHandlers;
 		HMODULE m_hUser32Module;
 		SecurityAttribute sa;
 	};
-
-
 }

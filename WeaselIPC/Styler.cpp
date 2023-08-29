@@ -1,6 +1,6 @@
+module;
 #include "stdafx.h"
-#include "Deserializer.h"
-#include "Styler.h"
+module Styler;
 
 using namespace weasel;
 

@@ -1,6 +1,7 @@
+module;
 #include "stdafx.h"
-
-#include <PipeChannel.h>
+#include <boost/interprocess/streams/bufferstream.hpp>
+module PipeChannel;
 
 using namespace weasel;
 using namespace std;
@@ -10,14 +11,16 @@ using namespace boost;
 #define _ThrowCode(__c) throw __c
 #define _ThrowIfNot(__c) { DWORD err; if ((err = ::GetLastError()) != __c) throw err; }
 
-PipeChannelBase::PipeChannelBase(std::wstring &&pn_cmd, size_t bs = 4 * 1024, SECURITY_ATTRIBUTES *s = NULL)
+PipeChannelBase::PipeChannelBase(std::wstring&& pn_cmd, size_t bs = 4 * 1024, SECURITY_ATTRIBUTES* s = NULL)
 	: pname(pn_cmd),
-	write_stream(nullptr),
-	buff_size(bs),
-	buffer(std::make_unique<char[]>(bs)),
 	hpipe(INVALID_HANDLE_VALUE),
 	has_body(false),
-	sa(s) {};
+	buff_size{ bs },
+	buffer{ std::make_unique<char[]>(bs) },
+	write_stream(nullptr),
+	sa(s)
+{
+}
 
 PipeChannelBase::PipeChannelBase(PipeChannelBase &&r)
 	: write_stream(std::move(r.write_stream)),
@@ -38,7 +41,7 @@ bool PipeChannelBase::_Ensure()
 {
 	try {
 		if (_Invalid(hpipe)) {
-			hpipe = _Connect(pname.c_str());
+			hpipe = _Connect(pname.data());
 			return !_Invalid(hpipe);
 		}
 	}
@@ -69,7 +72,7 @@ void PipeChannelBase::_Reconnect()
 
 HANDLE PipeChannelBase::_TryConnect()
 {
-	auto pipe = ::CreateFile(pname.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	auto pipe = ::CreateFile(pname.data(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (!_Invalid(pipe)) {
 		// connected to the pipe
 		return pipe;
@@ -131,4 +134,3 @@ HANDLE PipeChannelBase::_ConnectServerPipe(std::wstring &pn)
 	}
 	return pipe;
 }
-

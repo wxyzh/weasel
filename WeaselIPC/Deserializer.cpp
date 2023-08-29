@@ -1,10 +1,12 @@
+module;
 #include "stdafx.h"
-#include "Deserializer.h"
-#include "ActionLoader.h"
-#include "Committer.h"
-#include "ContextUpdater.h"
-#include "Configurator.h"
-#include "Styler.h"
+module Deserializer;
+import ActionLoader;
+import Committer;
+import ContextUpdater;
+import Configurator;
+import Styler;
+import ResponseParser;
 
 using namespace weasel;
 

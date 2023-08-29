@@ -1,9 +1,7 @@
+module;
 #include "stdafx.h"
-#include <StringAlgorithm.hpp>
-#include "Deserializer.h"
-#include "ActionLoader.h"
-#include <algorithm>
-
+module ActionLoader;
+import StringAlgorithm;
 using namespace weasel;
 
 

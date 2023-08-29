@@ -1,8 +1,11 @@
-﻿#include "stdafx.h"
-#include "DictManagementDialog.h"
-#include "Configurator.h"
-#include <WeaselUtility.h>
+﻿module;
+#include "stdafx.h"
 #include <rime_api.h>
+#include "WeaselDeployer.h"
+#include "resource.h"
+module DictManagementDialog;
+import Config;
+import WeaselUtility;
 
 DictManagementDialog::DictManagementDialog()
 {
@@ -11,6 +14,7 @@ DictManagementDialog::DictManagementDialog()
 
 DictManagementDialog::~DictManagementDialog()
 {
+	g_hwnd = nullptr;
 }
 
 void DictManagementDialog::Populate() {
@@ -38,6 +42,7 @@ LRESULT DictManagementDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	
 	CenterWindow();
 	BringWindowToTop();
+	g_hwnd = m_hWnd;
 	return TRUE;
 }
 

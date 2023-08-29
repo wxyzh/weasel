@@ -4,9 +4,9 @@
 #include "stdafx.h"
 #include "WeaselSetup.h"
 #include "InstallOptionsDialog.h"
-#include <WeaselIPC.h>
-#include <RimeWithWeasel.h>
 #include <format>
+import  RimeWithWeasel;
+import WeaselIPC;
 
 CAppModule _Module;
 
@@ -43,8 +43,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 }
 
 int install(bool hant, bool silent);
-int uninstall(bool silent);
-bool has_installed();
+int uninstall(bool silent, bool ime = false);
+bool has_installed(bool& ime);
 
 static int CustomInstall(bool installing)
 {
@@ -81,7 +81,7 @@ static int CustomInstall(bool installing)
 	if (!silent)
 	{
 		InstallOptionsDialog dlg;
-		dlg.installed = installed = has_installed();
+		dlg.installed = installed = has_installed(dlg.ime);
 		dlg.hant = hant;
 		dlg.user_dir = user_dir;
 		if (IDOK != dlg.DoModal())
@@ -136,8 +136,12 @@ static int Run(LPTSTR lpCmdLine)
 {
 	const bool silent = true;
 	bool uninstalling = !wcscmp(L"/u", lpCmdLine);
+	bool ime;
 	if (uninstalling)
-		return uninstall(silent);
+	{
+		has_installed(ime);
+		return uninstall(silent, ime);
+	}		
 	bool hans = !wcscmp(L"/s", lpCmdLine);
 	if (hans)
 		return install(false, silent);

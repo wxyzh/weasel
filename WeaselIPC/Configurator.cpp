@@ -1,6 +1,8 @@
+module;
 #include "stdafx.h"
-#include "Deserializer.h"
-#include "Configurator.h"
+module Configurator;
+import Deserializer;
+import Configurator;
 
 using namespace weasel;
 

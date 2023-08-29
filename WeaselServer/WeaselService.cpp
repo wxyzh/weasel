@@ -1,16 +1,17 @@
+module;
 #include "stdafx.h"
-#include "WeaselService.h"
-#include "WeaselServerApp.h"
-#include <boost/thread.hpp>
+module WeaselService;
+import <thread>;
+import WeaselServerApp;
 
-WeaselService *WeaselService::_service = NULL;
+WeaselService *WeaselService::_service = nullptr;
 
 WeaselService::WeaselService(
 	BOOL fCanStop = TRUE,
 	BOOL fCanShutdown = TRUE,
 	BOOL fCanPauseContinue = FALSE)
 {
-	_statusHandle = NULL;
+	_statusHandle = nullptr;
 
 	// The service runs in its own process.
 	_status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
@@ -57,7 +58,7 @@ BOOL WeaselService::Run(WeaselService &serv)
 	_service = &serv;
 	SERVICE_TABLE_ENTRY serviceTable[] =
 	{
-		{ const_cast<TCHAR*>(WEASEL_SERVICE_NAME), ServiceMain },
+		{ const_cast<TCHAR*>(WEASEL_SERVICE_NAME.data()), ServiceMain},
 		{ NULL, NULL }
 	};
 
@@ -80,9 +81,10 @@ void WeaselService::Start(DWORD dwArgc = 0, PWSTR * pszArgv = NULL)
 		{
 			RegisterApplicationRestart(NULL, 0);
 		}
-		boost::thread{ [this] {
+		std::thread t{ [this] {
 			app.Run();
 		} };
+		t.detach();
 		// Tell SCM that the service is started.
 		SetServiceStatus(SERVICE_RUNNING);
 
@@ -132,7 +134,7 @@ void WeaselService::Stop()
 void WeaselService::ServiceMain(DWORD dwArgc, PWSTR *pszArgv)
 {
 	_service->_statusHandle = RegisterServiceCtrlHandler(
-		WEASEL_SERVICE_NAME, ServiceCtrlHandler);
+		WEASEL_SERVICE_NAME.data(), ServiceCtrlHandler);
 	if (_service->_statusHandle == NULL)
 	{
 		throw GetLastError();

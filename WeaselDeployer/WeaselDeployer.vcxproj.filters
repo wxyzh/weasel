@@ -13,6 +13,10 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Module Files">
+      <UniqueIdentifier>{0297693b-e27b-4810-b0df-6babe842501f}</UniqueIdentifier>
+      <Extensions>ixx</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -25,21 +29,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WeaselDeployer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Configurator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SwitcherSettingsDialog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UIStyleSettingsDialog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UIStyleSettings.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DictManagementDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -67,6 +56,27 @@
     </ClCompile>
     <ClCompile Include="..\RimeWithWeasel\WeaselUtility.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfiguratorDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Configurator.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfiguratorDialog.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DictManagementDialog.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SwitcherSettingsDialog.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UIStyleSettings.ixx">
+      <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UIStyleSettingsDialog.ixx">
+      <Filter>Module Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

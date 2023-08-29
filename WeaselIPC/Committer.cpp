@@ -1,6 +1,8 @@
+module;
 #include "stdafx.h"
-#include "Deserializer.h"
-#include "Committer.h"
+module Committer;
+import Deserializer;
+import Committer;
 
 using namespace weasel;
 

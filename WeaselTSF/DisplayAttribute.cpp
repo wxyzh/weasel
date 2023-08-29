@@ -1,6 +1,7 @@
+module;
 #include "stdafx.h"
-
-#include "WeaselTSF.h"
+#include "Globals.h"
+module WeaselTSF;
 
 void WeaselTSF::_ClearCompositionDisplayAttributes(TfEditCookie ec, _In_ ITfContext* pContext)
 {

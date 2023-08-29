@@ -1,7 +1,9 @@
+module;
 #include "stdafx.h"
-#include <string>
+module WeaselUtility;
 
-std::wstring WeaselUserDataPath() {
+std::wstring WeaselUserDataPath() 
+{
 	WCHAR path[MAX_PATH] = {0};
 	const WCHAR KEY[] = L"Software\\Rime\\Weasel";
 	HKEY hKey;
@@ -23,7 +25,8 @@ std::wstring WeaselUserDataPath() {
 	return path;
 }
 
-const char* weasel_shared_data_dir() {
+const char* weasel_shared_data_dir()
+{
 	static char path[MAX_PATH] = {0};
 	GetModuleFileNameA(NULL, path, _countof(path));
 	std::string str_path(path);
@@ -32,7 +35,8 @@ const char* weasel_shared_data_dir() {
 	return path;
 }
 
-const char* weasel_user_data_dir() {
+const char* weasel_user_data_dir()
+{
 	static char path[MAX_PATH] = {0};
 	// Windows wants multi-byte file paths in native encoding
 	WideCharToMultiByte(CP_ACP, 0, WeaselUserDataPath().c_str(), -1, path, _countof(path) - 1, NULL, NULL);

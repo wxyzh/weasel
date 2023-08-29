@@ -8,7 +8,7 @@
 Unicode true
 
 !ifndef WEASEL_VERSION
-!define WEASEL_VERSION 0.15.0
+!define WEASEL_VERSION 0.15.1
 !endif
 
 !ifndef WEASEL_BUILD
@@ -129,7 +129,7 @@ Function .onInit
   StrCpy $0 "Upgrade"
   IfSilent uninst 0
   MessageBox MB_OKCANCEL|MB_ICONINFORMATION \
-  "安装前，我打盘先卸载旧版本的小狼毫。$\n$\n按下「确定」移除旧版本，按下「取消」放弃本次安装。" \
+  "安装前，我打算先卸载旧版本的小狼毫。$\n$\n按下「确定」移除旧版本，按下「取消」放弃本次安装。" \
   IDOK uninst
   Abort
 

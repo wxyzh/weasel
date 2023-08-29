@@ -1,9 +1,8 @@
 #include "stdafx.h"
-
 #include "Globals.h"
-#include "Register.h"
-#include "WeaselTSF.h"
 #include <VersionHelpers.hpp>
+import Register;
+import WeaselTSF;
 
 void DllAddRef()
 {

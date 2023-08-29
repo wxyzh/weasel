@@ -2,7 +2,7 @@
 #pragma once
 
 #include "stdafx.h"
-#include <WeaselCommon.h>
+import WeaselCommon;
 
 #ifdef WEASEL_HANT
 #define TEXTSERVICE_LANGID	MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL)
@@ -49,4 +49,5 @@ extern const GUID GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT;
 
 extern const GUID GUID_LBI_INPUTMODE;
 extern const GUID GUID_IME_MODE_PRESERVED_KEY;
-
+extern const GUID WEASEL_COMPARTMENT_PUNCTUATION;
+extern const GUID WEASEL_COMPARTMENT_GLOAL_DEAMON;
