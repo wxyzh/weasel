@@ -70,7 +70,7 @@ export
 
 			pRangeComposition->Collapse(ec, TF_ANCHOR_START);
 			/* set selection */
-			TF_SELECTION tfSelection;			
+			TF_SELECTION tfSelection;
 			tfSelection.range = pRangeComposition;
 			tfSelection.style.ase = TF_AE_NONE;
 			tfSelection.style.fInterimChar = FALSE;
@@ -142,25 +142,26 @@ export
 		com_ptr<ITfRange> pRangeComposition;
 		RECT rc;
 		BOOL fClipped;
+		HRESULT hr;
 
-		if (_pComposition != nullptr && _pComposition->GetRange(&pRangeComposition) == S_OK)
+		if (_pComposition != nullptr && SUCCEEDED(_pComposition->GetRange(&pRangeComposition)))
 		{
-			pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+		
 		}
 		else
 		{
 			// composition end
 			// note: selection.range is always an empty range
-			_pContext->GetEnd(ec, &pRangeComposition);
+			hr = _pContext->GetEnd(ec, &pRangeComposition);
 		}
 
-		auto hr = _pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped);
+		hr = _pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped);
 #ifdef TEST
 #ifdef _M_X64
-		LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}", rc.left, rc.top, (unsigned)hr);
+		LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {}", rc.left, rc.top, (unsigned)hr, fClipped);
 #endif // _M_X64
 #endif // TEST
-	
+
 		if (SUCCEEDED(hr) && (rc.left != 0 || rc.top != 0))
 		{
 			if (_pTextService->GetBit(5))				// _bitset[5]: _InlinePreedit
@@ -226,7 +227,7 @@ export
 		{
 			_pTextService->_AbortComposition();
 			return hr;
-		}		
+		}
 
 		/* TODO: Check the availability and correctness of these values */
 		int sel_cursor{};

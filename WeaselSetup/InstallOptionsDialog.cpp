@@ -1,5 +1,12 @@
 #include "stdafx.h"
 #include "InstallOptionsDialog.h"
+#include <dwmapi.h>
+
+#pragma comment(lib, "Dwmapi.lib")
+
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
 
 int uninstall(bool silent, bool ime = false);
 
@@ -13,6 +20,9 @@ InstallOptionsDialog::~InstallOptionsDialog()
 }
 
 LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
+	BOOL value{ TRUE };
+	::DwmSetWindowAttribute(m_hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
+
 	cn_.Attach(GetDlgItem(IDC_RADIO_CN));
 	tw_.Attach(GetDlgItem(IDC_RADIO_TW));
 	remove_.Attach(GetDlgItem(IDC_REMOVE));

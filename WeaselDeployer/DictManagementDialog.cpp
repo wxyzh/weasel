@@ -3,9 +3,16 @@
 #include <rime_api.h>
 #include "WeaselDeployer.h"
 #include "resource.h"
+#include <dwmapi.h>
 module DictManagementDialog;
 import Config;
 import WeaselUtility;
+
+#pragma comment(lib, "Dwmapi.lib")
+
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
 
 DictManagementDialog::DictManagementDialog()
 {
@@ -21,13 +28,15 @@ void DictManagementDialog::Populate() {
 	RimeUserDictIterator iter = {0};
 	api_->user_dict_iterator_init(&iter);
 	while (const char* dict = api_->next_user_dict(&iter)) {
-		user_dict_list_.AddString(utf8towcs(dict));
+		user_dict_list_.AddString(to_wstring(dict, CP_UTF8).data());
 	}
 	api_->user_dict_iterator_destroy(&iter);
 	user_dict_list_.SetCurSel(-1);
 }
 
 LRESULT DictManagementDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
+	BOOL value{ TRUE };
+	::DwmSetWindowAttribute(m_hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
 	user_dict_list_.Attach(GetDlgItem(IDC_USER_DICT_LIST));
 	backup_.Attach(GetDlgItem(IDC_BACKUP));
 	backup_.EnableWindow(FALSE);
@@ -74,7 +83,7 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 	WCHAR dict_name[100] = {0};
 	user_dict_list_.GetText(sel, dict_name);
 	path += std::wstring(L"\\") + dict_name + L".userdb.txt";
-	if (!api_->backup_user_dict(wcstoutf8(dict_name))) {
+	if (!api_->backup_user_dict(to_string(dict_name, CP_UTF8).data())) {
 		MessageBox(L"不知哪里出错了，未能完成导出操作。", L":-(", MB_OK | MB_ICONERROR);
 		return 0;
 	}
@@ -117,7 +126,7 @@ LRESULT DictManagementDialog::OnExport(WORD, WORD code, HWND, BOOL&) {
 	if (IDOK == dlg.DoModal()) {
 		char path[MAX_PATH] = {0};
 		WideCharToMultiByte(CP_ACP, 0, dlg.m_szFileName, -1, path, _countof(path), NULL, NULL);
-		int result = api_->export_user_dict(wcstoutf8(dict_name), path);
+		int result = api_->export_user_dict(to_string(dict_name, CP_UTF8).data(), path);
 		if (result < 0) {
 			MessageBox(L"不知哪里出错了，未能完成操作。", L":-(", MB_OK | MB_ICONERROR);
 		}
@@ -148,7 +157,7 @@ LRESULT DictManagementDialog::OnImport(WORD, WORD code, HWND, BOOL&) {
 	if (IDOK == dlg.DoModal()) {
 		char path[MAX_PATH] = {0};
 		WideCharToMultiByte(CP_ACP, 0, dlg.m_szFileName, -1, path, _countof(path), NULL, NULL);
-		int result = api_->import_user_dict(wcstoutf8(dict_name), path);
+		int result = api_->import_user_dict(to_string(dict_name, CP_UTF8).data(), path);
 		if (result < 0) {
 			MessageBox(L"不知哪里出错了，未能完成操作。", L":-(", MB_OK | MB_ICONERROR);
 		}

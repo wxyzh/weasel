@@ -2,11 +2,17 @@ module;
 #include "stdafx.h"
 #include "resource.h"
 #include "WeaselDeployer.h"
+#include <dwmapi.h>
 module UIStyleSettingsDialog;
 import UIStyleSettings;
 import Config;
 import WeaselUtility;
 
+#pragma comment(lib, "Dwmapi.lib")
+
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
 
 UIStyleSettingsDialog::UIStyleSettingsDialog(UIStyleSettings* settings)
 	: settings_(settings), loaded_(false)
@@ -27,7 +33,7 @@ void UIStyleSettingsDialog::Populate() {
 	int active_index = -1;
 	settings_->GetPresetColorSchemes(&preset_);
 	for (size_t i = 0; i < preset_.size(); ++i) {
-		color_schemes_.AddString(utf8towcs(preset_[i].name.c_str()));
+		color_schemes_.AddString(to_wstring(preset_[i].name, CP_UTF8).data());
 		if (preset_[i].color_scheme_id == active) {
 			active_index = i;
 		}
@@ -40,6 +46,8 @@ void UIStyleSettingsDialog::Populate() {
 }
 
 LRESULT UIStyleSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
+	BOOL value{ TRUE };
+	::DwmSetWindowAttribute(m_hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
 	color_schemes_.Attach(GetDlgItem(IDC_COLOR_SCHEME));
 	preview_.Attach(GetDlgItem(IDC_PREVIEW));
 	select_font_.Attach(GetDlgItem(IDC_SELECT_FONT));

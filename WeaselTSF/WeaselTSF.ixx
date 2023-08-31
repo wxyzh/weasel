@@ -241,7 +241,7 @@ export
 		// _bitset[6]:  _BeginComposition
 		// _bitset[7]:  _FocusChanged
 		// _bitset[8]:  _SupportDisplayAttribute
-		// _bitset[9]:
+		// _bitset[9]:  _CUASWorkaroundMode
 		// _bitset[10]: 
 		// _bitset[11]:
 		// _bitset[12]: 

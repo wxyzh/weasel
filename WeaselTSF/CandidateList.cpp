@@ -231,7 +231,6 @@ void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 {
 #ifdef TEST
 #ifdef _M_X64
-	LOG(INFO) << std::format("From CCandidateList::UpdateUI. ctx.empty() = {}, ctx.cinfo.empty() = {}", ctx.empty(), ctx.cinfo.empty());
 	if (!ctx.cinfo.candies.empty())
 		LOG(INFO) << std::format("From CCandidateList::UpdateUI. _pbShow = {}, status.composing = {}, cand = {}", _pbShow, status.composing, to_string(ctx.cinfo.candies[0].str, CP_UTF8));
 #endif // _M_X64

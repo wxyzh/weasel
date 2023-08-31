@@ -178,7 +178,6 @@ void WeaselPanel::Refresh(bool from_server)
 		LOG(INFO) << std::format("From WeaselPanel::Refresh. RedrawWindow.");
 #endif // DEBUG
 #endif // TEST
-		RedrawWindow();
 		if (m_ctx != m_octx)
 		{
 			m_octx = m_ctx;
@@ -802,7 +801,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	ModifyStyleEx(WS_EX_TRANSPARENT, WS_EX_LAYERED);
 #ifdef TEST
 #ifdef _M_X64
-	LOG(INFO) << std::format("From WeaselPanel::DoPaint. m_inputPos.left = {}, m_inputPos.top = {}, hide_candidates = {}, m_ctx.empty() = {}, m_status.composing = {}", m_inputPos.left, m_inputPos.top, hide_candidates, m_ctx.empty(), m_status.composing);
+	LOG(INFO) << std::format("From WeaselPanel::DoPaint. m_inputPos.left = {}, m_inputPos.top = {}, hide_candidates = {}, m_ctx.empty() = {}, m_status.composing = {}, inline_preedit = {}", m_inputPos.left, m_inputPos.top, hide_candidates, m_ctx.empty(), m_status.composing, m_style.inline_preedit);
 #endif // _M_X64
 #endif // TEST
 
@@ -979,7 +978,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 #endif // TEST
 	if (!m_layout)	return;			// avoid handling nullptr in _RepositionWindow
 
-
+	
 	if (rc.left != m_inputPos.left || rc.top != m_inputPos.top)
 	{
 #ifdef TEST
@@ -1013,7 +1012,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 			_RepositionWindow(true);
 			RedrawWindow();
 		}
-		else if ((!m_ctx.aux.empty() || (m_ctx.aux.empty() && m_layout->ShouldDisplayStatusIcon())) && m_oinputPos.left != 0)
+		else if ((!m_ctx.aux.empty() || (m_ctx.aux.empty() && m_layout->ShouldDisplayStatusIcon())) && m_inputPos.left != 0)
 		{
 #ifdef TEST
 #ifdef _M_X64

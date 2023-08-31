@@ -53,8 +53,15 @@ void WeaselTSF::_EndComposition(ITfContext* pContext, BOOL clear)
 BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 {
 	com_ptr<ITfContextView> pContextView;
+	HRESULT hr;
 
-	if (FAILED(pContext->GetActiveView(&pContextView)))
+	hr = pContext->GetActiveView(&pContextView);
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From _UpdateCompositionWindow. hr = {:#x}", (unsigned)hr);
+#endif // _M_X64
+#endif // TEST
+	if (FAILED(hr))
 		return FALSE;
 	com_ptr<CGetTextExtentEditSession> pEditSession;
 	pEditSession.Attach(new CGetTextExtentEditSession(this, pContext, pContextView, _pComposition));
@@ -62,7 +69,7 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 	{
 		return FALSE;
 	}
-	HRESULT hr;
+	
 	auto ret = pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READ, &hr);
 #ifdef TEST
 #ifdef _M_X64
@@ -75,27 +82,30 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 void WeaselTSF::_SetCompositionPosition(const RECT& rc)
 {
 	/* Test if rect is valid.
-	 * If it is invalid during CUAS test, we need to apply CUAS workaround */
+	 * If it is invalid during CUAS test, we need to apply CUAS workaround */	
 	if (!_fCUASWorkaroundTested)
 	{
+		RECT rect{};
+		::SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
 		_fCUASWorkaroundTested = true;
-		if (rc.top == rc.bottom)
+		if ((abs(rc.left - rect.left) < 2 && abs(rc.top - rect.top) < 2)
+			|| (abs(rc.left - rect.right) < 5 && abs(rc.top - rect.bottom) < 5))
 		{
 			_fCUASWorkaroundEnabled = true;
 #ifdef TEST
 #ifdef _M_X64
-			LOG(INFO) << std::format("From _SetCompositionPosition. _fCUASWorkaroundEnabled = {}", _fCUASWorkaroundEnabled);
+			LOG(INFO) << std::format("From _SetCompositionPosition. _fCUASWorkaroundEnabled = {}, CUASWorkaroundMode = {}", _fCUASWorkaroundEnabled, GetBit(9));
 #endif // _M_X64
 #endif // TEST
-			return;
 		}
 	}
-	RECT _rc{ rc };
+
 #ifdef TEST
 #ifdef _M_X64
 	LOG(INFO) << std::format("From _SetCompositionPosition. left = {}, top = {}, right = {}, bottom = {}", rc.left, rc.top, rc.right, rc.bottom);
 #endif // _M_X64
-#endif // TEST	
+#endif // TEST
+
 	m_client.UpdateInputPosition(rc);
 	_cand->UpdateInputPosition(rc);
 }

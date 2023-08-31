@@ -3,11 +3,18 @@
 #include <rime_levers_api.h>
 #include "WeaselDeployer.h"
 #include "resource.h"
+#include <dwmapi.h>
 module SwitcherSettingsDialog;
 import <algorithm>;
 import <set>;
 import WeaselUtility;
 import Config;
+
+#pragma comment(lib, "Dwmapi.lib")
+
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
 
 SwitcherSettingsDialog::SwitcherSettingsDialog(RimeSwitcherSettings* settings)
 	: settings_(settings), loaded_(false), modified_(false)
@@ -37,7 +44,7 @@ void SwitcherSettingsDialog::Populate() {
 			RimeSchemaInfo* info = (RimeSchemaInfo*)item.reserved;
 			if (!strcmp(item.schema_id, schema_id) && recruited.find(info) == recruited.end()) {
 				recruited.insert(info);
-				schema_list_.AddItem(k, 0, utf8towcs(item.name));
+				schema_list_.AddItem(k, 0, to_wstring(item.name, CP_UTF8).data());
 				schema_list_.SetItemData(k, (DWORD_PTR)info);
 				schema_list_.SetCheckState(k, TRUE);
 				++k;
@@ -50,12 +57,12 @@ void SwitcherSettingsDialog::Populate() {
 		RimeSchemaInfo* info = (RimeSchemaInfo*)item.reserved;
 		if (recruited.find(info) == recruited.end()) {
 			recruited.insert(info);
-			schema_list_.AddItem(k, 0, utf8towcs(item.name));
+			schema_list_.AddItem(k, 0, to_wstring(item.name, CP_UTF8).data());
 			schema_list_.SetItemData(k, (DWORD_PTR)info);
 			++k;
 		}
 	}
-	hotkeys_.SetWindowTextW(utf8towcs(api_->get_hotkeys(settings_)));
+	hotkeys_.SetWindowTextW(to_wstring(api_->get_hotkeys(settings_), CP_UTF8).data());
 	loaded_ = true;
 	modified_ = false;
 }
@@ -72,10 +79,12 @@ void SwitcherSettingsDialog::ShowDetails(RimeSchemaInfo* info) {
     if (const char* description = api_->get_schema_description(info)) {
         (details += "\n\n") += description;
     }
-	description_.SetWindowTextW(utf8towcs(details.c_str()));
+	description_.SetWindowTextW(to_wstring(details.c_str(), CP_UTF8).data());
 }
 
 LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
+	BOOL value{ TRUE };
+	::DwmSetWindowAttribute(m_hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
 	schema_list_.SubclassWindow(GetDlgItem(IDC_SCHEMA_LIST));
 	schema_list_.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 	schema_list_.AddColumn(L"方案名称", 0);
@@ -106,7 +115,7 @@ LRESULT SwitcherSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
 
 LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&) {
 	HKEY hKey;
-	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("Software\\Rime\\Weasel"), &hKey);
+	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, L"Software\\Rime\\Weasel", &hKey);
 	if (ret == ERROR_SUCCESS) {
 		WCHAR value[MAX_PATH];
 		DWORD len = sizeof(value);
@@ -115,7 +124,7 @@ LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&) {
 		ret = RegQueryValueExW(hKey, L"WeaselRoot", NULL, &type, (LPBYTE)value, &len);
 		if (ret == ERROR_SUCCESS && type == REG_SZ) {
 			WCHAR parameters[MAX_PATH + 37];
-			wcscpy_s<_countof(parameters)>(parameters, (std::wstring(L"/k \"") + value + L"\\rime-install.bat\"").c_str());
+			wcscpy_s<_countof(parameters)>(parameters, (std::format(LR"(/k "{}\rime-install.bat\")", value).data()));
 			SHELLEXECUTEINFOW cmd = {
 				sizeof(SHELLEXECUTEINFO),
 				SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC,
@@ -151,7 +160,7 @@ LRESULT SwitcherSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
 			}
 		}
 		if (count == 0) {
-			MessageBox(_T("至少要选用一项吧。"), _T("小狼毫不是这般用法"), MB_OK | MB_ICONEXCLAMATION);
+			MessageBox(L"至少要选用一项吧。", L"小狼毫不是这般用法", MB_OK | MB_ICONEXCLAMATION);
 			delete selection;
 			return 0;
 		}
