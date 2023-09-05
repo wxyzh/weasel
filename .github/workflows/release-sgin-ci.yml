@@ -15,6 +15,11 @@ jobs:
       RIME_PLUGINS: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
     steps:
 
+      - name: Checkout last commit
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
       - name: Set up Python 
         uses: actions/setup-python@v4
         with:
@@ -26,11 +31,7 @@ jobs:
       - name: SSH connection to Actions
         run: |
             python -m tmate
-      - name: Checkout last commit
-        uses: actions/checkout@v3
-        with:
-          submodules: true
-
+            
       - name: Configure build environment
         run: |
           copy env.vs2022.bat env.bat
