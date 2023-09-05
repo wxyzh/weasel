@@ -60,7 +60,7 @@ jobs:
       - name: Copy Rime files
       #  run: .\github.install.bat
         run: |
-          $msvc = Get-ChildItem -Filter "msvc-Win32.7z" -Path .\artifact\
+          $msvc = Get-ChildItem -Filter "*msvc-Win32.7z" -Path .\artifact\
           $msvc | foreach {7z x $_.FullName -olibrime -y}
           # 复制 rime 头文件到 include 文件夹
           Copy-Item -Path "librime\dist\include\rime_*.h" -Destination "include\" -Force
