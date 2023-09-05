@@ -71,12 +71,9 @@ jobs:
           if (!(Test-Path -Path "output\data\opencc" -PathType Container)) {
           New-Item -Path "output\data\opencc" -ItemType Directory
           }
+          # 复制 opencc 文件到 output\data\opencc 文件夹
+          Copy-Item -Path "librime\share\opencc\*.*" -Destination "output\data\opencc\" -Force
 
-# 复制 opencc 文件到 output\data\opencc 文件夹
-Copy-Item -Path "librime\share\opencc\*.*" -Destination "output\data\opencc\" -Force
-         
-
-            
       - name: Build Weasel
         id: build_weasel
         run: |
