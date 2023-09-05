@@ -4,7 +4,12 @@ on:
   workflow_dispatch:
 
 jobs:
-
+  librime:
+    uses: wxyzh/librime/.github/workflows/windows-build.yml@x64
+    with:
+      repository: wxyzh/librime
+      rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
+      
   build-and-release:
     permissions:
       contents: write
@@ -20,7 +25,9 @@ jobs:
         with:
           submodules: true
 
-
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        
       - name: Configure build environment
         run: |
           copy env.vs2022.bat env.bat
@@ -50,16 +57,12 @@ jobs:
 
       #- name: Copy Rime files
       #  run: .\github.install.bat
-      - name: Build librime
-        uses: wxyzh/librime/.github/workflows/windows-build.yml@x64
-        with:
-         repository: wxyzh/librime
-         rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
                
       - name: Set up Python 
         uses: actions/setup-python@v4
         with:
           python-version: "pypy3.9"
+          
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -68,7 +71,6 @@ jobs:
         run: |
             python -m tmate
             
-
       - name: Build Weasel
         id: build_weasel
         run: |
