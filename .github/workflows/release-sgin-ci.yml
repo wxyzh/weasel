@@ -57,29 +57,32 @@ jobs:
 #          python-version: '3.11'
           
 
-      #- name: Copy Rime files
+      - name: Copy Rime files
       #  run: .\github.install.bat
-               
-      - name: Set up Python 
-        uses: actions/setup-python@v4
-        with:
-          python-version: "pypy3.9"
-          
-      - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -U tmate
-      - name: SSH connection to Actions
-        run: |
-            #python -m tmate
-            ls artifact
+          $msvc = Get-ChildItem -Filter "msvc-Win32.7z" -Path .\artifact\
+          $msvc | foreach {7z x $_.FullName -olibrime -y}
+          # 复制 rime 头文件到 include 文件夹
+          Copy-Item -Path "librime\dist\include\rime_*.h" -Destination "include\" -Force
+          # 复制 rime.lib 和 rime.dll 到 lib 文件夹
+          Copy-Item -Path "librime\dist\lib\rime.lib" -Destination "lib\" -Force
+          Copy-Item -Path "librime\dist\lib\rime.dll" -Destination "output\" -Force
+          # 创建 output\data\opencc 文件夹（如果不存在）
+          if (!(Test-Path -Path "output\data\opencc" -PathType Container)) {
+          New-Item -Path "output\data\opencc" -ItemType Directory
+          }
+
+# 复制 opencc 文件到 output\data\opencc 文件夹
+Copy-Item -Path "librime\share\opencc\*.*" -Destination "output\data\opencc\" -Force
+         
+
             
       - name: Build Weasel
         id: build_weasel
         run: |
           .\build.bat data
           .\build.bat hant
-          #.\build.bat installer
+          .\build.bat installer
           
       - name: Sgin Bin
         shell: pwsh
