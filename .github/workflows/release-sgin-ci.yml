@@ -14,6 +14,7 @@ jobs:
     permissions:
       contents: write
     runs-on: windows-2022
+    needs: librime
     env:
       boost_version: 1.78.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
