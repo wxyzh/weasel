@@ -7,12 +7,15 @@ export
 	class Configurator
 	{
 	public:
-		explicit Configurator() {};
+		explicit Configurator();
 
 		void Initialize();
 		int Run(bool installing);
 		int UpdateWorkspace(bool report_errors = false);
 		int DictManagement();
 		int SyncUserData();
+
+	private:
+		void create_miss_file();
 	};
 }

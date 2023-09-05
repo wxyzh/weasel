@@ -1,5 +1,12 @@
 module;
 #include "stdafx.h"
+#include "test.h"
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#endif // TEST
 module WeaselTSF;
 import CandidateList;
 import ResponseParser;
@@ -15,35 +22,53 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	weasel::ResponseParser parser(&commit, context.get(), &_status, &config, &_cand->style());
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
-	_UpdateLanguageBar(_status);
+	auto state = _UpdateLanguageBar(_status);
+
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, simplication = {}", state, _status.simplication);
+#endif // _M_X64
+#endif // TEST
 
 	if (ok)
 	{
-		if (!commit.empty())
+		if (state || GetBit(12))		// _bitset[12]: _simplication_state
 		{
-			// For auto-selecting, commit and preedit can both exist.
-			// Commit and close the original composition first.
-			if (!_IsComposing()) {
+			if (!_IsComposing()) 
+			{
 				_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
 			}
-			_InsertText(_pEditSessionContext, commit);
-			_EndComposition(_pEditSessionContext, false);
-		}
-		if (_status.composing && !_IsComposing())
-		{
-			_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
-		}
-		else if (!_status.composing && _IsComposing())
-		{
+			_UpdateCompositionWindow(_pEditSessionContext);
 			_EndComposition(_pEditSessionContext, true);
-		}		
-		if (_IsComposing() && config.inline_preedit)
-		{
-			_ShowInlinePreedit(_pEditSessionContext, context);
-			SetBit(5);					// _bitset[5]: _InlinePreedit
+			ReSetBit(12);				// _bitset[12]: _simplication_state
 		}
-		_UpdateCompositionWindow(_pEditSessionContext);
-		SetBit(2, _status.full_shape);	// _bitset[2]:  _full_shape
+		else
+		{
+			if (!commit.empty())
+			{
+				// For auto-selecting, commit and preedit can both exist.
+				// Commit and close the original composition first.
+				if (!_IsComposing()) {
+					_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
+				}
+				_InsertText(_pEditSessionContext, commit);
+				_EndComposition(_pEditSessionContext, false);
+			}
+			if (_status.composing && !_IsComposing())
+			{
+				_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
+			}
+			else if (!_status.composing && _IsComposing())
+			{
+				_EndComposition(_pEditSessionContext, true);
+			}
+			if (_IsComposing() && config.inline_preedit)
+			{
+				_ShowInlinePreedit(_pEditSessionContext, context);
+				SetBit(5);					// _bitset[5]: _InlinePreedit
+			}
+			_UpdateCompositionWindow(_pEditSessionContext);
+		}
 	}
 	_UpdateUI(*context, _status);
 

@@ -28,6 +28,7 @@ export
 
 		void Populate();
 		void Preview(int index);
+		void CloseDialog(int nVal);
 
 		UIStyleSettings* settings_;
 		bool loaded_;

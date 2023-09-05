@@ -28,6 +28,17 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 	else
 	{
 		*pfEaten = (BOOL)m_client.ProcessKeyEvent(ke);
+		switch ((unsigned)ke)
+		{
+		case 0x4005'0024:
+			SetBit(12);			// _bitset[12]: _simplication_state
+			break;
+		}
+#ifdef TEST
+#ifdef _M_X64
+		LOG(INFO) << std::format("From WeaselTSF::_ProcessKeyEvent. ke = 0x{:X}", (unsigned)ke);
+#endif // _M_X64
+#endif // TEST
 	}
 }
 
@@ -66,7 +77,8 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 	LOG(INFO) << std::format("From OnTestKeyDown. wParam = {:#x}, lParam = {:#x}, pContext = {:#x}", wParam, lParam, (size_t)pContext);
 #endif // _M_X64
 #endif // TEST
-	_fTestKeyUpPending = false;	
+	_fTestKeyUpPending = false;
+	ReSetBit(13);		// _bitset[13]: _FistKeyComposition
 	if (_fTestKeyDownPending)
 	{
 		*pfEaten = TRUE;
@@ -140,7 +152,7 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BO
 	{
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
 		_UpdateComposition(pContext);
-	}
+	}	
 	return S_OK;
 }
 

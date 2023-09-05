@@ -1,6 +1,4 @@
 ﻿module;
-#define USE_MOUSE_EVENTS
-//#define USE_MOUSE_HOVER
 //#define USE_SHARP_COLOR_CODE
 //#define _DEBUG_
 export module WeaselCommon;
@@ -205,7 +203,7 @@ export
 		// 由ime管理
 		struct Status
 		{
-			Status() : ascii_mode(false), composing(false), disabled(false), full_shape(false), ascii_punct{} {}
+			Status() : ascii_mode(false), composing(false), disabled(false), full_shape(false), ascii_punct{}, simplication{} {}
 			void reset()
 			{
 				schema_name.clear();
@@ -215,6 +213,7 @@ export
 				disabled = false;
 				full_shape = false;
 				ascii_punct = false;
+				simplication = false;
 			}
 			// 输入方案
 			std::wstring schema_name{};
@@ -230,6 +229,8 @@ export
 			bool full_shape;
 			// 标点符号
 			bool ascii_punct;
+			// 简体中文
+			bool simplication;
 		};
 
 		// 用于向前端告知设置信息

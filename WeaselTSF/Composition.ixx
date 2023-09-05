@@ -161,6 +161,13 @@ export
 		LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {}", rc.left, rc.top, (unsigned)hr, fClipped);
 #endif // _M_X64
 #endif // TEST
+		if (hr == 0x80040057)
+		{
+			_pTextService->SetBit(9);		// _bitset[9]:  _AutoCAD
+			_pTextService->SetBit(11);		// _bitset[11]: _NonDynamicInput
+			_pTextService->_AbortComposition();
+			return hr;
+		}
 
 		if (SUCCEEDED(hr) && (rc.left != 0 || rc.top != 0))
 		{
@@ -179,7 +186,11 @@ export
 				}
 				else if (5 < abs(rcFirst.top - rc.top))
 				{
-					// nop
+					rcFirst = rc;
+				}
+				else if (rc.left < rcFirst.left)
+				{
+					rcFirst = rc;
 				}
 				else
 				{
@@ -217,15 +228,17 @@ export
 		if ((_pComposition->GetRange(&pRangeComposition)) != S_OK)
 			return E_FAIL;
 
+		HRESULT hr = pRangeComposition->SetText(ec, 0, preedit.c_str(), preedit.length());
 #ifdef TEST
 #ifdef _M_X64
-		LOG(INFO) << std::format("From CInlinePreeditEditSession::DoEditSession. preedit = {}", to_string(preedit));
+		LOG(INFO) << std::format("From CInlinePreeditEditSession::DoEditSession. preedit = {}, hr = 0x{:X}", to_string(preedit), (unsigned)hr);
 #endif // _M_X64
 #endif // TEST
-		HRESULT hr = pRangeComposition->SetText(ec, 0, preedit.c_str(), preedit.length());
 		if (FAILED(hr))
 		{
-			_pTextService->_AbortComposition();
+			_pTextService->SetBit(9);		// _bitset[9]:  _AutoCAD
+			_pTextService->SetBit(11);		// _bitset[11]: _NonDynamicInput
+			_pTextService->_AbortComposition();			
 			return hr;
 		}
 

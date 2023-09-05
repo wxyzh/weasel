@@ -16,34 +16,40 @@ export
 {
 	class ConfiguratorDialog :
 		public CDialogImpl<ConfiguratorDialog>,
-		public CMessageFilter,
-		public CIdleHandler
+		public CUpdateUI<ConfiguratorDialog>,
+		public CDynamicDialogLayout<ConfiguratorDialog>
 	{
 	public:
 		enum { IDD = IDD_CONFIGURATOR };
 
-		virtual BOOL PreTranslateMessage(MSG* pMsg);
 		virtual BOOL OnIdle();
 
-		ConfiguratorDialog(RimeSwitcherSettings& switcher, UIStyleSettings& style);
+		BEGIN_UPDATE_UI_MAP(CMainDlg)
+		END_UPDATE_UI_MAP()
+
+		ConfiguratorDialog(RimeSwitcherSettings* switcher_settings, UIStyleSettings* ui_style_settings);
 
 		BEGIN_MSG_MAP(ConfiguratorDialog)
 			MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 			COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
 			COMMAND_ID_HANDLER(IDOK, OnOK)
+			MESSAGE_HANDLER(WM_SIZE, OnSize)
+			NOTIFY_ID_HANDLER(IDC_TAB, OnSelChange)
 		END_MSG_MAP()
 
 		LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&);
 		LRESULT OnCancel(WORD, WORD wID, HWND, BOOL&);
 		LRESULT OnOK(WORD, WORD, HWND, BOOL&);
+		LRESULT OnSelChange(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
+		LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 		void CloseDialog(int nVal);
 
 	private:
+		bool m_selected{ true };
+		CFont m_font;
 		CTabCtrl m_tab;
-		RimeSwitcherSettings& m_switcher;
-		UIStyleSettings& m_style;
-		SwitcherSettingsDialog m_switcherSettings{ &m_switcher };
-		UIStyleSettingsDialog m_styleSettings{ &m_style };
+		SwitcherSettingsDialog m_switcherSettings;
+		UIStyleSettingsDialog m_styleSettings;
 	};
 }

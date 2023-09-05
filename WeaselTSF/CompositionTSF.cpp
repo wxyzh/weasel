@@ -21,7 +21,8 @@ void WeaselTSF::_StartComposition(ITfContext* pContext, BOOL fCUASWorkaroundEnab
 	{
 		HRESULT hr;
 		auto ret = pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
-		SetBit(6);						// _bitset[6]: _BeginComposition
+		SetBit(6);						// _bitset[6]:	_BeginComposition
+		SetBit(13);						// _bitset[13]: _FistKeyComposition
 #ifdef TEST
 #ifdef _M_X64
 			LOG(INFO) << std::format("From _StartComposition. hr = {:#x}, ret = {:#x}", (unsigned)hr, (unsigned)ret);
@@ -107,7 +108,7 @@ void WeaselTSF::_SetCompositionPosition(const RECT& rc)
 #endif // TEST
 
 	m_client.UpdateInputPosition(rc);
-	_cand->UpdateInputPosition(rc);
+	_cand->UpdateInputPosition(rc);	
 }
 
 BOOL WeaselTSF::_ShowInlinePreedit(ITfContext* pContext, const std::shared_ptr<weasel::Context> context)
@@ -167,6 +168,14 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 	LOG(INFO) << std::format("From OnCompositionTerminated. _AbortComposition. _AutoCADTest = {}", GetBit(9));
 #endif // _M_X64
 #endif // TEST
+	static int count{};
+	++count;
+	SetBit(9);			// _bitset[9]:  _AutoCAD
+	if (count == 2)
+	{
+		count = 0;
+		SetBit(10);		// _bitset[10]: _DynamicInput
+	}
 	_AbortComposition();
 
 	return S_OK;
@@ -174,7 +183,21 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 
 void WeaselTSF::_AbortComposition(bool clear)
 {
-	m_client.ClearComposition();
+	if (GetBit(9))							// _bitset[9]:  _AutoCAD
+	{
+		ReSetBit(9);						// _bitset[9]:  _AutoCAD
+		if (GetBit(10) || GetBit(11))		// _bitset[10]: _DynamicInput, _bitset[11]: _NonDynamicInput
+		{			
+			ReSetBit(10);					// _bitset[10]: _DynamicInput
+			ReSetBit(11);					// _bitset[11]: _NonDynamicInput
+			BOOL eaten;
+			_ProcessKeyEvent(0x8, 0xE001, &eaten);
+		}
+	}
+	else
+	{
+		m_client.ClearComposition();
+	}
 
 	if (_IsComposing()) {
 		_EndComposition(_pEditSessionContext, clear);

@@ -275,7 +275,7 @@ void CCandidateList::Destroy()
 	_DisposeUIWindowAll();
 }
 
-UIStyle & CCandidateList::style()
+UIStyle& CCandidateList::style()
 {
 	//return _ui->style();
 	return _style;
@@ -348,7 +348,7 @@ void CCandidateList::StartUI()
 		return;
 	}
 
-	_ui->SetSelectCallback([this](std::wstring_view str, const size_t index) { _tsf.InsertText(str, index); });
+	_ui->SetSelectCallback([this](int* const sel, int* const hov, bool* const next) { _tsf.HandleUICallback(sel, hov, next); });
 	// ToDo: send select candidate info back to rime
 
 	pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
@@ -384,6 +384,14 @@ void CCandidateList::EndUI()
 com_ptr<ITfContext> CCandidateList::GetContextDocument()
 {
 	return _pContextDocument;
+}
+
+bool CCandidateList::GetIsReposition()
+{
+	if (_ui)
+		return _ui->GetIsReposition();
+
+	return false;
 }
 
 void CCandidateList::_DisposeUIWindow()

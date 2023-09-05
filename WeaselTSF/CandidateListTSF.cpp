@@ -3,6 +3,7 @@ module;
 module WeaselTSF;
 import CandidateList;
 import ResponseParser;
+import KeyEvent;
 
 using namespace weasel;
 
@@ -41,47 +42,77 @@ void WeaselTSF::_DeleteCandidateList()
 	_cand->Destroy();
 }
 
-void WeaselTSF::InsertText(std::wstring_view str, const size_t index)
+void WeaselTSF::_SelectCandidateOnCurrentPage(const int index)
 {
 	m_client.SelectCandidateOnCurrentPage(index);
 	// fake a empty presskey to get data back and DoEditSession
 	m_client.ProcessKeyEvent(0);
-	std::wstring commit;
-	weasel::Config config;
-	auto context = std::make_shared<weasel::Context>();
-	weasel::ResponseParser parser(&commit, context.get(), &_status, &config, &_cand->style());
+	_UpdateComposition(_pEditSessionContext);
+}
 
-	auto ok = m_client.GetResponseData(std::ref(parser));
+void WeaselTSF::_HandleMouseHoverEvent(const int index)
+{
+	// ToDo: if feature new api comes, replae the processes bellow
+	int current_select{};
+	_cand->GetSelection(reinterpret_cast<UINT*>(&current_select));
+	weasel::KeyEvent ke{ 0, 0 };
+	ke.keycode = current_select < index ? ibus::Down : ibus::Up;
 
-	_UpdateLanguageBar(_status);
-
-	if (ok)
+	int inc = index > current_select ? 1 : (index < current_select) ? -1 : 0;
+	if (_cand->GetIsReposition())
 	{
-		if (!commit.empty())
+		inc = -inc;
+	}
+	if (index != current_select)
+	{
+		for (int i{}; i < abs(index - current_select); ++i)
 		{
-			// For auto-selecting, commit and preedit can both exist.
-			// Commit and close the original composition first.
-			if (!_IsComposing()) 
-			{
-				_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
-			}
-			_InsertText(_pEditSessionContext, commit);
-			_EndComposition(_pEditSessionContext, false);
-		}
-		if (_status.composing && !_IsComposing())
-		{
-			_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
-		}
-		else if (!_status.composing && _IsComposing())
-		{
-			_EndComposition(_pEditSessionContext, true);
-		}
-		_UpdateCompositionWindow(_pEditSessionContext);
-		if (_IsComposing() && config.inline_preedit)
-		{
-			_ShowInlinePreedit(_pEditSessionContext, context);
+			_cand->SetSelection(current_select + inc);
+			m_client.ProcessKeyEvent(ke);
+			_UpdateComposition(_pEditSessionContext);
 		}
 	}
+}
 
-	_UpdateUI(*context, _status);
+void WeaselTSF::_HandleMousePageEvent(const bool nextPage)
+{
+	// ToDo: if feature new api comes, replace the processes bellow
+	weasel::KeyEvent ke{ 0, 0 };
+	if (_cand->style().paging_on_scroll)
+	{
+		ke.keycode = nextPage ? ibus::Page_Down : ibus::Page_Up;
+	}
+	else
+	{
+		ke.keycode = nextPage ? ibus::Down : ibus::Up;
+		if (_cand->GetIsReposition())
+		{
+			if (ke.keycode == ibus::Up)
+			{
+				ke.keycode = ibus::Down;
+			}
+			else if (ke.keycode == ibus::Down)
+			{
+				ke.keycode = ibus::Up;
+			}
+		}
+	}
+	m_client.ProcessKeyEvent(ke);
+	_UpdateComposition(_pEditSessionContext);
+}
+
+void WeaselTSF::HandleUICallback(int* const sel, int* const hov, bool* const next)
+{
+	if (sel)
+	{
+		_SelectCandidateOnCurrentPage(*sel);
+	}
+	if (hov)
+	{
+		_HandleMouseHoverEvent(*hov);
+	}
+	if (next)
+	{
+		_HandleMousePageEvent(*next);
+	}
 }

@@ -82,7 +82,7 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 	}
 	WCHAR dict_name[100] = {0};
 	user_dict_list_.GetText(sel, dict_name);
-	path += std::wstring(L"\\") + dict_name + L".userdb.txt";
+	path += std::format(LR"(\{}.userdb.txt)", dict_name);
 	if (!api_->backup_user_dict(to_string(dict_name, CP_UTF8).data())) {
 		MessageBox(L"不知哪里出错了，未能完成导出操作。", L":-(", MB_OK | MB_ICONERROR);
 		return 0;
@@ -91,8 +91,8 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 		MessageBox(L"咦，输出的快照文件找不着了。", L":-(", MB_OK | MB_ICONERROR);
 		return 0;
 	}
-	std::wstring param = L"/select, \"" + path + L"\"";
-	ShellExecute(NULL, L"open", L"explorer.exe", param.c_str(), NULL, SW_SHOWNORMAL);
+	std::wstring param{ std::format(LR"(/select, "{}")", path) };
+	ShellExecute(NULL, L"open", L"explorer.exe", param.data(), NULL, SW_SHOWNORMAL);
 	return 0;
 }
 
@@ -134,10 +134,10 @@ LRESULT DictManagementDialog::OnExport(WORD, WORD code, HWND, BOOL&) {
 			MessageBox(L"咦，导出的文件找不着了。", L":-(", MB_OK | MB_ICONERROR);
 		}
 		else {
-			std::wstring report(L"导出了 " + std::to_wstring(result) + L" 条记录。");
-			MessageBox(report.c_str(), L":-)", MB_OK | MB_ICONINFORMATION);
-			std::wstring param = L"/select, \"" + std::wstring(dlg.m_szFileName) + L"\"";
-			ShellExecute(NULL, L"open", L"explorer.exe", param.c_str(), NULL, SW_SHOWNORMAL);
+			std::wstring report{ std::format(L"导出了{}条记录。", result) };
+			MessageBox(report.data(), L":-)", MB_OK | MB_ICONINFORMATION);
+			std::wstring param{ std::format(LR"(/select, "{}")", dlg.m_szFileName) };
+			ShellExecute(NULL, L"open", L"explorer.exe", param.data(), NULL, SW_SHOWNORMAL);
 		}
 	}
 	return 0;
@@ -162,8 +162,8 @@ LRESULT DictManagementDialog::OnImport(WORD, WORD code, HWND, BOOL&) {
 			MessageBox(L"不知哪里出错了，未能完成操作。", L":-(", MB_OK | MB_ICONERROR);
 		}
 		else {
-			std::wstring report(L"导入了 " + std::to_wstring(result) + L" 条记录。");
-			MessageBox(report.c_str(), L":-)", MB_OK | MB_ICONINFORMATION);
+			std::wstring report{ std::format(L"导入了{}条记录。", result) };
+			MessageBox(report.data(), L":-)", MB_OK | MB_ICONINFORMATION);
 		}
 	}
 	return 0;

@@ -67,6 +67,7 @@ void UIImpl::Show()
 #endif // TEST
 	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_SHOWNA);
+	panel.SetHide(false);
 	shown = true;
 	if (timer)
 	{
@@ -79,6 +80,7 @@ void UIImpl::Hide()
 {
 	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_HIDE);
+	panel.SetHide(true);
 	shown = false;
 	if (timer)
 	{
@@ -221,4 +223,11 @@ void UI::Update(const Context &ctx, const Status &status, bool from_server)
 	ctx_ = ctx;
 	status_ = status;
 	Refresh(from_server);
+}
+
+bool weasel::UI::GetIsReposition()
+{
+	if (pimpl_)
+		return pimpl_->panel.GetIsReposition();
+	return false;
 }

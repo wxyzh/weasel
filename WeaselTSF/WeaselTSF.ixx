@@ -125,7 +125,7 @@ export
 
 		com_ptr<ITfThreadMgr> _GetThreadMgr() { return _pThreadMgr; }
 
-		void InsertText(std::wstring_view str, const size_t index);
+		void HandleUICallback(int* const sel, int* const hov, bool* const next);
 
 		HRESULT _GetCompartmentDWORD(_Out_ DWORD& value, const GUID guid);
 		HRESULT _SetCompartmentDWORD(DWORD value, const GUID guid);
@@ -141,6 +141,10 @@ export
 		com_ptr<ITfCompartment> _GetGlobalCompartmentDaemon() { return _pGlobalCompartmentDaemon; }
 
 	private:
+		// ui callback functions
+		void _SelectCandidateOnCurrentPage(const int index);
+		void _HandleMouseHoverEvent(const int index);
+		void _HandleMousePageEvent(const bool nextPage);
 		/* TSF Related */
 		BOOL _InitThreadMgrEventSink();
 		void _UninitThreadMgrEventSink();
@@ -159,7 +163,7 @@ export
 
 		BOOL _InitLanguageBar();
 		void _UninitLanguageBar();
-		void _UpdateLanguageBar(weasel::Status& stat);
+		bool _UpdateLanguageBar(weasel::Status& stat);
 		void _ShowLanguageBar(BOOL show);
 		void _EnableLanguageBar(BOOL enable);
 
@@ -241,13 +245,15 @@ export
 		// _bitset[6]:  _BeginComposition
 		// _bitset[7]:  _FocusChanged
 		// _bitset[8]:  _SupportDisplayAttribute
-		// _bitset[9]:  _CUASWorkaroundMode
-		// _bitset[10]: 
-		// _bitset[11]:
-		// _bitset[12]: 
-		// _bitset[13]: 
+		// _bitset[9]:  _AutoCAD
+		// _bitset[10]: _DynamicInput
+		// _bitset[11]: _NonDynamicInput
+		// _bitset[12]: _simplication_state
+		// _bitset[13]: _FistKeyComposition
 		// _bitset[14]: 
 		// _bitset[15]:  
 		std::bitset<16> _bitset{};
+
+		std::wstring _schema_id{};
 	};
 }

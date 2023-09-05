@@ -31,6 +31,11 @@ STDAPI WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr)
 
 STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus)
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::OnSetFocus. pDocMgrFocus = {:#x}, pDocMrgPrevFocus = {:#x}", (size_t)pDocMgrFocus, (size_t)pDocMgrPrevFocus);
+#endif // _M_X64
+#endif // TEST
 	_InitTextEditSink(pDocMgrFocus);
 
 	if (!pDocMgrFocus)
@@ -42,11 +47,6 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocM
 	com_ptr<ITfContext> pTfContext = _GetUIContextDocument();
 	if ((nullptr != pTfContext) && SUCCEEDED(pTfContext->GetDocumentMgr(&pCandidateListDocumentMgr)))
 	{
-#ifdef TEST
-#ifdef _M_X64
-		LOG(INFO) << std::format("From WeaselTSF::OnSetFocus. pDocMgrFocus = {:#x}, pDocMrgPrevFocus = {:#x}, pCandidateListDocumentMgr = {:#x}", (size_t)pDocMgrFocus, (size_t)pDocMgrPrevFocus, (size_t)pCandidateListDocumentMgr.p);
-#endif // _M_X64
-#endif // TEST
 		if (pCandidateListDocumentMgr != pDocMgrFocus)
 		{
 			_HideUI();

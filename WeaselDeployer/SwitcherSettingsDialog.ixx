@@ -6,11 +6,16 @@ export module SwitcherSettingsDialog;
 
 export
 {
-	class SwitcherSettingsDialog : public CDialogImpl<SwitcherSettingsDialog> {
+	class SwitcherSettingsDialog : 
+		public CDialogImpl<SwitcherSettingsDialog>
+	{
 	public:
 		enum { IDD = IDD_SWITCHER_SETTING };
 
-		SwitcherSettingsDialog(RimeSwitcherSettings* settings);
+		BEGIN_UPDATE_UI_MAP(SwitcherSettingsDialog)
+		END_UPDATE_UI_MAP()
+
+		SwitcherSettingsDialog(RimeSwitcherSettings* settings, bool& selected);
 		~SwitcherSettingsDialog();
 
 	protected:
@@ -30,6 +35,7 @@ export
 
 		void Populate();
 		void ShowDetails(RimeSchemaInfo* info);
+		void CloseDialog(int nVal);
 
 		RimeLeversApi* api_;
 		RimeSwitcherSettings* settings_;
@@ -40,5 +46,8 @@ export
 		CStatic description_;
 		CEdit hotkeys_;
 		CButton get_schemata_;
+
+	private:
+		bool& m_selected;
 	};
 }

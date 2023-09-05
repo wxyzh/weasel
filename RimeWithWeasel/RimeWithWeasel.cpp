@@ -634,6 +634,7 @@ bool RimeWithWeaselHandler::_Respond(RimeSessionId session_id, EatLine eat)
 		messages.emplace_back(std::format("status.disabled={}\n", status.is_disabled));
 		messages.emplace_back(std::format("status.full_shape={}\n", status.is_full_shape));
 		messages.emplace_back(std::format("status.ascii_punct={}\n", status.is_ascii_punct));
+		messages.emplace_back(std::format("status.simplication={}\n", status.is_simplified));
 		messages.emplace_back(std::format("status.schema_id={}\n", status.schema_id));
 		RimeFreeStatus(&status);
 	}
@@ -652,9 +653,9 @@ bool RimeWithWeaselHandler::_Respond(RimeSessionId session_id, EatLine eat)
 					std::string first = ctx.commit_text_preview;
 					messages.emplace_back(std::format("ctx.preedit={}\n", first));
 					messages.emplace_back(std::format("ctx.preedit.cursor={},{},{}\n",
-						utf8towcslen(first.c_str(), 0),
-						utf8towcslen(first.c_str(), first.size()),
-						utf8towcslen(first.c_str(), first.size())));
+						utf8towcslen(first.data(), 0),
+						utf8towcslen(first.data(), first.size()),
+						utf8towcslen(first.data(), first.size())));
 					break;
 				}
 				// no preview, fall back to composition
@@ -671,16 +672,16 @@ bool RimeWithWeaselHandler::_Respond(RimeSessionId session_id, EatLine eat)
 			case weasel::UIStyle::PREVIEW_ALL:
 				weasel::CandidateInfo cinfo;
 				_GetCandidateInfo(cinfo, ctx);
-				std::string topush = std::string("ctx.preedit=") + ctx.composition.preedit + "  [";
+				std::string topush = std::format("ctx.preedit={} [", ctx.composition.preedit);
 				for (auto i = 0; i < ctx.menu.num_candidates; i++)
 				{
 					std::string label = m_ui->style().label_font_point > 0 ? _GetLabelText(cinfo.labels, i, m_ui->style().label_text_format.c_str()) : "";
 					std::string comment = m_ui->style().comment_font_point > 0 ? to_string(cinfo.comments.at(i).str, CP_UTF8) : "";
 					std::string mark_text = m_ui->style().mark_text.empty() ? "*" : to_string(m_ui->style().mark_text, CP_UTF8);
 					std::string prefix = (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
-					topush += " " + prefix + label + std::string(ctx.menu.candidates[i].text) + " " + comment;
+					topush += std::format(" {}{}{} {}", prefix, label, ctx.menu.candidates[i].text, comment);
 				}
-				messages.emplace_back(topush + " ]\n");
+				messages.emplace_back(std::format("{} ]\n", topush));
 				//messages.emplace_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
 				if (ctx.composition.sel_start <= ctx.composition.sel_end)
 				{
@@ -818,7 +819,7 @@ static Bool _RimeConfigGetColor32bWithFallback(RimeConfig* config, std::string_v
 			return False;
 		}
 		value = ConvertColorToAbgr(value, fmt);
-		value = (value & 0xffffffff);
+		value = (value & 0xffff'ffff);
 		return True;
 	}
 	// regular number or other stuff, if user use pure dec number, they should take care themselves
@@ -832,9 +833,9 @@ static Bool _RimeConfigGetColor32bWithFallback(RimeConfig* config, std::string_v
 		}
 
 		if (fmt != COLOR_RGBA)
-			value = (tmp | 0xff000000) & 0xffffffff;
+			value = (tmp | 0xff00'0000) & 0xffff'ffff;
 		else
-			value = ((tmp << 8) | 0x000000ff) & 0xffffffff;
+			value = ((tmp << 8) | 0x0000'00ff) & 0xffff'ffff;
 		value = ConvertColorToAbgr(value, fmt);
 		return True;
 	}
@@ -853,7 +854,7 @@ static void _RimeGetBool(RimeConfig* config, const char* key, bool cond, T& valu
 	Bool tempb = false;
 	if (RimeConfigGetBool(config, key, &tempb) || cond)
 	{
-		value = !!tempb ? trueValue : falseValue;
+		value = (!!tempb) ? trueValue : falseValue;
 	}
 }
 
@@ -1136,6 +1137,7 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status& stat, RimeSessionId sessi
 		stat.disabled = !!status.is_disabled;
 		stat.full_shape = !!status.is_full_shape;
 		stat.ascii_punct = !!status.is_ascii_punct;
+		stat.simplication = !!status.is_simplified;
 		if (schema_id != m_last_schema_id)
 		{
 			m_last_schema_id = schema_id;

@@ -9,7 +9,7 @@ module;
 #endif // TEST
 module WeaselTSF;
 
-static BOOL IsRangeCovered(TfEditCookie ec, ITfRange *pRangeTest, ITfRange *pRangeCover)
+static BOOL IsRangeCovered(TfEditCookie ec, ITfRange* pRangeTest, ITfRange* pRangeCover)
 {
 	LONG lResult;
 
@@ -20,7 +20,7 @@ static BOOL IsRangeCovered(TfEditCookie ec, ITfRange *pRangeTest, ITfRange *pRan
 	return TRUE;
 }
 
-STDAPI WeaselTSF::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord)
+STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEditRecord* pEditRecord)
 {
 #ifdef TEST
 #ifdef _M_X64
@@ -55,22 +55,37 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEd
 	/* text modification? */
 	com_ptr<IEnumTfRanges> pEnumTextChanges;
 	com_ptr<ITfRange> pRange;
-	if (pEditRecord->GetTextAndPropertyUpdates(TF_GTP_INCL_TEXT, NULL, 0, &pEnumTextChanges) == S_OK)
+	if (SUCCEEDED(pEditRecord->GetTextAndPropertyUpdates(TF_GTP_INCL_TEXT, NULL, 0, &pEnumTextChanges)))
 	{
-		if (FAILED(pEnumTextChanges->Next(1, &pRange, NULL)))
-		{
-			return E_FAIL;
-		}
 #ifdef TEST
 #ifdef _M_X64
 		LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. pEditRecord->GetTextAndPropertyUpdates.");
 #endif // _M_X64
 #endif // TEST
+		static int count{};
+		if (SUCCEEDED(pEnumTextChanges->Next(1, &pRange, NULL)))
+		{
+			pRange.Release();
+		}
+		pEnumTextChanges.Release();
+
+		if (GetBit(13))			// _bitset[13]: _FistKeyComposition
+		{
+			if (++count == 2)
+			{
+				count = 0;
+				_UpdateCompositionWindow(pContext);
+			}
+		}
+		else
+		{
+			count = 0;
+		}
 	}
 	return S_OK;
 }
 
-STDAPI WeaselTSF::OnLayoutChange(ITfContext *pContext, TfLayoutCode lcode, ITfContextView *pContextView)
+STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext, TfLayoutCode lcode, ITfContextView* pContextView)
 {
 #ifdef TEST
 #ifdef _M_X64
@@ -103,18 +118,27 @@ BOOL WeaselTSF::_InitTextEditSink(ITfDocumentMgr* pDocMgr)
 {
 	com_ptr<ITfSource> pSource;
 	BOOL fRet{};
+	HRESULT hr1{}, hr2{};
 
 	/* clear out any previous sink first */
 	if (_dwTextEditSinkCookie != TF_INVALID_COOKIE)
 	{
 		if (SUCCEEDED(_pTextEditSinkContext->QueryInterface(&pSource)))
 		{
-			pSource->UnadviseSink(_dwTextEditSinkCookie);
-			pSource->UnadviseSink(_dwTextLayoutSinkCookie);
+			hr1 = pSource->UnadviseSink(_dwTextEditSinkCookie);
+			hr2 = pSource->UnadviseSink(_dwTextLayoutSinkCookie);
 		}
-		_pTextEditSinkContext = nullptr;
+		_pTextEditSinkContext.Release();
 		_dwTextEditSinkCookie = TF_INVALID_COOKIE;
+		_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
 	}
+
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::_InitTextEditSink. pDocMgr = {:#x}, _dwTextEditSinkCookie = {:#x}, hr1 = 0x{:X}, hr2 = 0x{:X}", (size_t)pDocMgr, (unsigned)_dwTextEditSinkCookie, (unsigned)hr1, (unsigned)hr2);
+#endif // _M_X64
+#endif // TEST
+
 	if (pDocMgr == NULL)
 		return TRUE;
 
@@ -126,11 +150,11 @@ BOOL WeaselTSF::_InitTextEditSink(ITfDocumentMgr* pDocMgr)
 
 	if (SUCCEEDED(_pTextEditSinkContext->QueryInterface(&pSource)))
 	{
-		if (SUCCEEDED(pSource->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink *) this, &_dwTextEditSinkCookie)))
+		if (SUCCEEDED(pSource->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink*)this, &_dwTextEditSinkCookie)))
 			fRet = TRUE;
 		else
 			_dwTextEditSinkCookie = TF_INVALID_COOKIE;
-		if (SUCCEEDED(pSource->AdviseSink(IID_ITfTextLayoutSink, (ITfTextLayoutSink *) this, &_dwTextLayoutSinkCookie)))
+		if (SUCCEEDED(pSource->AdviseSink(IID_ITfTextLayoutSink, (ITfTextLayoutSink*)this, &_dwTextLayoutSinkCookie)))
 		{
 			fRet = TRUE;
 		}
@@ -139,14 +163,8 @@ BOOL WeaselTSF::_InitTextEditSink(ITfDocumentMgr* pDocMgr)
 	}
 	if (fRet == FALSE)
 	{
-		_pTextEditSinkContext = nullptr;
+		_pTextEditSinkContext.Release();
 	}
-
-#ifdef TEST
-#ifdef _M_X64
-	LOG(INFO) << std::format("From WeaselTSF::_InitTextEditSink. pDocMgr = {:#x}, _dwTextEditSinkCookie = {:#x}, _dwTextLayoutSinkCookie = {:#x}", (size_t)pDocMgr, (unsigned)_dwTextEditSinkCookie, (unsigned)_dwTextLayoutSinkCookie);
-#endif // _M_X64
-#endif // TEST
 
 	return fRet;
 }

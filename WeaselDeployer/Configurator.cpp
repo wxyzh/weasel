@@ -3,11 +3,11 @@
 #include <WeaselVersion.h>
 #include "WeaselDeployer.h"
 #include "resource.h"
-#pragma warning(disable: 4005)
 #include <rime_api.h>
 #include <rime_levers_api.h>
 #pragma warning(default: 4005)
 module Config;
+import ConfiguratorDialog;
 import SwitcherSettingsDialog;
 import UIStyleSettings;
 import UIStyleSettingsDialog;
@@ -15,6 +15,13 @@ import DictManagementDialog;
 import WeaselCommon;
 import WeaselIPC;
 import WeaselUtility;
+
+namespace fs = std::filesystem;
+
+Configurator::Configurator()
+{
+	create_miss_file();
+}
 
 void Configurator::Initialize()
 {
@@ -36,12 +43,13 @@ void Configurator::Initialize()
 	RimeDeployerInitialize(NULL);
 }
 
-static bool configure_switcher(RimeLeversApi* api, RimeSwitcherSettings* switchcer_settings, bool* reconfigured)
+static bool configure_switcher(RimeLeversApi* api, RimeSwitcherSettings* switcher_settings, bool* reconfigured)
 {
-	RimeCustomSettings* settings = (RimeCustomSettings*)switchcer_settings;
+	RimeCustomSettings* settings = (RimeCustomSettings*)switcher_settings;
     if (!api->load_settings(settings))
         return false;
-	SwitcherSettingsDialog dialog(switchcer_settings);
+	bool selected{ true };
+	SwitcherSettingsDialog dialog(switcher_settings, selected);
 	if (dialog.DoModal() == IDOK) {
 		if (api->save_settings(settings))
 			*reconfigured = true;
@@ -63,6 +71,28 @@ static bool configure_ui(RimeLeversApi* api, UIStyleSettings* ui_style_settings,
 	return false;
 }
 
+static bool configure(RimeLeversApi* api, RimeSwitcherSettings* switcher_settings, UIStyleSettings* ui_style_settings, bool& reconfigured)
+{
+	RimeCustomSettings* settings = (RimeCustomSettings*)switcher_settings;
+	if (!api->load_settings(settings))
+		return false;
+	RimeCustomSettings* style_settings = ui_style_settings->settings();
+	if (!api->load_settings(style_settings))
+		return false;
+
+	ConfiguratorDialog dialog(switcher_settings, ui_style_settings);
+	if (dialog.DoModal() == IDOK)
+	{
+		if (api->save_settings(settings) || api->save_settings(style_settings))
+		{
+			reconfigured = true;
+			return true;
+		}
+		reconfigured = false;
+	}
+	return false;
+}
+
 int Configurator::Run(bool installing)
 {
 	RimeModule* levers = rime_get_api()->find_module("levers");
@@ -78,8 +108,11 @@ int Configurator::Run(bool installing)
 	bool skip_switcher_settings = installing && !api->is_first_run((RimeCustomSettings*)switcher_settings);
 	bool skip_ui_style_settings = installing && !api->is_first_run(ui_style_settings.settings());
 
-	(skip_switcher_settings || configure_switcher(api, switcher_settings, &reconfigured)) &&
-		(skip_ui_style_settings || configure_ui(api, &ui_style_settings, &reconfigured));
+	/*(skip_switcher_settings || configure_switcher(api, switcher_settings, &reconfigured)) &&
+		(skip_ui_style_settings || configure_ui(api, &ui_style_settings, &reconfigured));*/
+
+	/*(skip_switcher_settings || skip_ui_style_settings) &&*/
+	configure(api, switcher_settings, &ui_style_settings, reconfigured);
 
 	api->custom_settings_destroy((RimeCustomSettings*)switcher_settings);
 
@@ -215,4 +248,21 @@ int Configurator::SyncUserData() {
 		client.EndMaintenance();
 	}
 	return 0;
+}
+
+void Configurator::create_miss_file()
+{
+	auto user_data_dir{ WeaselUserDataPath() };
+	
+	fs::path default_custom{ std::format(LR"({}\default.custom.yaml)", user_data_dir) };
+	if (!fs::exists(default_custom))
+	{
+		std::wofstream out{ default_custom, std::ios::app };
+	}
+
+	fs::path weasel_custom{ std::format(LR"({}\weasel.custom.yaml)", user_data_dir) };
+	if (!fs::exists(weasel_custom))
+	{
+		std::wofstream out{ weasel_custom, std::ios::app };
+	}
 }

@@ -60,6 +60,7 @@ export
 		void EndUI();
 
 		com_ptr<ITfContext> GetContextDocument();
+		bool GetIsReposition();
 
 		weasel::UIStyle& style();
 

@@ -21,9 +21,12 @@
 #include <wtl/atlctrlx.h>
 #include <wtl/atlmisc.h>
 #include <wtl/atldlgs.h>
+#include <wtl/atlframe.h>
 
 #include <logging.h>
 
 #include <filesystem>
 #include <fstream>
 #include <format>
+
+extern CAppModule _Module;

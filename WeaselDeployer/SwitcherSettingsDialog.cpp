@@ -16,8 +16,8 @@ import Config;
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 #endif
 
-SwitcherSettingsDialog::SwitcherSettingsDialog(RimeSwitcherSettings* settings)
-	: settings_(settings), loaded_(false), modified_(false)
+SwitcherSettingsDialog::SwitcherSettingsDialog(RimeSwitcherSettings* settings, bool& selected)
+	: settings_(settings), loaded_(false), modified_(false), m_selected{ selected }
 {
 	api_ = (RimeLeversApi*)rime_get_api()->find_module("levers")->get_api();
 }
@@ -62,6 +62,7 @@ void SwitcherSettingsDialog::Populate() {
 			++k;
 		}
 	}
+
 	hotkeys_.SetWindowTextW(to_wstring(api_->get_hotkeys(settings_), CP_UTF8).data());
 	loaded_ = true;
 	modified_ = false;
@@ -79,7 +80,13 @@ void SwitcherSettingsDialog::ShowDetails(RimeSchemaInfo* info) {
     if (const char* description = api_->get_schema_description(info)) {
         (details += "\n\n") += description;
     }
-	description_.SetWindowTextW(to_wstring(details.c_str(), CP_UTF8).data());
+	description_.SetWindowTextW(to_wstring(details, CP_UTF8).data());
+}
+
+void SwitcherSettingsDialog::CloseDialog(int nVal)
+{
+	DestroyWindow();
+	::PostQuitMessage(nVal);
 }
 
 LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
@@ -101,6 +108,8 @@ LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	get_schemata_.EnableWindow(TRUE);	
 	
 	Populate();
+
+	ShowDetails((RimeSchemaInfo*)(schema_list_.GetItemData(0)));
 	
 	CenterWindow();
 	BringWindowToTop();
@@ -109,13 +118,13 @@ LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 }
 
 LRESULT SwitcherSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
-	EndDialog(IDCANCEL);
+	CloseDialog(0);
 	return 0;
 }
 
 LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&) {
 	HKEY hKey;
-	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, L"Software\\Rime\\Weasel", &hKey);
+	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, LR"(Software\Rime\Weasel)", &hKey);
 	if (ret == ERROR_SUCCESS) {
 		WCHAR value[MAX_PATH];
 		DWORD len = sizeof(value);
@@ -147,7 +156,8 @@ LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&) {
 	return 0;
 }
 
-LRESULT SwitcherSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
+LRESULT SwitcherSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) 
+{
 	if (modified_ && settings_ && schema_list_.GetItemCount() != 0) {
 		const char** selection = new const char*[schema_list_.GetItemCount()];
 		int count = 0;
@@ -160,14 +170,15 @@ LRESULT SwitcherSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
 			}
 		}
 		if (count == 0) {
-			MessageBox(L"至少要选用一项吧。", L"小狼毫不是这般用法", MB_OK | MB_ICONEXCLAMATION);
+			// MessageBox(L"至少要选用一项吧。", L"小狼毫不是这般用法", MB_OK | MB_ICONEXCLAMATION);
 			delete selection;
-			return 0;
+			m_selected = false;
+			return false;
 		}
 		api_->select_schemas(settings_, selection, count);
 		delete selection;
 	}
-	EndDialog(code);
+	CloseDialog(0);
 	return 0;
 }
 

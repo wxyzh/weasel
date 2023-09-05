@@ -163,9 +163,10 @@ void WeaselTSF::_UninitLanguageBar()
 	_pLangBarButton = NULL;
 }
 
-void WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
+bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 {
-	if (!_pLangBarButton) return;
+	bool state{};
+	if (!_pLangBarButton) return state;
 
 	DWORD flags{};
 	_pCompartmentConversion->_GetCompartmentDWORD(flags);
@@ -181,6 +182,7 @@ void WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 		SetBit(1, _status.ascii_mode);			// _bitset[1]: _ascii_mode
 		SetBit(2, _status.full_shape);			// _bitset[2]: _full_mode
 		SetBit(3, _status.ascii_punct);			// _bitset[3]: _ascii_punct
+		_schema_id = _status.schema_id;
 
 		if (stat.ascii_mode)
 		{
@@ -222,10 +224,11 @@ void WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			{
 				flags |= TF_CONVERSIONMODE_NATIVE;
 			}
+			state = true;
 		}
 		else if (GetBit(2) != stat.full_shape)	// _bitset[2]: _full_mode
 		{
-			SetBit(2, stat.ascii_mode);			// _bitset[2]: _full_mode
+			SetBit(2, stat.full_shape);			// _bitset[2]: _full_mode
 			if (stat.full_shape)
 			{
 				flags |= TF_CONVERSIONMODE_FULLSHAPE;
@@ -234,6 +237,7 @@ void WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			{
 				flags &= (~TF_CONVERSIONMODE_FULLSHAPE);
 			}
+			state = true;
 		}
 		else if (GetBit(3) != stat.ascii_punct)	// _bitset[3]: _ascii_punct
 		{
@@ -246,6 +250,12 @@ void WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			{
 				flags &= (~TF_CONVERSIONMODE_SYMBOL);
 			}
+			state = true;
+		}
+		else if (_schema_id != stat.schema_id)
+		{
+			_schema_id = stat.schema_id;
+			state = true;
 		}
 	}
 
@@ -259,6 +269,7 @@ void WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 	_pCompartmentConversion->_SetCompartmentDWORD(flags);
 
 	_pLangBarButton->UpdateWeaselStatus(stat);
+	return state;
 }
 
 void WeaselTSF::_ShowLanguageBar(BOOL show)

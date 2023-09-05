@@ -62,12 +62,12 @@ LRESULT UIStyleSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 }
 
 LRESULT UIStyleSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
-	EndDialog(IDCANCEL);
+	CloseDialog(0);
 	return 0;
 }
 
 LRESULT UIStyleSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
-	EndDialog(code);
+	CloseDialog(0);
 	return 0;
 }
 
@@ -90,4 +90,10 @@ void UIStyleSettingsDialog::Preview(int index) {
 	if (!image_.IsNull()) {
 		preview_.SetBitmap(image_);
 	}
+}
+
+void UIStyleSettingsDialog::CloseDialog(int nVal)
+{
+	DestroyWindow();
+	::PostQuitMessage(nVal);
 }
