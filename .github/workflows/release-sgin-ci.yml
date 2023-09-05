@@ -7,7 +7,7 @@ jobs:
   librime:
     uses: wxyzh/librime/.github/workflows/windows-build.yml@x64
     with:
-      repository: wxyzh/librime@x64
+      repository: wxyzh/librime
       rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
       
   build-and-release:
