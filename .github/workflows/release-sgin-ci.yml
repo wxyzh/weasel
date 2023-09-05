@@ -20,18 +20,7 @@ jobs:
         with:
           submodules: true
 
-      - name: Set up Python 
-        uses: actions/setup-python@v4
-        with:
-          python-version: "pypy3.9"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -U tmate
-      - name: SSH connection to Actions
-        run: |
-            python -m tmate
-            
+
       - name: Configure build environment
         run: |
           copy env.vs2022.bat env.bat
@@ -61,7 +50,23 @@ jobs:
 
       #- name: Copy Rime files
       #  run: .\github.install.bat
-
+      - name: Build librime
+        uses: wxyzhen/librime/.github/workflows/windows-build.yml@x64
+        with:
+         rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
+               
+      - name: Set up Python 
+        uses: actions/setup-python@v4
+        with:
+          python-version: "pypy3.9"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -U tmate
+      - name: SSH connection to Actions
+        run: |
+            python -m tmate
+            
 
       - name: Build Weasel
         id: build_weasel
