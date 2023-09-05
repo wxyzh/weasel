@@ -14,8 +14,8 @@ jobs:
     permissions:
       contents: write
     runs-on: windows-2022
-    if: ${{ always() }}
-    needs: librime
+    #if: ${{ always() }}
+    #needs: librime
     env:
       boost_version: 1.78.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
@@ -59,7 +59,9 @@ jobs:
 
       #- name: Copy Rime files
       #  run: .\github.install.bat
-               
+      #
+      - name: build rime
+        run: .\build.bat  rime        
       - name: Set up Python 
         uses: actions/setup-python@v4
         with:
@@ -69,9 +71,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -U tmate
-      - name: SSH connection to Actions
-        run: |
-            python -m tmate
+      #- name: SSH connection to Actions
+      #  run: |
+      #      python -m tmate
             
       - name: Build Weasel
         id: build_weasel
