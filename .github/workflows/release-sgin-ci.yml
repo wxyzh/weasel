@@ -1,0 +1,141 @@
+name: Release Sgin CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build-and-release:
+    permissions:
+      contents: write
+    runs-on: windows-2022
+    env:
+      boost_version: 1.78.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
+      RIME_PLUGINS: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
+    steps:
+
+      - name: Set up Python 
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -U tmate
+      - name: SSH connection to Actions
+        run: |
+            python -m tmate
+      - name: Checkout last commit
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Configure build environment
+        run: |
+          copy env.vs2022.bat env.bat
+          $git_ref_name = git describe --always
+          echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
+
+      - name: Cache Boost
+        id: cache-boost
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.BOOST_ROOT }}
+          key: ${{ runner.os }}-boost-${{ env.boost_version }}
+
+      - name: Install Boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        run: .\install_boost.bat
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.3.1
+        
+#      - name: setup python
+#        uses: actions/setup-python@v4
+#        with:
+#          python-version: '3.11'
+          
+
+      #- name: Copy Rime files
+      #  run: .\github.install.bat
+
+
+      - name: Build Weasel
+        id: build_weasel
+        run: |
+          .\build.bat data
+          .\build.bat hant
+          #.\build.bat installer
+          
+      - name: Sgin Bin
+        shell: pwsh
+        env:
+          env_certificate: ${{ secrets.CERTIFICATE }}
+          env_certpassword: ${{ secrets.PASSWORD }}
+          env_catert: '${{ secrets.CACERT }}'
+        run: |
+          $tempCertFile = New-TemporaryFile
+          $tempCAFile = New-TemporaryFile        
+
+          # Retrieve environment variables for cert/password.
+          $certText = $env:env_certificate
+          $CertPass = ($env:env_certpassword).ToString()
+          $CACertText = $env:env_catert
+
+          $SecPass =ConvertTo-SecureString -String $CertPass -AsPlainText -force
+
+          # Create a Cert object by converting the cert string to bytes.
+
+          $certBytes = [Convert]::FromBase64String($certText)
+          $CAcertBytes = [Convert]::FromBase64String($CACertText)
+
+          Set-Content -Path $tempCertFile -Value $certBytes -AsByteStream
+          Set-Content -Path $tempCAFile -Value $CAcertBytes -AsByteStream
+
+          #Import-Certificate -FilePath $tempCAFile  -CertStoreLocation Cert:\CurrentUser\Root\ -Confirm:$false
+          certutil.exe -addstore root $tempCAFile.FullName
+
+          $cert=Get-PfxCertificate -FilePath $tempCertFile -Password $SecPass
+
+          # Go through the artifacts directory and sign the 'windows' artifacts.
+          $output = ".\output"
+
+          $Extension = @(".exe",".dll",".ime")
+          Get-ChildItem -Path $output |  where {$Extension -contains $_.Extension} | Set-AuthenticodeSignature -Certificate $Cert -TimestampServer http://timestamp.digicert.com
+          Remove-Item $tempCAFile -Force
+          Remove-Item $tempCertFile -Force
+          
+        
+      - name: Compress Debug Symbols
+        shell: pwsh
+        run: |
+          Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
+      
+      - name: Upload artifacts bin
+        uses: actions/upload-artifact@v3
+        with:
+          name: weasel
+          if-no-files-found: error
+          path: |
+            .\output\*.exe
+            .\output\*.dll
+            .\output\*.ime
+            
+      - name: build_weasel_installer
+        id: build_weasel_installer
+        run: |
+          #.\build.bat data
+          #.\build.bat hant
+          .\build.bat installer
+          
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: weasel_installer
+          if-no-files-found: error
+          path: |
+            .\output\archives\weasel*.exe
+            .\output\archives\symbols.zip
+
