@@ -51,8 +51,9 @@ jobs:
       #- name: Copy Rime files
       #  run: .\github.install.bat
       - name: Build librime
-        uses: wxyzhen/librime/.github/workflows/windows-build.yml@x64
+        uses: wxyzh/librime/.github/workflows/windows-build.yml@x64
         with:
+         repository: wxyzh/librime
          rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
                
       - name: Set up Python 
