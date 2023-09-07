@@ -5,7 +5,7 @@ on:
 
 jobs:
   checklibrime:
-        runs-on: windows-2022
+    runs-on: windows-2022
     outputs: 
       buildlibrime: ${{steps.buildlibrime.outputs.bulidrime}}
       librimesha: ${{steps.getlastsha.outputs.librimesha}}
@@ -38,6 +38,8 @@ jobs:
           #exit 1
 
   librime:
+    always() && (needs.checklibrime.outputs.buildlibrime == '1')
+    needs: checklibrime
     uses: wxyzh/weasel/.github/workflows/librime-build.yml@librime
     with:
       repository: rime/librime
@@ -48,7 +50,7 @@ jobs:
       contents: write
     runs-on: windows-2022
     if: ${{ always() }}
-    needs: librime
+    needs: [checklibrime, librime]
     env:
       boost_version: 1.78.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
