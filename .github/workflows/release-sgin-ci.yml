@@ -64,7 +64,7 @@ jobs:
           submodules: true
           
       - name: Cache Boost
-        id: cache-boost
+        id: cache-artifact
         uses: actions/cache@v3
         with:
           path: |
@@ -72,6 +72,7 @@ jobs:
           key: librime-artifact-${{ env.commitsha }}
           
       - name: Download artifacts
+        if: steps.cache-artifact.outputs.cache-hit != 'true'
         uses: actions/download-artifact@v3
         
       - name: Configure build environment
