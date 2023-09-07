@@ -38,7 +38,7 @@ jobs:
           #exit 1
 
   librime:
-    always() && (needs.checklibrime.outputs.buildlibrime == '1')
+    if: always() && (needs.checklibrime.outputs.buildlibrime == '1')
     needs: checklibrime
     uses: wxyzh/weasel/.github/workflows/librime-build.yml@librime
     with:
