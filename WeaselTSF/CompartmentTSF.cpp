@@ -2,7 +2,7 @@ module;
 #include "stdafx.h"
 #include "Globals.h"
 #include <resource.h>
-// #include "test.h"
+#include "test.h"
 #ifdef TEST
 #ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
@@ -100,6 +100,11 @@ HRESULT WeaselTSF::_SetKeyboardOpen(BOOL fOpen)
 			hr = pCompartment->SetValue(_tfClientId, &var);
 		}
 	}
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::_SetKeyboardOpen. fOpen = {}, hr = 0x{:X}", fOpen, (unsigned)hr);
+#endif // _M_X64
+#endif // TEST
 
 	return hr;
 }
@@ -116,6 +121,11 @@ BOOL WeaselTSF::_InitCompartment()
 		(IUnknown*)_pThreadMgr,
 		GUID_COMPARTMENT_KEYBOARD_OPENCLOSE
 	);
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::_InitCompartment. hr = 0x{:X}", (unsigned)hr);
+#endif // _M_X64
+#endif // TEST
 
 	_pConversionCompartmentSink = new CCompartmentEventSink(callback);
 	if (!_pConversionCompartmentSink)
@@ -124,6 +134,11 @@ BOOL WeaselTSF::_InitCompartment()
 		(IUnknown*)_pThreadMgr,
 		GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION
 	);
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::_InitCompartment. hr = 0x{:X}", (unsigned)hr);
+#endif // _M_X64
+#endif // TEST
 
 	return SUCCEEDED(hr);
 }
@@ -146,24 +161,36 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 		BOOL isOpen = _IsKeyboardOpen();
 		if (isOpen) {
 			m_client.TrayCommand(ID_WEASELTRAY_DISABLE_ASCII);
+			ReSetBit(14);	// _bitset[14]: _KeyboardDisabled
+		}
+		else
+		{
+			SetBit(14);		// _bitset[14]: _KeyboardDisabled
 		}
 		_EnableLanguageBar(isOpen);
 #ifdef TEST
 #ifdef _M_X64
-		LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. isOpen = {}", isOpen);
+		LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. GUID_COMPARTMENT_KEYBOARD_OPENCLOSE: isOpen = {}", isOpen);
 #endif // _M_X64
 #endif // TEST
 	}
 	else if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION))
 	{
-		BOOL isOpen = _IsKeyboardOpen();
-		if (isOpen)
-		{
-			weasel::ResponseParser parser(nullptr, nullptr, &_status, nullptr, &_cand->style());
-			bool ok = m_client.GetResponseData(std::ref(parser));
-			_UpdateLanguageBar(_status);
-		}
+		/*weasel::ResponseParser parser(nullptr, nullptr, &_status, nullptr, &_cand->style());
+		bool ok = m_client.GetResponseData(std::ref(parser));
+		_UpdateLanguageBar(_status);*/
+#ifdef TEST
+#ifdef _M_X64
+		LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION");
+#endif // _M_X64
+#endif // TEST
 	}
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. guidCompartment = {:X}-{:X}-{:X}-{:X}{:X}{:X}{:X}{:X}{:X}{:X}{:X}", guidCompartment.Data1, guidCompartment.Data2, guidCompartment.Data3, guidCompartment.Data4[0],
+		guidCompartment.Data4[1], guidCompartment.Data4[2], guidCompartment.Data4[3], guidCompartment.Data4[4], guidCompartment.Data4[5], guidCompartment.Data4[6], guidCompartment.Data4[7]);
+#endif // _M_X64
+#endif // TEST
 
 	return S_OK;
 }

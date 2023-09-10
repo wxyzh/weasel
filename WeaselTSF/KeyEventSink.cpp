@@ -152,7 +152,8 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BO
 	{
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
 		_UpdateComposition(pContext);
-	}	
+	}
+	
 	return S_OK;
 }
 

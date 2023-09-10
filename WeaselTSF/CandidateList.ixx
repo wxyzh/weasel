@@ -59,6 +59,10 @@ export
 		void StartUI();
 		void EndUI();
 
+		// Event for ITfThreadFocusSink
+		virtual HRESULT OnSetThreadFocus();
+		virtual HRESULT OnKillThreadFocus();
+
 		com_ptr<ITfContext> GetContextDocument();
 		bool GetIsReposition();
 

@@ -32,15 +32,12 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 
 	if (ok)
 	{
-		if (state || GetBit(12))		// _bitset[12]: _simplication_state
+		if ((state || GetBit(12)) && !_IsComposing())	// _bitset[12]: _simplication_state
 		{
-			if (!_IsComposing()) 
-			{
-				_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
-			}
+			_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
 			_UpdateCompositionWindow(_pEditSessionContext);
 			_EndComposition(_pEditSessionContext, true);
-			ReSetBit(12);				// _bitset[12]: _simplication_state
+			ReSetBit(12);								// _bitset[12]: _simplication_state
 		}
 		else
 		{

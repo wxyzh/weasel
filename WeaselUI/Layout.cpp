@@ -24,12 +24,12 @@ Layout::Layout(const UIStyle& style, const Context& context, const Status& statu
 		offsetY = abs(_style.shadow_offset_y) + _style.shadow_radius*2;
 		if ((_style.shadow_offset_x != 0) || (_style.shadow_offset_y != 0))
 		{
-			offsetX -= _style.shadow_radius/2;
-			offsetY -= _style.shadow_radius/2;
+			offsetX -= _style.shadow_radius;
+			offsetY -= _style.shadow_radius;
 		}
 	}
-	offsetX += _style.border + 1;
-	offsetY += _style.border + 1;
+	offsetX += _style.border * 2;
+	offsetY += _style.border * 2;
 }
 
 GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool roundTopLeft, bool roundTopRight, bool roundBottomRight, bool roundBottomLeft)
@@ -43,17 +43,17 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool ro
 		int cny = ((corner * 2 <= rc.Height()) ? corner : (rc.Height() / 2));
 		int elWid = 2 * cnx;
 		int elHei = 2 * cny;
-		AddArc(rc.left, rc.top, elWid * roundTopLeft, elHei * roundTopLeft, 180, 90);
-		AddLine(INT(rc.left + cnx * roundTopLeft), INT(rc.top), INT(rc.right - cnx * roundTopRight), INT(rc.top));
+		AddArc(rc.left, rc.top, Gdiplus::REAL(elWid * roundTopLeft), Gdiplus::REAL(elHei * roundTopLeft), 180, 90);
+		AddLine(Gdiplus::REAL(rc.left + cnx * roundTopLeft), rc.top, Gdiplus::REAL(rc.right - cnx * roundTopRight), rc.top);
 
-		AddArc(rc.right - elWid * roundTopRight, rc.top, elWid * roundTopRight, elHei * roundTopRight, 270, 90);
-		AddLine(INT(rc.right), INT(rc.top + cny * roundTopRight), INT(rc.right), INT(rc.bottom - cny * roundBottomRight));
+		AddArc(Gdiplus::REAL(rc.right - elWid * roundTopRight), rc.top, Gdiplus::REAL(elWid * roundTopRight), Gdiplus::REAL(elHei * roundTopRight), 270, 90);
+		AddLine(rc.right, Gdiplus::REAL(rc.top + cny * roundTopRight), rc.right, Gdiplus::REAL(rc.bottom - cny * roundBottomRight));
 
-		AddArc(rc.right - elWid * roundBottomRight, rc.bottom - elHei * roundBottomRight, elWid * roundBottomRight, elHei * roundBottomRight, 0, 90);
-		AddLine(INT(rc.right - cnx * roundBottomRight), INT(rc.bottom), INT(rc.left + cnx * roundBottomLeft), INT(rc.bottom));
+		AddArc(Gdiplus::REAL(rc.right - elWid * roundBottomRight), Gdiplus::REAL(rc.bottom - elHei * roundBottomRight), Gdiplus::REAL(elWid * roundBottomRight), Gdiplus::REAL(elHei * roundBottomRight), 0, 90);
+		AddLine(Gdiplus::REAL(rc.right - cnx * roundBottomRight), rc.bottom, Gdiplus::REAL(rc.left + cnx * roundBottomLeft), rc.bottom);
 
-		AddArc(rc.left, rc.bottom - elHei * roundBottomLeft, elWid * roundBottomLeft, elHei * roundBottomLeft, 90, 90);
-		AddLine(INT(rc.left), INT(rc.top + cny * roundTopLeft), INT(rc.left), INT(rc.bottom - cny * roundBottomLeft));
+		AddArc(rc.left, Gdiplus::REAL(rc.bottom - elHei * roundBottomLeft), Gdiplus::REAL(elWid * roundBottomLeft), Gdiplus::REAL(elHei * roundBottomLeft), 90, 90);
+		AddLine(rc.left, Gdiplus::REAL(rc.top + cny * roundTopLeft), rc.left, Gdiplus::REAL(rc.bottom - cny * roundBottomLeft));
 	}
 }
 

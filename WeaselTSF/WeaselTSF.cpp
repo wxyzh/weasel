@@ -169,6 +169,11 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	_pThreadMgr = pThreadMgr;
 	_tfClientId = tfClientId;	
 
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitThreadMgrEventSink.");
+#endif // _M_X64
+#endif // TEST
 	if (!_InitThreadMgrEventSink())
 		goto ExitError;
 
@@ -179,6 +184,12 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 
 	if (!_InitKeyEventSink())
 		goto ExitError;
+
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitActiveLanguageProfileNotifySink");
+#endif // _M_X64
+#endif // TEST
 
 	if (!_InitActiveLanguageProfileNotifySink())
 	{
@@ -199,13 +210,19 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	if (!_IsKeyboardOpen())
 		_SetKeyboardOpen(TRUE);
 
-	if (!_InitCompartment())
-		goto ExitError;
-
 	_InitGlobalCompartment();
 	_pCompartmentConversion = std::make_unique<CCompartment>(pThreadMgr, tfClientId, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
 
 	_EnsureServerConnected();
+
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitCompartment");
+#endif // _M_X64
+#endif // TEST
+
+	if (!_InitCompartment())
+		goto ExitError;	
 
 	return S_OK;
 
@@ -216,6 +233,11 @@ ExitError:
 
 STDMETHODIMP WeaselTSF::OnActivated(REFCLSID clsid, REFGUID guidProfile, BOOL isActivated)
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::OnActivated. isActivated = {}", isActivated);
+#endif // _M_X64
+#endif // TEST
 	if (!IsEqualCLSID(clsid, c_clsidTextService))
 	{
 		return S_OK;

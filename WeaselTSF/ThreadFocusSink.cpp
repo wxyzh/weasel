@@ -1,5 +1,12 @@
 module;
 #include "stdafx.h"
+#include "test.h"
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#endif // TEST
 module WeaselTSF;
 import CandidateList;
 
@@ -10,6 +17,19 @@ STDMETHODIMP WeaselTSF::OnSetThreadFocus()
 	LOG(INFO) << std::format("From WeaselTSF::OnSetThreadFocus.");
 #endif // _M_X64
 #endif // TEST
+	if (_cand)
+	{
+		com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
+		
+		if (SUCCEEDED(_pTextEditSinkContext->GetDocumentMgr(&pCandidateListDocumentMgr)))
+		{
+			if (pCandidateListDocumentMgr == _pDocMgrLastFocused)
+			{
+				_cand->OnSetThreadFocus();
+			}
+		}
+	}
+
 	return S_OK;
 }
 STDMETHODIMP WeaselTSF::OnKillThreadFocus()
@@ -19,6 +39,16 @@ STDMETHODIMP WeaselTSF::OnKillThreadFocus()
 	LOG(INFO) << std::format("From WeaselTSF::OnKillThreadFocus.");
 #endif // _M_X64
 #endif // TEST
+	if (_cand)
+	{
+		com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
+
+		if (SUCCEEDED(_pTextEditSinkContext->GetDocumentMgr(&pCandidateListDocumentMgr)))
+		{
+			_pDocMgrLastFocused = pCandidateListDocumentMgr;
+			_cand->OnKillThreadFocus();
+		}
+	}
 	_AbortComposition();
 	return S_OK;
 }

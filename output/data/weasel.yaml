@@ -10,6 +10,7 @@ app_options:
     ascii_mode: true
 
 style:
+  antialias_mode: default
   color_scheme: dark_temple
   ascii_tip_follow_cursor: false
   font_face: Microsoft YaHei
@@ -26,6 +27,7 @@ style:
   label_format: "%s."
   mark_text: ""
   mouse_hover_ms: 0
+  paging_on_scroll: true
   vertical_text: false
   vertical_text_left_to_right: false
   vertical_text_with_wrap: false

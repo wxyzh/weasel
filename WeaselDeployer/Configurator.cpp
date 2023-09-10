@@ -111,8 +111,7 @@ int Configurator::Run(bool installing)
 	/*(skip_switcher_settings || configure_switcher(api, switcher_settings, &reconfigured)) &&
 		(skip_ui_style_settings || configure_ui(api, &ui_style_settings, &reconfigured));*/
 
-	/*(skip_switcher_settings || skip_ui_style_settings) &&*/
-	configure(api, switcher_settings, &ui_style_settings, reconfigured);
+	skip_switcher_settings && skip_ui_style_settings || configure(api, switcher_settings, &ui_style_settings, reconfigured);
 
 	api->custom_settings_destroy((RimeCustomSettings*)switcher_settings);
 

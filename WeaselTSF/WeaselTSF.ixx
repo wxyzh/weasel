@@ -250,7 +250,7 @@ export
 		// _bitset[11]: _NonDynamicInput
 		// _bitset[12]: _simplication_state
 		// _bitset[13]: _FistKeyComposition
-		// _bitset[14]: 
+		// _bitset[14]: _KeyboardDisabled
 		// _bitset[15]:  
 		std::bitset<16> _bitset{};
 

@@ -28,21 +28,29 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 	int height = offsetY, width = offsetX + real_margin_x;
 	int h = offsetY + real_margin_y;
 
-	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
+	if (_style.hilited_mark_color & 0xff00'0000)
 	{
 		CSize sg;
-		GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
+		if (!_style.mark_text.empty())
+		{
+			GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
+		}
+		else
+		{
+			GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
+		}
+
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_HEIGHT + 4;
 	}
-	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
+	int base_offset =  ((_style.hilited_mark_color & 0xff00'0000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
 
 	// calc page indicator 
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
+	bool page_en = (_style.prevpage_color & 0xff00'0000) && (_style.nextpage_color & 0xff00'0000);
 	int pgh = page_en ? (pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding_y * 2) : 0;
 	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
 
@@ -171,7 +179,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 				base_left = _auxiliaryRect.left;	
 			else
 				base_left = _candidateRects[0].left;
-			for(int i = candidates_count - 1; i>=0 ; i --)
+			for(int i = candidates_count - 1; i >= 0 ; --i)
 			{
 				int offset;
 				if(i == candidates_count - 1)
@@ -403,7 +411,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 					}
 				}		
 			}
-			for(auto i = col_cnt; i >= 0; i-- )
+			for(auto i = col_cnt; i >= 0; --i)
 			{
 				int offset ;
 				if(i == col_cnt)
@@ -413,7 +421,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 				offset_of_cols[i] = offset;
 				_candidateRects[first_cand_of_cols[i]].OffsetRect(offset_of_cols[i], 0);
 			}
-			for(auto i = 0; i < candidates_count; i++ )
+			for(auto i = 0; i < candidates_count; ++i)
 			{
 				if( i != first_cand_of_cols[col_of_candidate[i]] )
 					_candidateRects[i].OffsetRect(offset_of_cols[col_of_candidate[i]], 0);
@@ -461,7 +469,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 	_PrepareRoundInfo(dc);
 	if(_style.vertical_text_left_to_right)
 	{
-		for(auto i = 0; i < candidates_count; i++)
+		for(auto i = 0; i < candidates_count; ++i)
 		{
 			_roundInfo[i].Hemispherical = _roundInfo[0].Hemispherical;
 			if(_roundInfo[0].Hemispherical)
@@ -498,7 +506,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 	}
 	else
 	{
-		for(auto i = 0; i < candidates_count; i++)
+		for(auto i = 0; i < candidates_count; ++i)
 		{
 			_roundInfo[i].Hemispherical = _roundInfo[0].Hemispherical;
 			if(_roundInfo[0].Hemispherical)
@@ -540,4 +548,3 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 	// eliminate the 1 pixel gap when border width odd and padding equal to margin
 	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
 }
-

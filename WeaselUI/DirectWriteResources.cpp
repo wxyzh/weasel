@@ -1,7 +1,5 @@
 module;
 #include "stdafx.h"
-#include <d2d1.h>
-#include <dwrite_2.h>
 module WeaselUI;
 
 using namespace weasel;
@@ -65,34 +63,18 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 		pRenderTarget->SetTextAntialiasMode(mode);
 		pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 	}
-	pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &m_pBrush);
+	pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), &m_pBrush);
 	//get the dpi information
-	if (dpi == 0)
-	{
-		pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
-		dpiScaleX_ /= 72.0f;
-		dpiScaleY_ /= 72.0f;
-	}
-	else
-	{
-		dpiScaleX_ = dpi / 72.0f;
-		dpiScaleY_ = dpi / 72.0f;
-	}
+	dpiScaleX_ = dpiScaleY_ = dpi;
+	dpiScaleX_ /= 72.0f;
+	dpiScaleY_ /= 72.0f;
 
 	InitResources(style, dpi);
 }
 
 DirectWriteResources::~DirectWriteResources()
 {
-	SafeRelease(&pPreeditTextFormat);
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pLabelTextFormat);
-	SafeRelease(&pCommentTextFormat);
-	SafeRelease(&m_pBrush);
-	SafeRelease(&pRenderTarget);
-	SafeRelease(&pDWFactory);
-	SafeRelease(&pD2d1Factory);
-	SafeRelease(&pTextLayout);
+
 }
 
 HRESULT DirectWriteResources::InitResources(std::wstring_view label_font_face, int label_font_point,
@@ -100,13 +82,13 @@ HRESULT DirectWriteResources::InitResources(std::wstring_view label_font_face, i
 	std::wstring_view comment_font_face, int comment_font_point, bool vertical_text)
 {
 	// prepare d2d1 resources
-	SafeRelease(&pPreeditTextFormat);
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pLabelTextFormat);
-	SafeRelease(&pCommentTextFormat);
+	pPreeditTextFormat.Release();
+	pTextFormat.Release();
+	pLabelTextFormat.Release();
+	pCommentTextFormat.Release();
 	DWRITE_WORD_WRAPPING wrapping = ((_style.max_width == 0 && _style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
-		|| (_style.max_height == 0 && _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)) ?
-		DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_CHARACTER;
+		|| (_style.max_height == 0 && _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT))
+		? DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_CHARACTER;
 	DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
 
 	HRESULT hResult = S_OK;
@@ -115,13 +97,13 @@ HRESULT DirectWriteResources::InitResources(std::wstring_view label_font_face, i
 	// text font text format set up
 	fontFaceStrVector = ws_split(font_face.data(), L",");
 	// set main font a invalid font name, to make every font range customizable
-	const std::wstring _mainFontFace = L"_InvalidFontName_";
+	std::wstring_view _mainFontFace = L"_InvalidFontName_";
 	DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
 	// setup font weight and font style by the first unit of font_face setting string
 	_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
-	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
+	hResult = pDWFactory->CreateTextFormat(_mainFontFace.data(), NULL,
 		fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 		font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
 	if (pTextFormat != NULL)
@@ -139,12 +121,12 @@ HRESULT DirectWriteResources::InitResources(std::wstring_view label_font_face, i
 		pTextFormat->SetWordWrapping(wrapping);
 		_SetFontFallback(pTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.clear();
+	decltype(fontFaceStrVector)().swap(fontFaceStrVector);
 
 	fontFaceStrVector = ws_split(font_face.data(), L",");
 	//_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
-	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
+	hResult = pDWFactory->CreateTextFormat(_mainFontFace.data(), NULL,
 		fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 		font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pPreeditTextFormat));
 	if (pPreeditTextFormat != NULL)
@@ -161,14 +143,14 @@ HRESULT DirectWriteResources::InitResources(std::wstring_view label_font_face, i
 		pPreeditTextFormat->SetWordWrapping(wrapping);
 		_SetFontFallback(pPreeditTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.clear();
+	decltype(fontFaceStrVector)().swap(fontFaceStrVector);
 
 	// label font text format set up
 	fontFaceStrVector = ws_split(label_font_face.data(), L",");
 	// setup weight and style of label_font_face
 	_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
-	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
+	hResult = pDWFactory->CreateTextFormat(_mainFontFace.data(), NULL,
 		fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 		label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
 	if (pLabelTextFormat != NULL)
@@ -185,14 +167,14 @@ HRESULT DirectWriteResources::InitResources(std::wstring_view label_font_face, i
 		pLabelTextFormat->SetWordWrapping(wrapping);
 		_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.clear();
+	decltype(fontFaceStrVector)().swap(fontFaceStrVector);
 
 	// comment font text format set up
 	fontFaceStrVector = ws_split(comment_font_face.data(), L",");
 	// setup weight and style of label_font_face
 	_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
-	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
+	hResult = pDWFactory->CreateTextFormat(_mainFontFace.data(), NULL,
 		fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 		comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
 	if (pCommentTextFormat != NULL)
@@ -209,7 +191,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring_view label_font_face, i
 		pCommentTextFormat->SetWordWrapping(wrapping);
 		_SetFontFallback(pCommentTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.clear();
+	decltype(fontFaceStrVector)().swap(fontFaceStrVector);
 	return hResult;
 }
 
@@ -225,15 +207,55 @@ HRESULT DirectWriteResources::InitResources(UIStyle& style, UINT dpi = 0)
 		style.comment_font_face, style.comment_font_point, style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT);
 }
 
+HRESULT weasel::DirectWriteResources::CreateTextLayout(std::wstring_view text, const int nCount, IDWriteTextFormat1* const txtFormat, const float width, const float height)
+{
+	return pDWFactory->CreateTextLayout(text.data(), nCount, txtFormat, width, height, reinterpret_cast<IDWriteTextLayout**>(&pTextLayout));
+}
+
+HRESULT weasel::DirectWriteResources::CreateBrush(const D2D1_COLOR_F& color)
+{
+	return pRenderTarget->CreateSolidColorBrush(color, &m_pBrush);
+}
+
+HRESULT weasel::DirectWriteResources::GetLayoutOverhangMetrics(DWRITE_OVERHANG_METRICS* overhangMetrics)
+{
+	return pTextLayout->GetOverhangMetrics(overhangMetrics);
+}
+
+HRESULT weasel::DirectWriteResources::GetLayoutMetrics(DWRITE_TEXT_METRICS* metrics)
+{
+	return pTextLayout->GetMetrics(metrics);
+}
+
+HRESULT weasel::DirectWriteResources::SetLayoutReadingDirection(const DWRITE_READING_DIRECTION& direct)
+{
+	return pTextLayout->SetReadingDirection(direct);
+}
+
+HRESULT weasel::DirectWriteResources::SetLayoutFlowDirection(const DWRITE_FLOW_DIRECTION& direct)
+{
+	return pTextLayout->SetFlowDirection(direct);
+}
+
+void weasel::DirectWriteResources::DrawRect(D2D1_RECT_F* const rect, const float strokeWidth, ID2D1StrokeStyle* const sstyle)
+{
+	pRenderTarget->DrawRectangle(rect, m_pBrush, strokeWidth, sstyle);
+}
+
+void weasel::DirectWriteResources::DrawTextLayoutAt(const D2D1_POINT_2F& point)
+{
+	pRenderTarget->DrawTextLayout(point, pTextLayout, m_pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+}
+
 void weasel::DirectWriteResources::SetDpi(UINT dpi)
 {
 	dpiScaleX_ = dpi / 72.0f;
 	dpiScaleY_ = dpi / 72.0f;
 
-	SafeRelease(&pPreeditTextFormat);
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pLabelTextFormat);
-	SafeRelease(&pCommentTextFormat);
+	pPreeditTextFormat.Release();
+	pTextFormat.Release();
+	pLabelTextFormat.Release();
+	pCommentTextFormat.Release();
 	InitResources(_style);
 }
 
@@ -282,10 +304,10 @@ void DirectWriteResources::_ParseFontFace(const std::wstring& fontFaceStr, DWRIT
 
 void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* textFormat, std::span<std::wstring> fontVector)
 {
-	IDWriteFontFallback* pSysFallback;
+	CComPtr<IDWriteFontFallback> pSysFallback;
 	pDWFactory->GetSystemFontFallback(&pSysFallback);
-	IDWriteFontFallback* pFontFallback = NULL;
-	IDWriteFontFallbackBuilder* pFontFallbackBuilder = NULL;
+	CComPtr<IDWriteFontFallback> pFontFallback;
+	CComPtr<IDWriteFontFallbackBuilder> pFontFallbackBuilder;
 	pDWFactory->CreateFontFallbackBuilder(&pFontFallbackBuilder);
 	std::vector<std::wstring> fallbackFontsVector;
 	for (UINT32 i = 0; i < fontVector.size(); i++)
@@ -339,7 +361,4 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* textFormat, std:
 	pFontFallbackBuilder->CreateFontFallback(&pFontFallback);
 	textFormat->SetFontFallback(pFontFallback);
 	fallbackFontsVector.clear();
-	SafeRelease(&pFontFallback);
-	SafeRelease(&pSysFallback);
-	SafeRelease(&pFontFallbackBuilder);
 }

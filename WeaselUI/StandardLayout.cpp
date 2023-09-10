@@ -23,7 +23,7 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 	return std::wstring(buffer);
 }
 
-void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, PDWR pDWR,  LPSIZE lpSize) const
+void weasel::StandardLayout::GetTextSizeDW(std::wstring_view text, size_t nCount, IDWriteTextFormat1* pTextFormat, PDWR pDWR,  LPSIZE lpSize) const
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
@@ -37,9 +37,9 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 	// 创建文本布局 
 	if (pTextFormat != NULL){
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, _style.max_height, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat, 0, _style.max_height);
 		else
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, _style.max_width, 0, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat, _style.max_width, 0);
 	}
 
 	if (SUCCEEDED(hr))
@@ -47,12 +47,12 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
 			DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
-			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pDWR->pTextLayout->SetFlowDirection(flow);
+			pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pDWR->SetLayoutFlowDirection(flow);
 		}
 		// 获取文本尺寸  
 		DWRITE_TEXT_METRICS textMetrics;
-		hr = pDWR->pTextLayout->GetMetrics(&textMetrics);
+		hr = pDWR->GetLayoutMetrics(&textMetrics);
 		sz = D2D1::SizeF(ceil(textMetrics.width), ceil(textMetrics.height));
 
 		lpSize->cx = (int)sz.width;
@@ -62,21 +62,21 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 		if(_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
 			size_t max_width = _style.max_width == 0 ? textMetrics.width : _style.max_width;
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, max_width, textMetrics.height,  reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat, max_width, textMetrics.height);
 		}
 		else
 		{
 			size_t max_height = _style.max_height == 0 ? textMetrics.height : _style.max_height;
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, textMetrics.width, max_height,  reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat, textMetrics.width, max_height);
 		}
 
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
-			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pDWR->pTextLayout->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pDWR->SetLayoutFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
 		}
 		DWRITE_OVERHANG_METRICS overhangMetrics;
-		hr = pDWR->pTextLayout->GetOverhangMetrics(&overhangMetrics);
+		hr = pDWR->GetLayoutOverhangMetrics(&overhangMetrics);
 		{
 			if (overhangMetrics.left > 0)
 				lpSize->cx += overhangMetrics.left + 1;
@@ -88,7 +88,7 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 				lpSize->cy += overhangMetrics.bottom + 1;
 		}
 	}
-	SafeRelease(&pDWR->pTextLayout);
+	pDWR->ResetLayout();
 }
 
 CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat1* pTextFormat, PDWR pDWR) const
@@ -423,5 +423,9 @@ bool StandardLayout::ShouldDisplayStatusIcon() const
 	LOG(INFO) << std::format("ascii_mode = {}, inline_preedit = {}, composing = {}, aux.empty() = {}, layout_type = {}", _status.ascii_mode, _style.inline_preedit, _status.composing, _context.aux.empty(), (int)_style.layout_type);
 #endif // DEBUG
 #endif // TEST
-	return ((_status.ascii_mode && !_style.inline_preedit) || !_status.composing || !_context.aux.empty()) && ((_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && _style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN) || _context.aux.empty());
+	return ((_status.ascii_mode && !_style.inline_preedit) 
+		|| !_status.composing || !_context.aux.empty()) 
+		&& ((_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN 
+			&& _style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN) 
+			|| _context.aux.empty());
 }

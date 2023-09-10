@@ -3,6 +3,7 @@ module;
 #include "resource.h"
 #include <winsparkle.h>
 export module WeaselServerApp;
+import <dwrite_2.h>;
 import <functional>;
 import <memory>;
 import <string>;

@@ -168,14 +168,6 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 	LOG(INFO) << std::format("From OnCompositionTerminated. _AbortComposition. _AutoCADTest = {}", GetBit(9));
 #endif // _M_X64
 #endif // TEST
-	static int count{};
-	++count;
-	SetBit(9);			// _bitset[9]:  _AutoCAD
-	if (count == 2)
-	{
-		count = 0;
-		SetBit(10);		// _bitset[10]: _DynamicInput
-	}
 	_AbortComposition();
 
 	return S_OK;
@@ -186,9 +178,9 @@ void WeaselTSF::_AbortComposition(bool clear)
 	if (GetBit(9))							// _bitset[9]:  _AutoCAD
 	{
 		ReSetBit(9);						// _bitset[9]:  _AutoCAD
-		if (GetBit(10) || GetBit(11))		// _bitset[10]: _DynamicInput, _bitset[11]: _NonDynamicInput
+		if (/*GetBit(10) || */GetBit(11))		// _bitset[10]: _DynamicInput, _bitset[11]: _NonDynamicInput
 		{			
-			ReSetBit(10);					// _bitset[10]: _DynamicInput
+			// ReSetBit(10);					// _bitset[10]: _DynamicInput
 			ReSetBit(11);					// _bitset[11]: _NonDynamicInput
 			BOOL eaten;
 			_ProcessKeyEvent(0x8, 0xE001, &eaten);

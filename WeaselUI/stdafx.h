@@ -17,6 +17,8 @@
 #include <wtl/atlgdi.h>
 #include <wtl/atlmisc.h>
 
+#include <atlcomcli.h> 
+
 #include <string>
 #include <vector>
 #include <utility>

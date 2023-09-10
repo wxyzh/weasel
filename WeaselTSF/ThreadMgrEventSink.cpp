@@ -8,6 +8,7 @@ module;
 #endif
 #endif // TEST
 module WeaselTSF;
+import CandidateList;
 
 STDAPI WeaselTSF::OnInitDocumentMgr(ITfDocumentMgr *pDocMgr)
 {
@@ -31,16 +32,21 @@ STDAPI WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr)
 
 STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus)
 {
+	auto ret = _InitTextEditSink(pDocMgrFocus);
+
 #ifdef TEST
 #ifdef _M_X64
-	LOG(INFO) << std::format("From WeaselTSF::OnSetFocus. pDocMgrFocus = {:#x}, pDocMrgPrevFocus = {:#x}", (size_t)pDocMgrFocus, (size_t)pDocMgrPrevFocus);
+	LOG(INFO) << std::format("From WeaselTSF::OnSetFocus. pDocMgrFocus = {:#x}, pDocMrgPrevFocus = {:#x}, ret = {}", (size_t)pDocMgrFocus, (size_t)pDocMgrPrevFocus, ret);
 #endif // _M_X64
 #endif // TEST
-	_InitTextEditSink(pDocMgrFocus);
 
 	if (!pDocMgrFocus)
 	{
 		SetBit(7);			// _bitset[7]: _FocusChanged
+	}
+	else if(GetBit(14))		// _bitset[14]: _KeyboardDisabled
+	{
+		_SetKeyboardOpen(TRUE);
 	}
 
 	com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
@@ -49,13 +55,15 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocM
 	{
 		if (pCandidateListDocumentMgr != pDocMgrFocus)
 		{
-			_HideUI();
+			_cand->OnKillThreadFocus();
 		}
 		else
 		{
-			_ShowUI();
+			_cand->OnSetThreadFocus();
 		}		
 	}
+
+	_pDocMgrLastFocused = pDocMgrFocus;
 
 	return S_OK;
 }

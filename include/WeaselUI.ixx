@@ -1,9 +1,10 @@
 ﻿module;
-#include <d2d1.h>
-#include <dwrite_2.h>
+#include <atlcomcli.h> 
 #include <ShellScalingApi.h>
 #include "VersionHelpers.hpp"
 export module WeaselUI;
+import <d2d1.h>;
+import <dwrite_2.h>;
 import WeaselCommon;
 import <vector>;
 import <regex>;
@@ -109,20 +110,34 @@ export namespace weasel
 		HRESULT InitResources(std::wstring_view label_font_face, int lavel_font_point,
 			std::wstring_view font_face, int font_point,
 			std::wstring_view comment_font_face, int comment_font_point, bool vertical_text = false);
-		HRESULT InitResources(UIStyle& style, UINT dpi);
+		HRESULT InitResources(UIStyle& style, const UINT dpi);
+
+		HRESULT CreateTextLayout(std::wstring_view text, const int nCount, IDWriteTextFormat1* const txtFormat, const float width, const float height);
+		HRESULT CreateBrush(const D2D1_COLOR_F& color);
+
+		HRESULT GetLayoutOverhangMetrics(DWRITE_OVERHANG_METRICS* overhangMetrics);
+		HRESULT GetLayoutMetrics(DWRITE_TEXT_METRICS* metrics);
+		HRESULT SetLayoutReadingDirection(const DWRITE_READING_DIRECTION& direct);
+		HRESULT SetLayoutFlowDirection(const DWRITE_FLOW_DIRECTION& direct);
+		
+		void DrawRect(D2D1_RECT_F* const rect, const float strokeWidth = 1.0f, ID2D1StrokeStyle* const sstyle = nullptr);
+		void DrawTextLayoutAt(const D2D1_POINT_2F& point);
+
+		void ResetLayout() { pTextLayout.Release(); }
+		void SetBrushColor(const D2D1_COLOR_F& color) { m_pBrush->SetColor(color); }
 		void SetDpi(UINT dpi);
 
 	public:
 		float dpiScaleX_, dpiScaleY_;
-		ID2D1Factory* pD2d1Factory;
-		IDWriteFactory2* pDWFactory;
-		ID2D1DCRenderTarget* pRenderTarget;
-		IDWriteTextFormat1* pPreeditTextFormat;
-		IDWriteTextFormat1* pTextFormat;
-		IDWriteTextFormat1* pLabelTextFormat;
-		IDWriteTextFormat1* pCommentTextFormat;
-		IDWriteTextLayout2* pTextLayout;
-		ID2D1SolidColorBrush* m_pBrush;
+		CComPtr<ID2D1Factory> pD2d1Factory;
+		CComPtr<IDWriteFactory2> pDWFactory;
+		CComPtr<ID2D1DCRenderTarget> pRenderTarget;
+		CComPtr<IDWriteTextFormat1> pPreeditTextFormat;
+		CComPtr<IDWriteTextFormat1> pTextFormat;
+		CComPtr<IDWriteTextFormat1> pLabelTextFormat;
+		CComPtr<IDWriteTextFormat1> pCommentTextFormat;
+		CComPtr<IDWriteTextLayout2> pTextLayout;
+		CComPtr<ID2D1SolidColorBrush> m_pBrush;
 
 	private:
 		void _ParseFontFace(const std::wstring& fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle);

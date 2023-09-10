@@ -1,6 +1,13 @@
 module;
 #include "stdafx.h"
 #include <resource.h>
+#include "test.h"
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#endif // TEST
 module Compartment;
 import WeaselTSF;
 import Compartment;
@@ -170,6 +177,12 @@ STDAPI_(ULONG) CCompartmentEventSink::Release()
 
 STDAPI CCompartmentEventSink::OnChange(_In_ REFGUID guidCompartment)
 {
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::OnChange. guid = {:X}-{:X}-{:X}-{:X}{:X}{:X}{:X}{:X}{:X}{:X}{:X}", guidCompartment.Data1, guidCompartment.Data2, guidCompartment.Data3, guidCompartment.Data4[0],
+		guidCompartment.Data4[1], guidCompartment.Data4[2], guidCompartment.Data4[3], guidCompartment.Data4[4], guidCompartment.Data4[5], guidCompartment.Data4[6], guidCompartment.Data4[7]);
+#endif // _M_X64
+#endif // TEST
 	return _callback(guidCompartment);
 }
 

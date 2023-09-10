@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "Globals.h"
 #include "resource.h"
-// #include "test.h"
+#include "test.h"
 #ifdef TEST
 #ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING

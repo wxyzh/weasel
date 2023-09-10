@@ -186,7 +186,7 @@ void WeaselPanel::Refresh(bool from_server)
 	}
 }
 
-void WeaselPanel::_InitFontRes(void)
+void WeaselPanel::_InitFontRes(bool forced)
 {
 	HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
 	UINT dpiX = 96, dpiY = 96;
@@ -194,7 +194,7 @@ void WeaselPanel::_InitFontRes(void)
 		GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
 	// prepare d2d1 resources
 	// if style changed, or dpi changed, or pDWR nullptr, re-initialize directwrite resources
-	if (m_pDWR == nullptr || m_ostyle != m_style || dpiX != dpi)
+	if (forced || m_pDWR == nullptr || m_ostyle != m_style || dpiX != dpi)
 	{
 		m_pDWR.reset();
 		m_pDWR = std::make_shared<DirectWriteResources>(m_style, dpiX);
@@ -503,7 +503,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 #endif // TEST
 	bool drawn = false;
 	std::wstring const& t = text.str;
-	IDWriteTextFormat1* txtFormat = m_pDWR->pPreeditTextFormat;
+	auto txtFormat = m_pDWR->pPreeditTextFormat;
 
 	if (!t.empty()) {
 		weasel::TextRange range;
@@ -671,18 +671,27 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 	const std::vector<Text>& comments(m_ctx.cinfo.comments);
 	const std::vector<Text>& labels(m_ctx.cinfo.labels);
 
-	IDWriteTextFormat1* txtFormat = m_pDWR->pTextFormat;
-	IDWriteTextFormat1* labeltxtFormat = m_pDWR->pLabelTextFormat;
-	IDWriteTextFormat1* commenttxtFormat = m_pDWR->pCommentTextFormat;
+	// prevent all text format nullptr
+	if (m_pDWR->pTextFormat == nullptr && m_pDWR->pLabelTextFormat == nullptr && m_pDWR->pCommentTextFormat == nullptr)
+	{
+		_InitFontRes(true);
+	}
+
+	auto txtFormat = m_pDWR->pTextFormat;
+	auto labeltxtFormat = m_pDWR->pLabelTextFormat;
+	auto commenttxtFormat = m_pDWR->pCommentTextFormat;
 	BackType bkType = BackType::CAND;
 
 
 	CRect rect;
 	// draw back color and shadow color, with gdi+
-	if (back) {
+	if (back) 
+	{
 		// if candidate_shadow_color not transparent, draw candidate shadow first
-		if (COLORNOTTRANSPARENT(m_style.candidate_shadow_color)) {
-			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+		if (COLORNOTTRANSPARENT(m_style.candidate_shadow_color)) 
+		{
+			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) 
+			{
 				if (i == m_ctx.cinfo.highlighted) continue;	// draw non hilited candidates only 
 				rect = m_layout->GetCandidateRect((int)i);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
@@ -818,10 +827,11 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
 	// turn off WS_EX_TRANSPARENT, for better resp performance
-	ModifyStyleEx(WS_EX_TRANSPARENT, WS_EX_LAYERED);
+	auto ret = ModifyStyleEx(WS_EX_TRANSPARENT, WS_EX_LAYERED);
 #ifdef TEST
 #ifdef _M_X64
-	LOG(INFO) << std::format("From WeaselPanel::DoPaint. m_inputPos.left = {}, m_inputPos.top = {}, hide_candidates = {}, m_ctx.empty() = {}, m_status.composing = {}, inline_preedit = {}", m_inputPos.left, m_inputPos.top, hide_candidates, m_ctx.empty(), m_status.composing, m_style.inline_preedit);
+	LOG(INFO) << std::format("From WeaselPanel::DoPaint. m_inputPos.left = {}, m_inputPos.top = {}, hide_candidates = {}, m_ctx.empty() = {}, m_status.composing = {}, inline_preedit = {}, ret = {}, m_candidateCount = {}", 
+		m_inputPos.left, m_inputPos.top, hide_candidates, m_ctx.empty(), m_status.composing, m_style.inline_preedit, ret, m_candidateCount);
 #endif // _M_X64
 #endif // TEST
 
@@ -838,11 +848,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		CRect preeditrc = m_layout->GetPreeditRect();
 		if (m_istorepos)
 		{
-			CRect* rects = new CRect[m_candidateCount];
-			int* btmys = new int[m_candidateCount];
+			std::vector<CRect> rects;
+			rects.reserve(m_candidateCount);
+			std::vector<int> btmys;
+			btmys.reserve(m_candidateCount);
 			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-				rects[i] = m_layout->GetCandidateRect(i);
-				btmys[i] = rects[i].bottom;
+				rects.emplace_back(m_layout->GetCandidateRect(i));
+				btmys.emplace_back(rects[i].bottom);
 			}
 			if (m_candidateCount) {
 				if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
@@ -866,8 +878,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 				else
 					m_offsetys[i] = (rects[i - 1].top + m_offsetys[i - 1] - m_style.candidate_spacing) - rects[i].bottom;
 			}
-			delete[] rects;
-			delete[] btmys;
 		}
 		// background and candidates back, hilite back drawing start
 		if (!m_ctx.empty()) {
@@ -924,7 +934,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 				iconRect.OffsetRect(0, m_offsety_preedit);
 
 			CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : m_iconEnabled);
-			/*((m_ctx.aux.str != L"🌕️" && m_ctx.aux.str != L"🌙️") ? m_iconEnabled : (m_status.full_shape ? m_iconFull : m_iconHalf)));*/
 			memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 			drawn = true;
 		}
@@ -933,9 +942,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			ShowWindow(SW_HIDE);
 	}
 	_LayerUpdate(rcw, memDC);
-
-	// turn off WS_EX_TRANSPARENT after drawings, for better resp performance
-	::SetWindowLong(m_hWnd, GWL_EXSTYLE, ::GetWindowLong(m_hWnd, GWL_EXSTYLE) & (~WS_EX_TRANSPARENT));
 
 	// clean objs
 	::DeleteDC(memDC);
@@ -1002,7 +1008,6 @@ void WeaselPanel::MoveTo(RECT const& rc)
 #endif // TEST
 	if (!m_layout)	return;			// avoid handling nullptr in _RepositionWindow
 
-	
 	if ((rc.left != m_inputPos.left || rc.top != m_inputPos.top) && !hide_candidates)
 	{
 #ifdef TEST
@@ -1142,7 +1147,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 #endif // TEST
 	}
 
-void WeaselPanel::_TextOut(CRect const& rc, std::wstring_view psz, size_t cch, int inColor, IDWriteTextFormat* pTextFormat)
+void WeaselPanel::_TextOut(CRect const& rc, std::wstring_view psz, size_t cch, int inColor, IDWriteTextFormat1* const pTextFormat)
 {
 #ifdef TEST
 #ifdef _M_X64
@@ -1154,14 +1159,25 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring_view psz, size_t cch, i
 	float g = (float)(GetGValue(inColor)) / 255.0f;
 	float b = (float)(GetBValue(inColor)) / 255.0f;
 	float alpha = (float)((inColor >> 24) & 255) / 255.0f;
-	m_pDWR->m_pBrush->SetColor(D2D1::ColorF(r, g, b, alpha));
+	HRESULT hr{ S_OK };
+
+	if (m_pDWR->m_pBrush == nullptr)
+	{
+		hr = m_pDWR->CreateBrush(D2D1::ColorF(r, g, b, alpha));
+		if (FAILED(hr))
+			MessageBox(L"Failed CreateBrush", L"Info");
+	}
+	else
+	{
+		m_pDWR->SetBrushColor(D2D1::ColorF(r, g, b, alpha));
+	}
 
 	if (NULL != m_pDWR->m_pBrush && NULL != pTextFormat) {
-		m_pDWR->pDWFactory->CreateTextLayout(psz.data(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), reinterpret_cast<IDWriteTextLayout**>(&m_pDWR->pTextLayout));
+		m_pDWR->CreateTextLayout(psz.data(), (int)cch, pTextFormat, (float)rc.Width(), (float)rc.Height());
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
 			DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
-			m_pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			m_pDWR->pTextLayout->SetFlowDirection(flow);
+			m_pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			m_pDWR->SetLayoutFlowDirection(flow);
 		}
 
 		// offsetx for font glyph over left
@@ -1169,20 +1185,20 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring_view psz, size_t cch, i
 		float offsety = rc.top;
 		// prepare for space when first character overhanged
 		DWRITE_OVERHANG_METRICS omt;
-		m_pDWR->pTextLayout->GetOverhangMetrics(&omt);
+		m_pDWR->GetLayoutOverhangMetrics(&omt);
 		if (m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT && omt.left > 0)
 			offsetx += omt.left;
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && omt.top > 0)
 			offsety += omt.top;
 
 		if (m_pDWR->pTextLayout != NULL) {
-			m_pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, m_pDWR->pTextLayout, m_pDWR->m_pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+			m_pDWR->DrawTextLayoutAt({ offsetx, offsety });
 #if 0
 			D2D1_RECT_F rectf = D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
-			pDWR->pRenderTarget->DrawRectangle(&rectf, m_pDWR->m_pBrush);
+			pDWR->DrawRect(&rectf);
 #endif
 	}
-		SafeRelease(&m_pDWR->pTextLayout);
+		m_pDWR->ResetLayout();
 }
 }
 

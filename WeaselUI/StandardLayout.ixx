@@ -38,7 +38,7 @@ export namespace weasel
 		virtual CRect GetPrepageRect() { return _prePageRect; }
 		virtual CRect GetNextpageRect() { return _nextPageRect; }
 
-		void GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, PDWR pDWR, LPSIZE lpSize) const;
+		void GetTextSizeDW(std::wstring_view text, size_t nCount, IDWriteTextFormat1* pTextFormat, PDWR pDWR, LPSIZE lpSize) const;
 
 	protected:
 		/* Utility functions */

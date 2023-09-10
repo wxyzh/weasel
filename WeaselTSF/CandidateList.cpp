@@ -250,12 +250,14 @@ void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 	if (_pbShow == FALSE)
 		_UpdateUIElement();
 
-	if (status.composing)
+	if (status.composing && !ctx.cinfo.empty())
 	{
 		Show(_pbShow);
 	}
 	else
+	{
 		Show(FALSE);
+	}
 }
 
 void CCandidateList::UpdateStyle(const UIStyle & sty)
@@ -379,6 +381,25 @@ void CCandidateList::EndUI()
 	if (emgr != NULL)
 		emgr->EndUIElement(uiid);
 	_DisposeUIWindow();
+}
+
+HRESULT CCandidateList::OnSetThreadFocus()
+{
+	if (_pbShow)
+	{
+		Show(TRUE);
+	}
+
+	return S_OK;
+}
+
+HRESULT CCandidateList::OnKillThreadFocus()
+{
+	if (_pbShow)
+	{
+		Show(FALSE);
+	}
+	return S_OK;
 }
 
 com_ptr<ITfContext> CCandidateList::GetContextDocument()

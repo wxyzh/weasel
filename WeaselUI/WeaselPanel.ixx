@@ -67,7 +67,7 @@ export
 		bool GetIsReposition() { return m_istorepos; }
 
 	private:
-		void _InitFontRes(void);
+		void _InitFontRes(bool forced = false);
 		void _CaptureRect(CRect& rect);
 		bool m_mouse_entry = false;
 		void _CreateLayout();
@@ -78,7 +78,7 @@ export
 		bool _DrawCandidates(CDCHandle& dc, bool back = false);
 		void _HighlightText(CDCHandle& dc, const CRect& rc, const COLORREF& color, const COLORREF& shadowColor, int radius, 
 			const BackType& type = BackType::TEXT, const IsToRoundStruct& rd = IsToRoundStruct(), const COLORREF& bordercolor = TRANS_COLOR);
-		void _TextOut(CRect const& rc, std::wstring_view psz, size_t cch, int inColor, IDWriteTextFormat* pTextFormat = NULL);
+		void _TextOut(CRect const& rc, std::wstring_view psz, size_t cch, int inColor, IDWriteTextFormat1* const pTextFormat = nullptr);
 
 		void _LayerUpdate(const CRect& rc, CDCHandle dc);
 

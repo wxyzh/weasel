@@ -288,7 +288,7 @@ namespace weasel
 			radiusY = (float)(h / 2);
 		}
 
-		Gdiplus::Bitmap* temp = new Gdiplus::Bitmap(img->GetWidth(), img->GetHeight(), img->GetPixelFormat());
+		auto temp = std::make_unique<Gdiplus::Bitmap>(img->GetWidth(), img->GetHeight(), img->GetPixelFormat());
 
 		Gdiplus::BitmapData bitmapData1;
 		Gdiplus::BitmapData bitmapData2;
@@ -298,15 +298,13 @@ namespace weasel
 			&rect,
 			Gdiplus::ImageLockModeRead | Gdiplus::ImageLockModeWrite,
 			img->GetPixelFormat(),
-			&bitmapData1
-		)
-			&&
-			Gdiplus::Ok == temp->LockBits(
+			&bitmapData1)
+			&& Gdiplus::Ok == temp->LockBits(
 				&rect,
 				Gdiplus::ImageLockModeRead | Gdiplus::ImageLockModeWrite,
 				temp->GetPixelFormat(),
-				&bitmapData2
-			)) {
+				&bitmapData2))
+		{
 			BYTE* src = (BYTE*)bitmapData1.Scan0;
 			BYTE* dst = (BYTE*)bitmapData2.Scan0;
 
@@ -318,8 +316,6 @@ namespace weasel
 			img->UnlockBits(&bitmapData1);
 			temp->UnlockBits(&bitmapData2);
 		}
-
-		delete temp;
 	}
 
 	void DoGaussianBlurPower(Gdiplus::Bitmap* img, float radiusX, float radiusY, int nPower)

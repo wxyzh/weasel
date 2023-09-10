@@ -160,6 +160,7 @@ RimeSessionId RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 		_LoadAppInlinePreeditSet(session_id, true);
 		_UpdateInlinePreeditStatus(session_id);
 		_RefreshTrayIcon(session_id, _UpdateUICallback);
+		RimeFreeStatus(&status);
 	}
 	// show session's welcome message :-) if any
 	if (eat) {
@@ -416,8 +417,8 @@ void RimeWithWeaselHandler::_UpdateUI(RimeSessionId session_id)
 
 	if (weasel_status.composing)
 	{
-		// m_ui->Update(weasel_context, weasel_status, true);
-		// if (!is_tsf) m_ui->Show();
+		 /*m_ui->Update(weasel_context, weasel_status, true);
+		 if (!is_tsf) m_ui->Show();*/
 	}
 	else if (!_ShowMessage(weasel_context, weasel_status))
 	{
