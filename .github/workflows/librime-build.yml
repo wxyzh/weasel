@@ -1,0 +1,124 @@
+name: Windows build
+on:
+  workflow_call:
+    inputs:
+      repository:
+        default: ${{ github.repository }}
+        required: false
+        type: string
+      rime_plugins:
+        required: false
+        type: string
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [msvc, clang]
+        arch: [Win32, x64] # 架构矩阵
+        exclude:
+          - compiler: clang
+            arch: Win32
+    env:
+      boost_version: 1.83.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
+      build_script: ${{ matrix.compiler == 'msvc' && './build.bat' || './build-clang.bat' }}
+      boost_arg: ${{ (matrix.arch == 'x64' && matrix.compiler == 'msvc') && 'boost_x64' || 'boost' }}
+      RIME_PLUGINS: ${{ inputs.rime_plugins }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - name: Checkout last commit
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository }}
+          submodules: recursive
+
+      - name: Configure MSVC
+        if: ${{ matrix.compiler == 'msvc' }}
+        run: |
+          copy env.vs2022.bat env.bat
+          $file = ".\env.bat"
+          $lines = Get-Content -Path $file
+          $lines = $lines | Where-Object { $_ -notlike "*set ARCH=Win32*" }
+          Set-Content -Path $file -Value $lines
+
+      - name: Configure clang
+        if: ${{ matrix.compiler == 'clang' }}
+        run: |
+          choco upgrade -y llvm
+          pip install ninja
+
+      - name: Configure build environment
+        run: |
+          $git_ref_name = git describe --always
+          echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
+          git submodule > submodule-status
+
+      - name: Cache Boost source
+        id: cache-boost-src
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.BOOST_ROOT }}.7z
+          key: ${{ runner.os }}-boost-${{ env.boost_version }}-${{ matrix.compiler }}-${{ env.ARCH }}-src
+
+      - name: Download Boost source
+        if: steps.cache-boost-src.outputs.cache-hit != 'true'
+        run: |
+          aria2c https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.7z -d deps
+
+      - name: Extract Boost source tarball
+        run: |
+          pushd deps
+          7z x ${{ env.BOOST_ROOT }}.7z
+          popd
+
+      - name: Cache Boost lib
+        id: cache-boost-lib
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.BOOST_ROOT }}\stage
+          key: ${{ runner.os }}-boost-${{ env.boost_version }}-${{ matrix.compiler }}-${{ env.ARCH }}-lib
+
+      - name: Install Boost
+        if: steps.cache-boost-lib.outputs.cache-hit != 'true'
+        run: ${{ env.build_script }} ${{ env.boost_arg }} 
+
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            bin
+            include
+            lib
+            share
+          key: ${{ runner.os }}-${{ matrix.compiler }}-${{ hashFiles('submodule-status') }}-${{ env.ARCH }}
+
+      - name: Build dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: ${{ env.build_script }} deps
+
+      - name: Install Rime plugins
+        run: .\action-install-plugins-windows.bat
+
+      - name: Build and test
+        run: ${{ env.build_script }} test
+
+      - name: Create distributable
+        if: ${{ matrix.compiler == 'msvc' }}
+        run: |
+          7z a rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ env.ARCH }}.7z `
+          dist version-info.txt
+          7z a -x'!*/.placeholder' rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ env.ARCH }}.7z `
+          bin include lib share
+
+      - name: Upload artifacts
+        if: ${{ matrix.compiler == 'msvc' }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: |
+            rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ env.ARCH }}.7z
+            rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ env.ARCH }}.7z
