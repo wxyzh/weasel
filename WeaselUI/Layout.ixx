@@ -3,6 +3,7 @@ module;
 #include <gdiplus.h>
 #include <dwrite_2.h>
 #pragma comment(lib, "gdiplus.lib")
+#pragma optimize("", off)
 export module Layout;
 import WeaselUI;
 import WeaselCommon;
