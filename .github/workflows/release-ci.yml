@@ -4,25 +4,90 @@ on:
   workflow_dispatch:
 
 jobs:
+  checklibrime:
+    runs-on: windows-2022
+    outputs: 
+      buildlibrime: ${{steps.buildlibrime.outputs.bulidrime}}
+      librimesha: ${{steps.getlastsha.outputs.librimesha}}
+    steps:
+      - name: Get Last commit sha
+        id: getlastsha
+        run: |
+          $commit = git ls-remote https://github.com/rime/librime/ master
+          $commitParts = $commit -split '\s+'
+          $commitsha = $commitParts[0]
+          "commitsha=$commitsha" |  Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          $bulidrime = "0"
+          echo "librime commit SHA: $commitsha"
+          echo "librimesha=$commitsha" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          
+      - name: Create cache
+        id: buildflag
+        uses: actions/cache@v3
+        with:
+          path: ${{ runner.workspace }}  # 缓存整个工作目录
+          key: buildflag-${{env.commitsha}}  # 使用 commit SHA 作为缓存的 key
+          
+      - name: Create out.txt with commit SHA
+        id: buildlibrime
+        if: steps.buildflag.outputs.cache-hit != 'true' 
+        #continue-on-error: true
+        run: |
+          $bulidrime = "1"
+          echo "bulidrime=$bulidrime" |  Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          #exit 1
+
+  librime:
+    if: always() && (needs.checklibrime.outputs.buildlibrime == '1')
+    needs: checklibrime
+    uses: wxyzh/weasel/.github/workflows/librime-build.yml@librime
+    with:
+      repository: rime/librime
+      rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
+      
   build-and-release:
     permissions:
       contents: write
-    runs-on: windows-2019
+    runs-on: windows-2022
+    if: ${{ always() }}
+    needs: [checklibrime, librime]
     env:
-      boost_version: 1.78.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
+      boost_version: 1.83.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
       RIME_PLUGINS: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
+      commitsha: ${{ needs.checklibrime.outputs.librimesha }}
     steps:
+
       - name: Checkout last commit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-
+          
+      - name: Fetch submodule 
+        run: git submodule update --init --recursive
+          
+      - name: Cache lirime artifacts
+        id: cache-artifact
+        uses: actions/cache@v3
+        with:
+          path: |
+            artifact
+          key: librime-artifact-${{ env.commitsha }}
+          
+      - name: Download artifacts
+        if: steps.cache-artifact.outputs.cache-hit != 'true'
+        uses: actions/download-artifact@v3
+        
       - name: Configure build environment
         run: |
-          copy env.vs2019.bat env.bat
+          copy env.vs2022.bat env.bat
           $git_ref_name = git describe --always
           echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
+          copy librime\env.vs2022.bat librime\env.bat
+          $file = "librime\env.bat"
+          $lines = Get-Content -Path $file
+          $lines = $lines | Where-Object { $_ -notlike "*set ARCH=Win32*" }
+          Set-Content -Path $file -Value $lines
 
       - name: Cache Boost
         id: cache-boost
@@ -36,35 +101,41 @@ jobs:
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: .\install_boost.bat
 
-      - name: Check submodules
-        run: git submodule > submodule-status
-
-      - name: Cache dependencies
-        id: cache-deps
-        uses: actions/cache@v3
-        with:
-          path: |
-            librime
-            plum
-          key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
-
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.1.3
+        uses: microsoft/setup-msbuild@v1.3.1
+        
+#      - name: setup python
+#        uses: actions/setup-python@v4
+#        with:
+#          python-version: '3.11'
+          
 
-      - name: Build dependencies
-        if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: .\build.bat opencc
-
-      # TODO: compile rime and other deps instead of downloading binary
       - name: Copy Rime files
-        run: .\github.install.bat
+        continue-on-error: true
+      #  run: .\github.install.bat
+        run: |
+          $msvc = Get-ChildItem -Filter "*msvc-x64.7z" -Path .\artifact\
+          $msvc | foreach {7z x $_.FullName -olibrime -y}
+          # 复制 rime 头文件到 include 文件夹
+          Copy-Item -Path "librime\dist\include\rime_*.h" -Destination "include\" -Force
+          # 复制 rime.lib 和 rime.dll 到 lib 文件夹
+          Copy-Item -Path "librime\dist\lib\rime.lib" -Destination "lib\" -Force
+          #Copy-Item -Path "librime\lib\glog.lib" -Destination "lib\" -Force
+          Copy-Item -Path "librime\dist\lib\rime.dll" -Destination "output\" -Force
+          # 创建 output\data\opencc 文件夹（如果不存在）
+          if (!(Test-Path -Path "output\data\opencc" -PathType Container)) {
+          New-Item -Path "output\data\opencc" -ItemType Directory
+          }
+          # 复制 opencc 文件到 output\data\opencc 文件夹
+          Copy-Item -Path "librime\share\opencc\*.*" -Destination "output\data\opencc\" -Force
 
       - name: Build Weasel
         id: build_weasel
+        continue-on-error: true
         run: |
           .\build.bat data
           .\build.bat hant
-          #.\build.bat installer
+          .\build.bat installer
           
       - name: Sgin Bin
         shell: pwsh
@@ -122,6 +193,7 @@ jobs:
             
       - name: build_weasel_installer
         id: build_weasel_installer
+        continue-on-error: true
         run: |
           #.\build.bat data
           #.\build.bat hant
@@ -129,6 +201,7 @@ jobs:
           
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
+        continue-on-error: true
         with:
           name: weasel_installer
           if-no-files-found: error
