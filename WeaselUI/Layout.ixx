@@ -1,10 +1,9 @@
 module;
 #include "stdafx.h"
-#include <gdiplus.h>
-#include <dwrite_2.h>
 #pragma comment(lib, "gdiplus.lib")
-#pragma optimize("", off)
 export module Layout;
+import <gdiplus.h>;
+import <dwrite_2.h>;
 import WeaselUI;
 import WeaselCommon;
 
