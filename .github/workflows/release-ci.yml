@@ -4,35 +4,23 @@ on:
   workflow_dispatch:
 
 jobs:
-  librime:
-    uses: wxyzh/weasel/.github/workflows/librime-build.yml@librime
-    with:
-      repository: rime/librime
-      rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
-      
   build-and-release:
     permissions:
       contents: write
-    runs-on: windows-2022
-    if: ${{ always() }}
-    needs: librime
+    runs-on: windows-2019
     env:
-      boost_version: 1.82.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_82_0
+      boost_version: 1.78.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
       RIME_PLUGINS: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
     steps:
-
       - name: Checkout last commit
         uses: actions/checkout@v3
         with:
-          submodules: true
+          submodules: recursive
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        
       - name: Configure build environment
         run: |
-          copy env.vs2022.bat env.bat
+          copy env.vs2019.bat env.bat
           $git_ref_name = git describe --always
           echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
 
@@ -48,38 +36,35 @@ jobs:
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: .\install_boost.bat
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.3.1
-        
-#      - name: setup python
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: '3.11'
-          
+      - name: Check submodules
+        run: git submodule > submodule-status
 
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            librime
+            plum
+          key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1.3
+
+      - name: Build dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: .\build.bat opencc
+
+      # TODO: compile rime and other deps instead of downloading binary
       - name: Copy Rime files
-      #  run: .\github.install.bat
-        run: |
-          $msvc = Get-ChildItem -Filter "*msvc-Win32.7z" -Path .\artifact\
-          $msvc | foreach {7z x $_.FullName -olibrime -y}
-          # 复制 rime 头文件到 include 文件夹
-          Copy-Item -Path "librime\dist\include\rime_*.h" -Destination "include\" -Force
-          # 复制 rime.lib 和 rime.dll 到 lib 文件夹
-          Copy-Item -Path "librime\dist\lib\rime.lib" -Destination "lib\" -Force
-          Copy-Item -Path "librime\dist\lib\rime.dll" -Destination "output\" -Force
-          # 创建 output\data\opencc 文件夹（如果不存在）
-          if (!(Test-Path -Path "output\data\opencc" -PathType Container)) {
-          New-Item -Path "output\data\opencc" -ItemType Directory
-          }
-          # 复制 opencc 文件到 output\data\opencc 文件夹
-          Copy-Item -Path "librime\share\opencc\*.*" -Destination "output\data\opencc\" -Force
+        run: .\github.install.bat
 
       - name: Build Weasel
         id: build_weasel
         run: |
           .\build.bat data
           .\build.bat hant
-          .\build.bat installer
+          #.\build.bat installer
           
       - name: Sgin Bin
         shell: pwsh
