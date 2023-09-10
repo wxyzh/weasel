@@ -1,6 +1,7 @@
 module;
 #include "stdafx.h"
 #include "resource.h"
+#pragma warning(disable:4005)
 export module UIStyleSettingsDialog;
 import UIStyleSettings;
 
