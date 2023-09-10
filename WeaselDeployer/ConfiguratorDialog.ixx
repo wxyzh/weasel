@@ -3,7 +3,6 @@ module;
 #include "resource.h"
 #include <WeaselVersion.h>
 #include "WeaselDeployer.h"
-#pragma warning(disable: 4005)
 #include <rime_api.h>
 #include <rime_levers_api.h>
 #pragma warning(default: 4005)
