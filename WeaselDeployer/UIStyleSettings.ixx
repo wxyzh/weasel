@@ -1,5 +1,6 @@
 module;
 #include <rime_levers_api.h>
+#pragma warning(disable:4005)
 export module UIStyleSettings;
 import <string>;
 import <vector>;
