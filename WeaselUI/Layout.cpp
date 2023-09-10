@@ -1,5 +1,7 @@
 module;
 #include "stdafx.h"
+#include <gdiplus.h>
+#include <dwrite_2.h>
 module Layout;
 
 using namespace weasel;
