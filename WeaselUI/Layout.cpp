@@ -46,17 +46,17 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool ro
 		int cny = ((corner * 2 <= rc.Height()) ? corner : (rc.Height() / 2));
 		int elWid = 2 * cnx;
 		int elHei = 2 * cny;
-		AddArc(rc.left, rc.top, Gdiplus::REAL(elWid * roundTopLeft), Gdiplus::REAL(elHei * roundTopLeft), 180, 90);
-		AddLine(Gdiplus::REAL(rc.left + cnx * roundTopLeft), rc.top, Gdiplus::REAL(rc.right - cnx * roundTopRight), rc.top);
+		AddArc(rc.left, rc.top, int(elWid * roundTopLeft), int(elHei * roundTopLeft), 180, 90);
+		AddLine(int(rc.left + cnx * roundTopLeft), rc.top, int(rc.right - cnx * roundTopRight), rc.top);
 
-		AddArc(Gdiplus::REAL(rc.right - elWid * roundTopRight), rc.top, Gdiplus::REAL(elWid * roundTopRight), Gdiplus::REAL(elHei * roundTopRight), 270, 90);
-		AddLine(rc.right, Gdiplus::REAL(rc.top + cny * roundTopRight), rc.right, Gdiplus::REAL(rc.bottom - cny * roundBottomRight));
+		AddArc(int(rc.right - elWid * roundTopRight), rc.top, int(elWid * roundTopRight), int(elHei * roundTopRight), 270, 90);
+		AddLine(rc.right, int(rc.top + cny * roundTopRight), rc.right, int(rc.bottom - cny * roundBottomRight));
 
-		AddArc(Gdiplus::REAL(rc.right - elWid * roundBottomRight), Gdiplus::REAL(rc.bottom - elHei * roundBottomRight), Gdiplus::REAL(elWid * roundBottomRight), Gdiplus::REAL(elHei * roundBottomRight), 0, 90);
-		AddLine(Gdiplus::REAL(rc.right - cnx * roundBottomRight), rc.bottom, Gdiplus::REAL(rc.left + cnx * roundBottomLeft), rc.bottom);
+		AddArc(int(rc.right - elWid * roundBottomRight), int(rc.bottom - elHei * roundBottomRight), int(elWid * roundBottomRight), int(elHei * roundBottomRight), 0, 90);
+		AddLine(int(rc.right - cnx * roundBottomRight), rc.bottom, int(rc.left + cnx * roundBottomLeft), rc.bottom);
 
-		AddArc(rc.left, Gdiplus::REAL(rc.bottom - elHei * roundBottomLeft), Gdiplus::REAL(elWid * roundBottomLeft), Gdiplus::REAL(elHei * roundBottomLeft), 90, 90);
-		AddLine(rc.left, Gdiplus::REAL(rc.top + cny * roundTopLeft), rc.left, Gdiplus::REAL(rc.bottom - cny * roundBottomLeft));
+		AddArc(rc.left, int(rc.bottom - elHei * roundBottomLeft), int(elWid * roundBottomLeft), int(elHei * roundBottomLeft), 90, 90);
+		AddLine(rc.left, int(rc.top + cny * roundTopLeft), rc.left, int(rc.bottom - cny * roundBottomLeft));
 	}
 }
 
