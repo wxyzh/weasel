@@ -1,6 +1,7 @@
 module;
 #include "stdafx.h"
 #include "resource.h"
+#include "UIStyleSettingsDialog.h"
 #include <dwmapi.h>
 module ConfiguratorDialog;
 

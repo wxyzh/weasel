@@ -3,12 +3,12 @@ module;
 #include "resource.h"
 #include <WeaselVersion.h>
 #include "WeaselDeployer.h"
+#include "UIStyleSettingsDialog.h"
 #include <rime_api.h>
 #include <rime_levers_api.h>
 #pragma warning(default: 4005)
 export module ConfiguratorDialog;
 import SwitcherSettingsDialog;
-import UIStyleSettingsDialog;
 import UIStyleSettings;
 
 export

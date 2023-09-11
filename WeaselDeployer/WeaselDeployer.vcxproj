@@ -182,6 +182,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="UIStyleSettingsDialog.h" />
     <ClInclude Include="WeaselDeployer.h" />
   </ItemGroup>
   <ItemGroup>
@@ -203,7 +204,6 @@
     <ClCompile Include="UIStyleSettings.cpp" />
     <ClCompile Include="UIStyleSettings.ixx" />
     <ClCompile Include="UIStyleSettingsDialog.cpp" />
-    <ClCompile Include="UIStyleSettingsDialog.ixx" />
     <ClCompile Include="WeaselDeployer.cpp" />
   </ItemGroup>
   <ItemGroup>

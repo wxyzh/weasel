@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <WeaselVersion.h>
 #include "WeaselDeployer.h"
+#include "UIStyleSettingsDialog.h"
 #include "resource.h"
 #include <rime_api.h>
 #include <rime_levers_api.h>
@@ -10,7 +11,6 @@ module Config;
 import ConfiguratorDialog;
 import SwitcherSettingsDialog;
 import UIStyleSettings;
-import UIStyleSettingsDialog;
 import DictManagementDialog;
 import WeaselCommon;
 import WeaselIPC;

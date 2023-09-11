@@ -1,9 +1,8 @@
-module;
 #include "stdafx.h"
 #include "resource.h"
+#include "UIStyleSettingsDialog.h"
 #include "WeaselDeployer.h"
 #include <dwmapi.h>
-module UIStyleSettingsDialog;
 import UIStyleSettings;
 import Config;
 import WeaselUtility;
@@ -32,12 +31,14 @@ void UIStyleSettingsDialog::Populate() {
 	std::string active(settings_->GetActiveColorScheme());
 	int active_index = -1;
 	settings_->GetPresetColorSchemes(&preset_);
+	color_schemes_.SetRedraw(false);
 	for (int i = 0; i < preset_.size(); ++i) {
 		color_schemes_.AddString(to_wstring(preset_[i].name, CP_UTF8).data());
 		if (preset_[i].color_scheme_id == active) {
 			active_index = i;
 		}
 	}
+	color_schemes_.SetRedraw(true);
 	if (active_index >= 0) {
 		color_schemes_.SetCurSel(active_index);
 		Preview(active_index);
@@ -51,7 +52,7 @@ LRESULT UIStyleSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	color_schemes_.Attach(GetDlgItem(IDC_COLOR_SCHEME));
 	preview_.Attach(GetDlgItem(IDC_PREVIEW));
 	select_font_.Attach(GetDlgItem(IDC_SELECT_FONT));
-	select_font_.EnableWindow(FALSE);
+	// select_font_.EnableWindow(FALSE);
 	
 	Populate();	
 	
