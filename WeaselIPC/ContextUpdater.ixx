@@ -1,8 +1,8 @@
 module;
 #include "stdafx.h"
+#include <WeaselCommon.h>
 export module ContextUpdater;
 import Deserializer;
-import WeaselCommon;
 
 export
 {

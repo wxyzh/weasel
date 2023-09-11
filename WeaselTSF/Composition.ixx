@@ -1,5 +1,6 @@
 module;
 #include "stdafx.h"
+#include <WeaselCommon.h>
 #include "cmath"
 #include <UIAutomation.h>
 #include "test.h"
@@ -15,7 +16,6 @@ import EditSession;
 import ResponseParser;
 import CandidateList;
 import WeaselUtility;
-import WeaselCommon;
 
 export
 {

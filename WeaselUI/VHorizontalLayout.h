@@ -1,9 +1,8 @@
-module;
-#include "stdafx.h"
-export module VHorizontalLayout;
-import StandardLayout;
+#pragma once
 
-export namespace weasel
+#include "StandardLayout.h"
+
+namespace weasel
 {
 	class VHorizontalLayout: public StandardLayout
 	{

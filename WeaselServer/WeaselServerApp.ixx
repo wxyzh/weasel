@@ -1,5 +1,6 @@
 module;
 #include "stdafx.h"
+#include <WeaselUI.h>
 #include "resource.h"
 #include <winsparkle.h>
 export module WeaselServerApp;
@@ -10,7 +11,6 @@ import <string>;
 import <filesystem>;
 import <format>;
 import WeaselIPC;
-import WeaselUI;
 import RimeWithWeasel;
 import WeaselUtility;
 import WeaselTrayIcon;

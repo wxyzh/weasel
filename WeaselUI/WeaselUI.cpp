@@ -1,5 +1,6 @@
-module;
-#include "stdafx.h"
+#include "pch.h"
+#include <WeaselUI.h>
+#include "WeaselPanel.h"
 #include "test.h"
 #ifdef TEST
 #ifdef _M_X64
@@ -9,8 +10,6 @@ module;
 #else
 #include "logging.h"
 #endif // TEST
-module WeaselUI;
-import WeaselPanel;
 
 using namespace weasel;
 

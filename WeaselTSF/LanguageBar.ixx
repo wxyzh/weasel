@@ -1,9 +1,9 @@
 module;
 #include "stdafx.h"
+#include <WeaselUI.h>
+#include <WeaselCommon.h>
 export module LanguageBar;
 import WeaselTSF;
-import WeaselUI;
-import WeaselCommon;
 
 export
 {

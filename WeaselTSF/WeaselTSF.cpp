@@ -1,5 +1,6 @@
 ﻿module;
 #include "stdafx.h"
+#include <WeaselCommon.h>
 #include "Globals.h"
 #include <resource.h>
 #include <psapi.h>
@@ -20,7 +21,6 @@ namespace fs = std::filesystem;
 //
 //#pragma comment(linker, "/SECTION:Shared,RWS")
 module WeaselTSF;
-import WeaselCommon;
 import CandidateList;
 import LanguageBar;
 import Compartment;
@@ -35,7 +35,7 @@ static void error_message(const WCHAR *msg)
 	if (now > next_tick)
 	{
 		next_tick = now + 10000;  // (ms)
-		MessageBox(NULL, msg, TEXTSERVICE_DESC.data(), MB_ICONERROR | MB_OK);
+		MessageBox(NULL, msg, TEXTSERVICE_DESC, MB_ICONERROR | MB_OK);
 	}
 }
 

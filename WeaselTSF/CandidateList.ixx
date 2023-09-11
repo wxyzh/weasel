@@ -1,10 +1,10 @@
 module;
 #include "stdafx.h"
+#include <WeaselUI.h>
+#include <WeaselCommon.h>
 #include "ctffunc.h"
 export module CandidateList;
 import WeaselTSF;
-import WeaselUI;
-import WeaselCommon;
 
 export
 {

@@ -1,7 +1,5 @@
-module;
-#include "stdafx.h"
-#include <gdiplus.h>
-module FullScreenLayout;
+#include "pch.h"
+#include "FullScreenLayout.h"
 
 using namespace weasel;
 

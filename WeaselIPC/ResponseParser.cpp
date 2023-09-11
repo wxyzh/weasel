@@ -1,5 +1,6 @@
 module;
 #include "stdafx.h"
+#include <WeaselCommon.h>
 module ResponseParser;
 import WeaselIPC;
 import Deserializer;

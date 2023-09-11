@@ -1,7 +1,5 @@
-module;
-#include "stdafx.h"
-#include <d2d1.h>
-#include <dwrite.h>
+#include "pch.h"
+#include "StandardLayout.h"
 #include "test.h"
 
 #ifdef TEST
@@ -12,7 +10,6 @@ module;
 #endif // TEST
 #define IS_FULLSCREENLAYOUT(style)	(style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 #define NOT_FULLSCREENLAYOUT(style)	(style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN && style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
-module StandardLayout;
 
 using namespace weasel;
 

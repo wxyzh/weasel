@@ -1,4 +1,5 @@
 ﻿module;
+#include <WeaselCommon.h>
 #include <windows.h>
 #define WEASEL_IPC_PIPE_NAME	L"WeaselNamedPipe"
 export module WeaselIPC;
@@ -6,7 +7,6 @@ import <functional>;
 import <memory>;
 import <string>;
 import WeaselUtility;
-import WeaselCommon;
 
 export
 {

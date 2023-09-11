@@ -1,5 +1,6 @@
 module;
 #include "stdafx.h"
+#include <WeaselCommon.h>
 #include "test.h"
 #ifdef TEST
 #ifdef _M_X64

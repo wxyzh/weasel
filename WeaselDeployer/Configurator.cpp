@@ -1,5 +1,6 @@
 ﻿module;
 #include "stdafx.h"
+#include <WeaselCommon.h>
 #include <WeaselVersion.h>
 #include "WeaselDeployer.h"
 #include "UIStyleSettings.h"
@@ -13,7 +14,6 @@
 #pragma warning(default: 4005)
 #pragma comment(lib, "rime.lib")
 module Config;
-import WeaselCommon;
 import WeaselIPC;
 import WeaselUtility;
 
@@ -33,7 +33,7 @@ void Configurator::Initialize()
 	const int len = 20;
 	char utf8_str[len];
 	memset(utf8_str, 0, sizeof(utf8_str));
-	WideCharToMultiByte(CP_UTF8, 0, WEASEL_IME_NAME.data(), -1, utf8_str, len - 1, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, WEASEL_IME_NAME, -1, utf8_str, len - 1, NULL, NULL);
 	weasel_traits.distribution_name = utf8_str;
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;

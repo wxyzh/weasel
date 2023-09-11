@@ -1,4 +1,6 @@
 module;
+#include <WeaselCommon.h>
+#include <WeaselUI.h>
 #include <rime_api.h>
 export module RimeWithWeasel;
 import <map>;
@@ -8,8 +10,6 @@ import <cmath>;
 import <regex>;
 import <thread>;
 import WeaselIPC;
-import WeaselUI;
-import WeaselCommon;
 
 export
 {

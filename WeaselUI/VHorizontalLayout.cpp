@@ -1,5 +1,5 @@
-module;
-#include "stdafx.h"
+#include "pch.h"
+#include "VHorizontalLayout.h"
 #include "test.h"
 #ifdef TEST
 #ifdef _M_X64
@@ -7,7 +7,6 @@ module;
 #include "logging.h"
 #endif
 #endif // TEST
-module VHorizontalLayout;
 
 using namespace weasel;
 

@@ -1,5 +1,6 @@
 module;
 #include "stdafx.h"
+#include <WeaselUI.h>
 #include "SystemTraySDK.h"
 #include "resource.h"
 #include <winsparkle.h>

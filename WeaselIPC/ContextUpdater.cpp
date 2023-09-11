@@ -1,5 +1,6 @@
 module;
 #include "stdafx.h"
+#include <WeaselCommon.h>
 module ContextUpdater;
 import WeaselUtility;
 import StringAlgorithm;

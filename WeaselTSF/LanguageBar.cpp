@@ -1,6 +1,7 @@
 ﻿module;
 #include "stdafx.h"
 #include "Globals.h"
+#include <WeaselUI.h>
 #include "resource.h"
 #include "test.h"
 #ifdef TEST

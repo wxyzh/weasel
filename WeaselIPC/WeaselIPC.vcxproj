@@ -248,7 +248,6 @@
     <ClCompile Include="..\include\PipeChannel.ixx" />
     <ClCompile Include="..\include\ResponseParser.ixx" />
     <ClCompile Include="..\include\StringAlgorithm.ixx" />
-    <ClCompile Include="..\include\WeaselCommon.ixx" />
     <ClCompile Include="..\include\WeaselIPC.ixx" />
     <ClCompile Include="..\include\WeaselUtility.ixx" />
     <ClCompile Include="ActionLoader.ixx" />

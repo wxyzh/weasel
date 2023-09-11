@@ -1,13 +1,11 @@
-module;
-#include "stdafx.h"
+#pragma once
+#include "Layout.h"
 #include <d2d1.h>
 #include <dwrite.h>
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
-export module StandardLayout;
-import Layout;
 
-export namespace weasel
+namespace weasel
 {
 	const int MAX_CANDIDATES_COUNT = 100;
 	const int STATUS_ICON_SIZE = GetSystemMetrics(SM_CXICON);

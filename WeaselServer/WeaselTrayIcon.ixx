@@ -1,11 +1,11 @@
 module;
 #include "stdafx.h"
+#include <WeaselUI.h>
+#include <WeaselCommon.h>
 #include "SystemTraySDK.h"
 export module WeaselTrayIcon;
 import <string>;
 import WeaselIPC;
-import WeaselUI;
-import WeaselCommon;
 
 export
 {

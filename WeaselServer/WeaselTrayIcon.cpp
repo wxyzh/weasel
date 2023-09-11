@@ -1,5 +1,7 @@
 ﻿module;
 #include "stdafx.h"
+#include <WeaselUI.h>
+#include <WeaselCommon.h>
 #include "SystemTraySDK.h"
 // nasty
 #include <resource.h>
@@ -24,7 +26,7 @@ BOOL WeaselTrayIcon::Create(HWND hTargetWnd)
 	CIcon icon;
 	icon.LoadIconW(IDI_ZH);
 	BOOL bRet = CSystemTray::Create(hModule, NULL, WM_WEASEL_TRAY_NOTIFY, 
-		WEASEL_IME_NAME.data(), icon, IDR_MENU_POPUP);
+		WEASEL_IME_NAME, icon, IDR_MENU_POPUP);
 	if (hTargetWnd)
 	{
 		SetTargetWnd(hTargetWnd);
@@ -84,7 +86,7 @@ void WeaselTrayIcon::Refresh()
 
 		if (mode_label[mode] && m_disabled == false)
 		{
-			ShowBalloon(mode_label[mode], WEASEL_IME_NAME.data());
+			ShowBalloon(mode_label[mode], WEASEL_IME_NAME);
 			m_disabled = true;
 		}
 		if (m_mode != DISABLED)

@@ -1,6 +1,8 @@
 ﻿module;
 // #define WEASEL_ENABLE_LOGGING
 #include "stdafx.h"
+#include <WeaselCommon.h>
+#include <WeaselUI.h>
 #include <logging.h>
 #include <WeaselVersion.h>
 #include <VersionHelpers.hpp>
@@ -11,7 +13,6 @@
 module RimeWithWeasel;
 import WeaselUtility;
 import StringAlgorithm;
-import WeaselCommon;
 
 namespace fs = std::filesystem;
 using weasel::UIStyle;
@@ -85,7 +86,7 @@ void RimeWithWeaselHandler::_Setup()
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
 	weasel_traits.user_data_dir = weasel_user_data_dir();
 	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
-	std::string distribution_name{ to_string(WEASEL_IME_NAME.data(), CP_UTF8) };
+	std::string distribution_name{ to_string(WEASEL_IME_NAME, CP_UTF8) };
 	weasel_traits.distribution_name = distribution_name.data();
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;

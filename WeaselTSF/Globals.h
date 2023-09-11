@@ -2,7 +2,7 @@
 #pragma once
 
 #include "stdafx.h"
-import WeaselCommon;
+#include <WeaselCommon.h>
 
 #ifdef WEASEL_HANT
 #define TEXTSERVICE_LANGID	MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL)

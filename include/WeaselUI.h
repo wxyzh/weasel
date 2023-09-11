@@ -1,19 +1,17 @@
-﻿module;
+﻿#pragma once
+#include <WeaselCommon.h>
 #include <atlcomcli.h> 
 #include <ShellScalingApi.h>
 #include "VersionHelpers.hpp"
-export module WeaselUI;
-import <d2d1.h>;
-import <dwrite_2.h>;
-import WeaselCommon;
-import <vector>;
-import <regex>;
-import <memory>;
-import <string>;
-import <span>;
-import <functional>;
+#include <d2d1.h>
+#include <dwrite_2.h>
+#include <functional>
+#include <memory>
+#include <wrl/client.h>
+#include <span>
+using namespace Microsoft::WRL;
 
-export namespace weasel
+namespace weasel
 {
 	template <typename T>
 	void SafeRelease(T** ppT)

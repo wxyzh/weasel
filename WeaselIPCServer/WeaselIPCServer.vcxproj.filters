@@ -37,9 +37,6 @@
     <ClCompile Include="..\include\WeaselIPC.ixx">
       <Filter>Module Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\include\WeaselCommon.ixx">
-      <Filter>Module Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\include\WeaselUtility.ixx">
       <Filter>Module Files</Filter>
     </ClCompile>

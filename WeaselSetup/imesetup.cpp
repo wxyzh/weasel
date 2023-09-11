@@ -1,11 +1,11 @@
 ﻿#include "stdafx.h"
+#include <WeaselCommon.h>
 #include <string>
 #include <vector>
 #include <msctf.h>
 #include <strsafe.h>
 #include <filesystem>
 import StringAlgorithm;
-import WeaselCommon;
 
 namespace fs = std::filesystem;
 
@@ -213,7 +213,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 
 	if (register_ime)
 	{
-		HKL hKL = ImmInstallIME(ime_path.c_str(), WEASEL_IME_NAME.data());
+		HKL hKL = ImmInstallIME(ime_path.c_str(), WEASEL_IME_NAME);
 		if (!hKL)
 		{
 			// manually register ime
@@ -466,11 +466,11 @@ int install(bool hant, bool silent)
 
 	// 写注册表
 	HKEY hKey;
-	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY.data(),
+	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY,
 		                         0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		if (!silent) MessageBox(NULL, WEASEL_REG_KEY.data(), L"安装失败", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, WEASEL_REG_KEY, L"安装失败", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -519,8 +519,8 @@ int uninstall(bool silent, bool ime)
 	retval += uninstall_ime_file(L".dll", silent, &register_text_service);
 
 	// 清除注册信息
-	RegDeleteKey(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY.data());
-	RegDeleteKey(HKEY_LOCAL_MACHINE, RIME_REG_KEY.data());
+	RegDeleteKey(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY);
+	RegDeleteKey(HKEY_LOCAL_MACHINE, RIME_REG_KEY);
 
 	if (retval)
 		return 1;

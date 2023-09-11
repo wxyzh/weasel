@@ -1,10 +1,8 @@
-module;
-#include "stdafx.h"
-#include <gdiplus.h>
-export module FullScreenLayout;
-import StandardLayout;
+#pragma once
 
-export namespace weasel
+#include "StandardLayout.h"
+
+namespace weasel
 {
 	class FullScreenLayout: public StandardLayout
 	{
@@ -21,4 +19,4 @@ export namespace weasel
 		const CRect& mr_inputPos;
 		Layout* m_layout;
 	};
-};
+}

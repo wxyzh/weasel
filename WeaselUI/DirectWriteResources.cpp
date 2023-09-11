@@ -1,6 +1,8 @@
-module;
-#include "stdafx.h"
-module WeaselUI;
+#include "pch.h"
+#include <string>
+#include <algorithm>
+#include <map>
+#include <WeaselUI.h>
 
 using namespace weasel;
 

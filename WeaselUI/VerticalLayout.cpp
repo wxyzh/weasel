@@ -1,6 +1,5 @@
-module;
-#include "stdafx.h"
-module VerticalLayout;
+#include "pch.h"
+#include "VerticalLayout.h"
 
 using namespace weasel;
 

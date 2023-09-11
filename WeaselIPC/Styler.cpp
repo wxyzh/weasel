@@ -1,5 +1,6 @@
 module;
 #include "stdafx.h"
+#include <WeaselCommon.h>
 module Styler;
 
 using namespace weasel;

@@ -1,10 +1,10 @@
 ﻿module;
 #include <windows.h>
+#include <WeaselCommon.h>
 export module ResponseParser;
 import <map>;
 import <memory>;
 import <string>;
-import WeaselCommon;
 
 
 export namespace weasel

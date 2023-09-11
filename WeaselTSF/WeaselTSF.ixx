@@ -1,7 +1,7 @@
 module;
 #include "Globals.h"
+#include <WeaselCommon.h>
 export module WeaselTSF;
-import WeaselCommon;
 import WeaselIPC;
 import <bitset>;
 import <memory>;

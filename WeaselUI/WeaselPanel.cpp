@@ -1,18 +1,15 @@
-﻿module;
-#include "stdafx.h"
-#include "test.h"
-#ifdef TEST
-#ifdef _M_X64
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif
-#endif // TEST
-#include <gdiplus.h>
-#include <d2d1.h>
+﻿#include "pch.h"
+#include "WeaselPanel.h"
+#include <WeaselCommon.h>
 #include <ShellScalingApi.h>
 #include "VersionHelpers.hpp"
+#include "VerticalLayout.h"
+#include "HorizontalLayout.h"
+#include "FullScreenLayout.h"
+#include "VHorizontalLayout.h"
 // for IDI_ZH, IDI_EN
 #include <resource.h>
+#include "test.h"
 #define USE_MOUSE_EVENTS
 #define COLORTRANSPARENT(color)		((color & 0xff000000) == 0)
 #define COLORNOTTRANSPARENT(color)	((color & 0xff000000) != 0)
@@ -21,14 +18,14 @@
 #define IS_FULLSCREENLAYOUT(style)	(style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 #define NOT_FULLSCREENLAYOUT(style)	(style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN && style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 
+#ifdef TEST
+#ifdef _M_X64
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+#endif
+#endif // TEST
+
 #pragma comment(lib, "Shcore.lib")
-module WeaselPanel;
-import <regex>;
-import VerticalLayout;
-import HorizontalLayout;
-import FullScreenLayout;
-import VHorizontalLayout;
-import WeaselCommon;
 import Utility;
 
 inline void LoadIconNecessary(std::wstring& a, std::wstring& b, WTL::CIcon& c, int d) {

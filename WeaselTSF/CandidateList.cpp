@@ -1,5 +1,7 @@
 module;
 #include "stdafx.h"
+#include <WeaselUI.h>
+#include <WeaselCommon.h>
 #include "test.h"
 #ifdef TEST
 #ifdef _M_X64
@@ -250,9 +252,20 @@ void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 	if (_pbShow == FALSE)
 		_UpdateUIElement();
 
-	if (status.composing && !ctx.cinfo.empty())
+	if (status.composing)
 	{
-		Show(_pbShow);
+		if (!_tsf.GetBit(13))		// _bitset[13]: _FistKeyComposition
+		{
+			Show(_pbShow);
+		}
+		else if (!ctx.cinfo.empty())
+		{
+			Show(_pbShow);
+		}
+		else
+		{
+			Show(FALSE);
+		}
 	}
 	else
 	{
