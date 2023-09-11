@@ -32,7 +32,7 @@ void UIStyleSettingsDialog::Populate() {
 	std::string active(settings_->GetActiveColorScheme());
 	int active_index = -1;
 	settings_->GetPresetColorSchemes(&preset_);
-	for (size_t i = 0; i < preset_.size(); ++i) {
+	for (int i = 0; i < preset_.size(); ++i) {
 		color_schemes_.AddString(to_wstring(preset_[i].name, CP_UTF8).data());
 		if (preset_[i].color_scheme_id == active) {
 			active_index = i;

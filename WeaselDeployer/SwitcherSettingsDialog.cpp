@@ -35,11 +35,11 @@ void SwitcherSettingsDialog::Populate() {
 	RimeSchemaList selected = {0};
 	api_->get_selected_schema_list(settings_, &selected);
 	schema_list_.DeleteAllItems();
-	size_t k = 0;
+	int k = 0;
 	std::set<RimeSchemaInfo*> recruited;
-	for (size_t i = 0; i < selected.size; ++i) {
+	for (int i = 0; i < selected.size; ++i) {
 		const char* schema_id = selected.list[i].schema_id;
-		for (size_t j = 0; j < available.size; ++j) {
+		for (int j = 0; j < available.size; ++j) {
 			RimeSchemaListItem& item(available.list[j]);
 			RimeSchemaInfo* info = (RimeSchemaInfo*)item.reserved;
 			if (!strcmp(item.schema_id, schema_id) && recruited.find(info) == recruited.end()) {
@@ -52,7 +52,7 @@ void SwitcherSettingsDialog::Populate() {
 			}
 		}
 	}
-	for (size_t i = 0; i < available.size; ++i) {
+	for (int i = 0; i < available.size; ++i) {
 		RimeSchemaListItem& item(available.list[i]);
 		RimeSchemaInfo* info = (RimeSchemaInfo*)item.reserved;
 		if (recruited.find(info) == recruited.end()) {
