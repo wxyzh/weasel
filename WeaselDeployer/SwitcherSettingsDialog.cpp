@@ -1,10 +1,9 @@
-﻿module;
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <rime_levers_api.h>
 #include "WeaselDeployer.h"
 #include "resource.h"
+#include "SwitcherSettingsDialog.h"
 #include <dwmapi.h>
-module SwitcherSettingsDialog;
 import <algorithm>;
 import <set>;
 import WeaselUtility;

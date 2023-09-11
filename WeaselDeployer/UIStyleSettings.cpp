@@ -1,7 +1,5 @@
-module;
 #include "stdafx.h"
-#include "rime_levers_api.h"
-module UIStyleSettings;
+#include "UIStyleSettings.h"
 import WeaselUtility;
 
 namespace fs = std::filesystem;

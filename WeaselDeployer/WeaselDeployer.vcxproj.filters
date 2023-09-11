@@ -34,6 +34,18 @@
     <ClInclude Include="UIStyleSettingsDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UIStyleSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SwitcherSettingsDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfiguratorDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DictManagementDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -64,18 +76,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Configurator.ixx">
-      <Filter>Module Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ConfiguratorDialog.ixx">
-      <Filter>Module Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DictManagementDialog.ixx">
-      <Filter>Module Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SwitcherSettingsDialog.ixx">
-      <Filter>Module Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UIStyleSettings.ixx">
       <Filter>Module Files</Filter>
     </ClCompile>
   </ItemGroup>

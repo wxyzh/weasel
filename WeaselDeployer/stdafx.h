@@ -28,5 +28,6 @@
 #include <filesystem>
 #include <fstream>
 #include <format>
+#include <vector>
 
 extern CAppModule _Module;

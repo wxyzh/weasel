@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "resource.h"
+#include "UIStyleSettings.h"
 #include "UIStyleSettingsDialog.h"
 #include "WeaselDeployer.h"
 #include <dwmapi.h>
-import UIStyleSettings;
 import Config;
 import WeaselUtility;
 

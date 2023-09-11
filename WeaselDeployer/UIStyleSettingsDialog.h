@@ -1,6 +1,6 @@
 #pragma once
 
-import UIStyleSettings;
+class UIStyleSettings;
 
 class UIStyleSettingsDialog : public CDialogImpl<UIStyleSettingsDialog> 
 {

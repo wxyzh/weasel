@@ -2,16 +2,16 @@
 #include "stdafx.h"
 #include <WeaselVersion.h>
 #include "WeaselDeployer.h"
+#include "UIStyleSettings.h"
 #include "UIStyleSettingsDialog.h"
+#include "ConfiguratorDialog.h"
+#include "SwitcherSettingsDialog.h"
+#include "DictManagementDialog.h"
 #include "resource.h"
 #include <rime_api.h>
 #include <rime_levers_api.h>
 #pragma warning(default: 4005)
 module Config;
-import ConfiguratorDialog;
-import SwitcherSettingsDialog;
-import UIStyleSettings;
-import DictManagementDialog;
 import WeaselCommon;
 import WeaselIPC;
 import WeaselUtility;

@@ -1,9 +1,13 @@
-module;
 #include "stdafx.h"
 #include "resource.h"
-#include "UIStyleSettingsDialog.h"
+#include <WeaselVersion.h>
+#include "WeaselDeployer.h"
+#include "UIStyleSettings.h"
+#include <rime_api.h>
+#include <rime_levers_api.h>
+#include "ConfiguratorDialog.h"
 #include <dwmapi.h>
-module ConfiguratorDialog;
+#pragma warning(default: 4005)
 
 #pragma comment(lib, "Dwmapi.lib")
 

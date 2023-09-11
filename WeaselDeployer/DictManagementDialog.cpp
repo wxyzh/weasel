@@ -1,10 +1,11 @@
 ﻿module;
 #include "stdafx.h"
-#include <rime_api.h>
-#include "WeaselDeployer.h"
 #include "resource.h"
+#include "WeaselDeployer.h"
+#include <rime_api.h>
+#include <rime_levers_api.h>
+#include "DictManagementDialog.h"
 #include <dwmapi.h>
-module DictManagementDialog;
 import Config;
 import WeaselUtility;
 
