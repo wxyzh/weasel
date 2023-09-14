@@ -35,7 +35,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	{
 		if ((state || GetBit(12)) && !_IsComposing())	// _bitset[12]: _simplication_state
 		{
-			_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
+			_StartComposition(_pEditSessionContext, !config.inline_preedit);
 			_UpdateCompositionWindow(_pEditSessionContext);
 			_EndComposition(_pEditSessionContext, true);
 			ReSetBit(12);								// _bitset[12]: _simplication_state
@@ -47,14 +47,14 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 				// For auto-selecting, commit and preedit can both exist.
 				// Commit and close the original composition first.
 				if (!_IsComposing()) {
-					_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
+					_StartComposition(_pEditSessionContext, !config.inline_preedit);
 				}
 				_InsertText(_pEditSessionContext, commit);
 				_EndComposition(_pEditSessionContext, false);
 			}
 			if (_status.composing && !_IsComposing())
 			{
-				_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
+				_StartComposition(_pEditSessionContext, !config.inline_preedit);
 			}
 			else if (!_status.composing && _IsComposing())
 			{

@@ -254,18 +254,7 @@ void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 
 	if (status.composing)
 	{
-		if (!_tsf.GetBit(13))		// _bitset[13]: _FistKeyComposition
-		{
-			Show(_pbShow);
-		}
-		else if (!ctx.cinfo.empty())
-		{
-			Show(_pbShow);
-		}
-		else
-		{
-			Show(FALSE);
-		}
+		Show(_pbShow);
 	}
 	else
 	{

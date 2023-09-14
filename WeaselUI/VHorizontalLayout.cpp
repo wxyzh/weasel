@@ -32,11 +32,11 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 		CSize sg;
 		if (!_style.mark_text.empty())
 		{
-			GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
+			GetTextSizeDW(L"|", 1, pDWR->pTextFormat.Get(), pDWR, &sg);
 		}
 		else
 		{
-			GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
+			GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat.Get(), pDWR, &sg);
 		}
 
 		MARK_WIDTH = sg.cx;
@@ -47,8 +47,8 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 
 	// calc page indicator 
 	CSize pgszl, pgszr;
-	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
-	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
+	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat.Get(), pDWR, &pgszl);
+	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat.Get(), pDWR, &pgszr);
 	bool page_en = (_style.prevpage_color & 0xff00'0000) && (_style.nextpage_color & 0xff00'0000);
 	int pgh = page_en ? (pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding_y * 2) : 0;
 	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
@@ -56,7 +56,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
-		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
+		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat.Get(), pDWR);
 		int szx = max(size.cx, pgw),	szy = pgh;
 		// icon size wider then preedit text
 		int xoffset = (STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szx) / 2 : 0;
@@ -69,7 +69,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		size = GetPreeditSize(dc, _context.aux, pDWR->pPreeditTextFormat, pDWR);
+		size = GetPreeditSize(dc, _context.aux, pDWR->pPreeditTextFormat.Get(), pDWR);
 		// icon size wider then preedit text
 		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
 		_auxiliaryRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
@@ -88,7 +88,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 			h = offsetY + real_margin_y + base_offset;
 			/* Label */
 			std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
-			GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
+			GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat.Get(), pDWR, &size);
 			_candidateLabelRects[i].SetRect(w, h, w + size.cx * labelFontValid, h + size.cy);
 			h += size.cy * labelFontValid;
 			max_content_height = max(max_content_height, h);
@@ -97,7 +97,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 			/* Text */
 			h += _style.hilite_spacing * labelFontValid;
 			const std::wstring& text = candidates.at(i).str;
-			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
+			GetTextSizeDW(text, text.length(), pDWR->pTextFormat.Get(), pDWR, &size);
 			_candidateTextRects[i].SetRect(w, h, w + size.cx * textFontValid, h + size.cy);
 			h += size.cy * textFontValid;
 			max_content_height = max(max_content_height, h);
@@ -108,7 +108,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 			{
 				h += _style.hilite_spacing;
 				const std::wstring& comment = comments.at(i).str;
-				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
+				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat.Get(), pDWR, &size);
 				_candidateCommentRects[i].SetRect(w, 0, w + size.cx * cmtFontValid, size.cy * cmtFontValid);
 				h += size.cy * cmtFontValid;
 				wid = max(wid, size.cx);
@@ -243,7 +243,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
-		GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
+		GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat.Get(), pDWR, &sg);
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_HEIGHT + 4;
@@ -252,8 +252,8 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 
 	// calc page indicator 
 	CSize pgszl, pgszr;
-	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
-	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
+	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat.Get(), pDWR, &pgszl);
+	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat.Get(), pDWR, &pgszr);
 	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
 	int pgh = page_en ? (pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding_y * 2) : 0;
 	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
@@ -261,7 +261,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
-		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
+		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat.Get(), pDWR);
 		size_t szx = max(size.cx, pgw), szy = pgh;
 		// icon size wider then preedit text
 		int xoffset = (STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szx) / 2 : 0;
@@ -273,7 +273,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		size = GetPreeditSize(dc, _context.aux, pDWR->pPreeditTextFormat, pDWR);
+		size = GetPreeditSize(dc, _context.aux, pDWR->pPreeditTextFormat.Get(), pDWR);
 		// icon size wider then auxiliary text
 		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
 		_auxiliaryRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
@@ -296,7 +296,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 			if( id == i )	h += base_offset;
 			/* Label */
 			std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
-			GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
+			GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat.Get(), pDWR, &size);
 			_candidateLabelRects[i].SetRect(width, h, width + size.cx, h + size.cy * labelFontValid);
 			h += size.cy * labelFontValid;
 			current_cand_height += size.cy * labelFontValid;
@@ -304,7 +304,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 			/* Text */
 			h += _style.hilite_spacing;
 			const std::wstring& text =candidates.at(i).str;
-			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
+			GetTextSizeDW(text, text.length(), pDWR->pTextFormat.Get(), pDWR, &size);
 			_candidateTextRects[i].SetRect(width, h, width + size.cx, h + size.cy * textFontValid);
 			h += size.cy * textFontValid;
 			current_cand_height += (size.cy + _style.hilite_spacing) * textFontValid;
@@ -313,7 +313,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 			if (!comments.at(i).str.empty() && cmtFontValid )
 			{
 				const std::wstring& comment = comments.at(i).str;
-				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
+				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat.Get(), pDWR, &size);
 				h += _style.hilite_spacing;
 				_candidateCommentRects[i].SetRect(width, h, width + size.cx, h + size.cy * cmtFontValid);
 				h += size.cy * cmtFontValid;

@@ -295,6 +295,7 @@ namespace weasel
 		std::wstring current_half_icon;
 		std::wstring current_full_icon;
 		bool enhanced_position;
+		bool click_to_capture;
 
 		std::wstring label_text_format;
 		std::wstring mark_text;
@@ -361,6 +362,7 @@ namespace weasel
 			current_half_icon(),
 			current_full_icon(),
 			enhanced_position(false),
+			click_to_capture{ false },
 
 			label_text_format(L"%s."),
 			mark_text(),
@@ -436,6 +438,7 @@ namespace weasel
 					|| current_half_icon != st.current_half_icon
 					|| current_full_icon != st.current_full_icon
 					|| enhanced_position != st.enhanced_position
+					|| click_to_capture != st.click_to_capture
 					|| label_text_format != st.label_text_format
 					|| min_width != st.min_width
 					|| max_width != st.max_width
@@ -505,6 +508,7 @@ namespace boost {
 			ar& s.current_half_icon;
 			ar& s.current_full_icon;
 			ar& s.enhanced_position;
+			ar& s.click_to_capture;
 			ar& s.label_text_format;
 			// layout
 			ar& s.layout_type;

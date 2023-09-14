@@ -12,10 +12,10 @@ import Composition;
 import CandidateList;
 import WeaselUtility;
 
-void WeaselTSF::_StartComposition(ITfContext* pContext, BOOL fCUASWorkaroundEnabled)
+void WeaselTSF::_StartComposition(ITfContext* pContext, bool not_inline_preedit)
 {
 	com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
-	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled));
+	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, not_inline_preedit));
 	_cand->StartUI();
 	if (pStartCompositionEditSession != nullptr)
 	{
@@ -130,16 +130,16 @@ BOOL WeaselTSF::_InsertText(ITfContext* pContext, std::wstring_view text)
 	pEditSession.Attach(new CInsertTextEditSession(this, pContext, _pComposition, text));
 	HRESULT hr;
 
-#ifdef TEST
-#ifdef _M_X64
-	LOG(INFO) << std::format("From _InsertText. text = {}", to_string(text.data(), CP_UTF8));
-#endif // _M_X64
-#endif // TEST
-
 	if (pEditSession != nullptr)
 	{
 		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 	}
+
+#ifdef TEST
+#ifdef _M_X64
+	LOG(INFO) << std::format("From _InsertText. text = {}, hr = 0x{:X}", to_string(text.data(), CP_UTF8), (unsigned)hr);
+#endif // _M_X64
+#endif // TEST
 
 	return TRUE;
 }
@@ -148,7 +148,7 @@ void WeaselTSF::_UpdateComposition(ITfContext* pContext)
 {
 	HRESULT hr;
 	_pEditSessionContext = pContext;
-	_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+	_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);		
 #ifdef TEST
 #ifdef _M_X64
 	LOG(INFO) << std::format("From _UpdateComposition. hr = {:#x}, pContext = {:#x}, _tfClientId = {:#x}", (unsigned)hr, (size_t)pContext, _tfClientId);

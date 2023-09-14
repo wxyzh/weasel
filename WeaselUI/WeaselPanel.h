@@ -56,7 +56,6 @@ public:
 	void MoveTo(RECT const& rc);
 	void Refresh(bool from_server);
 	void DoPaint(CDCHandle dc);
-	void SetHide(bool hide);
 	bool GetIsReposition() { return m_istorepos; }
 
 private:

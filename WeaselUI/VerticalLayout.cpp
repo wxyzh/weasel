@@ -11,7 +11,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
-		GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
+		GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat.Get(), pDWR, &sg);
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_WIDTH + 4;
@@ -20,8 +20,8 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 
 	// calc page indicator 
 	CSize pgszl, pgszr;
-	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
-	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
+	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat.Get(), pDWR, &pgszl);
+	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat.Get(), pDWR, &pgszr);
 	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
 	int pgw = page_en ? (pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding_x * 2) : 0;
 	int pgh = page_en ? max(pgszl.cy, pgszr.cy) : 0;
@@ -31,7 +31,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
-		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
+		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat.Get(), pDWR);
 		int szx = pgw, szy = max(size.cy, pgh);
 		// icon size higher then preedit text
 		int yoffset = (STATUS_ICON_SIZE >= szy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szy) / 2 : 0;
@@ -45,7 +45,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		size = GetPreeditSize(dc, _context.aux, pDWR->pPreeditTextFormat, pDWR);
+		size = GetPreeditSize(dc, _context.aux, pDWR->pPreeditTextFormat.Get(), pDWR);
 		// icon size higher then auxiliary text
 		int yoffset = (STATUS_ICON_SIZE >= size.cy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cy) / 2 : 0;
 		_auxiliaryRect.SetRect(real_margin_x, height + yoffset, real_margin_x + size.cx, height + yoffset + size.cy);
@@ -68,7 +68,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 		int candidate_width = base_offset, comment_width = 0;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
-		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
+		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat.Get(), pDWR, &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx * labelFontValid, height + size.cy);
 		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
 		w += (size.cx + space) * labelFontValid;
@@ -77,7 +77,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
-		GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
+		GetTextSizeDW(text, text.length(), pDWR->pTextFormat.Get(), pDWR, &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx * textFontValid, height + size.cy);
 		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
 		w += size.cx * textFontValid;
@@ -92,7 +92,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 			comment_shift_width = max(comment_shift_width, w);
 
 			const std::wstring& comment = comments.at(i).str;
-			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
+			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat.Get(), pDWR, &size);
 			_candidateCommentRects[i].SetRect(0, height, size.cx * cmtFontValid, height + size.cy);
 			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 			w += size.cx * cmtFontValid;

@@ -44,8 +44,8 @@ export
 		bool _IsDeployerRunning();
 		void _UpdateUI(RimeSessionId session_id);
 		void _LoadSchemaSpecificSettings(const std::string& schema_id);
-		std::wstring _LoadIconSettingFromSchema(RimeConfig& config, char* buffer, const int BUF_SIZE,
-			const char* key1, const char* key2, std::wstring_view user_dir, std::wstring_view shared_dir);
+		void _LoadIconSettingFromSchema(RimeConfig& config, char* buffer, const int BUF_SIZE,
+			const char* key1, const char* key2, std::wstring_view user_dir, std::wstring_view shared_dir, std::wstring& value);
 		void _LoadAppInlinePreeditSet(RimeSessionId session_id, bool ignore_app_name = false);
 		bool _ShowMessage(weasel::Context& ctx, weasel::Status& status);
 		bool _Respond(RimeSessionId session_id, EatLine eat);

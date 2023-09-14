@@ -54,7 +54,7 @@ void weasel::StandardLayout::GetTextSizeDW(std::wstring_view text, size_t nCount
 
 		lpSize->cx = (int)sz.width;
 		lpSize->cy = (int)sz.height;
-		SafeRelease(&pDWR->pTextLayout);
+		pDWR->ResetLayout();;
 		
 		if(_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
@@ -361,7 +361,7 @@ void StandardLayout::UpdateStatusIconLayout(int& width, int& height)
 				_statusIconRect.SetRect(0,0, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
 				_statusIconRect.OffsetRect(offsetX, offsetY);
 				width = STATUS_ICON_SIZE ;
-				height = (_style.vertical_text_with_wrap? offsetY : 0) + STATUS_ICON_SIZE;
+				height = (_style.vertical_text_with_wrap ? offsetY : 0) + STATUS_ICON_SIZE;
 			}
 		}
 		else
@@ -422,7 +422,7 @@ bool StandardLayout::ShouldDisplayStatusIcon() const
 #endif // TEST
 	return ((_status.ascii_mode && !_style.inline_preedit) 
 		|| !_status.composing || !_context.aux.empty()) 
-		&& ((_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN 
-			&& _style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN) 
-			|| _context.aux.empty());
+		&& !((_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN 
+			|| _style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN) 
+			&& !_context.aux.empty());
 }

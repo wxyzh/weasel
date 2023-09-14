@@ -92,7 +92,7 @@ export
 		HRESULT _SetKeyboardOpen(BOOL fOpen);
 
 		/* Composition */
-		void _StartComposition(ITfContext* pContext, BOOL fCUASWorkaroundEnabled);
+		void _StartComposition(ITfContext* pContext, bool not_inline_preedit);
 		void _EndComposition(ITfContext* pContext, BOOL clear);
 		BOOL _ShowInlinePreedit(ITfContext* pContext, const std::shared_ptr<weasel::Context> context);
 		void _UpdateComposition(ITfContext* pContext);
@@ -251,7 +251,7 @@ export
 		// _bitset[12]: _simplication_state
 		// _bitset[13]: _FistKeyComposition
 		// _bitset[14]: _KeyboardDisabled
-		// _bitset[15]:  
+		// _bitset[15]: _AsyncEdit
 		std::bitset<16> _bitset{};
 
 		std::wstring _schema_id{};

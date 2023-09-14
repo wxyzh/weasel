@@ -66,7 +66,6 @@ void UIImpl::Show()
 #endif // TEST
 	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_SHOWNA);
-	panel.SetHide(false);
 	shown = true;
 	if (timer)
 	{
@@ -79,7 +78,6 @@ void UIImpl::Hide()
 {
 	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_HIDE);
-	panel.SetHide(true);
 	shown = false;
 	if (timer)
 	{
@@ -125,9 +123,9 @@ bool UI::Create(HWND parent)
 	if (pimpl_)
 	{
 		// re create panel cause destroied before
-		if(pimpl_->panel.IsWindow())
-			pimpl_->panel.DestroyWindow();
-		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE/* | WS_EX_LAYERED*/ | WS_EX_TRANSPARENT, 0U, 0);
+		/*if(pimpl_->panel.IsWindow())
+			pimpl_->panel.DestroyWindow();*/
+		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT, 0U, 0);
 		return true;
 	}
 
@@ -135,7 +133,7 @@ bool UI::Create(HWND parent)
 	if (!pimpl_)
 		return false;
 
-	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE/* | WS_EX_LAYERED*/ | WS_EX_TRANSPARENT, 0U, 0);
+	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT, 0U, 0);
 	return true;
 }
 
@@ -158,6 +156,7 @@ void UI::Destroy(bool full)
 		{
 			delete pimpl_;
 			pimpl_ = nullptr;
+			pDWR_.reset();
 		}
 	}
 }

@@ -23,8 +23,8 @@ export
 	class CStartCompositionEditSession : public CEditSession
 	{
 	public:
-		CStartCompositionEditSession(WeaselTSF* pTextService, ITfContext* pContext, BOOL fCUASWorkaroundEnabled)
-			: CEditSession(pTextService, pContext), _fCUASWorkaroundEnabled{ fCUASWorkaroundEnabled }
+		CStartCompositionEditSession(WeaselTSF* pTextService, ITfContext* pContext, bool not_inline_preedit)
+			: CEditSession(pTextService, pContext), _not_inline_preedit{ not_inline_preedit }
 		{
 		}
 
@@ -32,7 +32,7 @@ export
 		STDMETHODIMP DoEditSession(TfEditCookie ec);
 
 	private:
-		BOOL _fCUASWorkaroundEnabled;
+		bool _not_inline_preedit;
 	};
 
 	STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
@@ -60,15 +60,24 @@ export
 			 *   The workaround is only needed when inline preedit is not enabled.
 			 *   See https://github.com/rime/weasel/pull/883#issuecomment-1567625762
 			 */
+			HRESULT ret;
+			if (_not_inline_preedit)
+			{
+				ret = pRangeComposition->SetText(ec, TF_ST_CORRECTION, L"|", 1);
+			}
 
-			auto ret = pRangeComposition->SetText(ec, TF_ST_CORRECTION, L"|", 1);
+			/*
+			 * 对用一些异步请求编辑的应用，候选框是!inline_preedit风格，使用语句
+			 * pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+			 * 会导致在编辑框中多插入一个哑字符。案例：Excel 2021--Power Query的公式编辑框。
+			 */
+			LONG moved{};
+			pRangeComposition->ShiftStart(ec, 1, &moved, nullptr);
 #ifdef TEST
 #ifdef _M_X64
 			LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. ec = {:#x}", /*ret,*/ (unsigned)ec);
 #endif // _M_X64
-#endif // TEST
-
-			pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+#endif // TEST			
 			/* set selection */
 			TF_SELECTION tfSelection;
 			tfSelection.range = pRangeComposition;
@@ -297,12 +306,13 @@ export
 		if (FAILED(_pComposition->GetRange(&pRange)))
 			return E_FAIL;
 
+		auto ret = pRange->SetText(ec, 0, _text.c_str(), _text.length());
 #ifdef TEST
 #ifdef _M_X64
-		LOG(INFO) << std::format("From CInsertTextEditSession::DoEditSession. _text = {}", to_string(_text, CP_UTF8));
+		LOG(INFO) << std::format("From CInsertTextEditSession::DoEditSession. _text = {}, ret = 0x{:X}", to_string(_text, CP_UTF8), (unsigned)ret);
 #endif // _M_X64
 #endif // TEST
-		if (FAILED(pRange->SetText(ec, 0, _text.c_str(), _text.length())))
+		if (FAILED(ret))
 		{
 			return E_FAIL;
 		}

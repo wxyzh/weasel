@@ -333,18 +333,18 @@ void RimeWithWeaselHandler::_GetCandidateInfo(weasel::CandidateInfo& cinfo, Rime
 	cinfo.labels.resize(ctx.menu.num_candidates);
 	for (int i = 0; i < ctx.menu.num_candidates; ++i)
 	{
-		cinfo.candies[i].str = std::regex_replace(to_wstring(ctx.menu.candidates[i].text, CP_UTF8), std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+		cinfo.candies[i].str = to_wstring(ctx.menu.candidates[i].text, CP_UTF8);
 		if (ctx.menu.candidates[i].comment)
 		{
-			cinfo.comments[i].str = std::regex_replace(to_wstring(ctx.menu.candidates[i].comment, CP_UTF8), std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+			cinfo.comments[i].str = to_wstring(ctx.menu.candidates[i].comment, CP_UTF8);
 		}
 		if (RIME_STRUCT_HAS_MEMBER(ctx, ctx.select_labels) && ctx.select_labels)
 		{
-			cinfo.labels[i].str = std::regex_replace(to_wstring(ctx.select_labels[i], CP_UTF8), std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+			cinfo.labels[i].str = to_wstring(ctx.select_labels[i], CP_UTF8);
 		}
 		else if (ctx.menu.select_keys)
 		{
-			cinfo.labels[i].str = std::regex_replace(std::wstring(1, ctx.menu.select_keys[i]), std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+			cinfo.labels[i].str = std::wstring(1, ctx.menu.select_keys[i]);
 		}
 		else
 		{
@@ -433,39 +433,36 @@ void RimeWithWeaselHandler::_UpdateUI(RimeSessionId session_id)
 	m_message_value.clear();
 }
 
-std::wstring RimeWithWeaselHandler::_LoadIconSettingFromSchema(RimeConfig& config, char* buffer, const int BUF_SIZE,
-	const char* key1, const char* key2, std::wstring_view user_dir, std::wstring_view shared_dir)
+void RimeWithWeaselHandler::_LoadIconSettingFromSchema(RimeConfig& config, char* buffer, const int BUF_SIZE,
+	const char* key1, const char* key2, std::wstring_view user_dir, std::wstring_view shared_dir, std::wstring& value)
 {
-	std::wstring value;
 	memset(buffer, '\0', (BUF_SIZE + 1));
 
 	if (RimeConfigGetString(&config, key1, buffer, BUF_SIZE) || (key2 != nullptr && RimeConfigGetString(&config, key2, buffer, BUF_SIZE)))
 	{
 		auto tmp = to_wstring(buffer, CP_UTF8);
 		fs::path user_file{ std::format(LR"({}\{})", user_dir.data(), tmp) };
-		if (!fs::exists(user_file) || fs::is_directory(user_file))
+		if (fs::exists(user_file) && !fs::is_directory(user_file))
 		{
-			fs::path shared_file{ std::format(LR"({}\{})", shared_dir.data(), tmp) };
-			if (!fs::exists(shared_file) || fs::is_directory(shared_file))
-			{
-				value = L"";
-			}
-			else
-			{
-				value = shared_file.wstring();
-			}
+			value = user_file.wstring();
 		}
 		else
 		{
-			value = user_file.wstring();
+			fs::path shared_file{ std::format(LR"({}\{})", shared_dir.data(), tmp) };
+			if (fs::exists(shared_file) && !fs::is_directory(shared_file))
+			{
+				value = shared_file.wstring();
+			}
+			else
+			{
+				value = L"";
+			}
 		}
 	}
 	else
 	{
 		value = L"";
 	}
-
-	return value;
 }
 
 void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schema_id)
@@ -483,11 +480,20 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	memset(buffer, '\0', sizeof(buffer));
 	if (RimeConfigGetString(&config, "style/color_scheme", buffer, BUF_SIZE))
 	{
-		RimeConfig weaselconfig;
-		if (RimeConfigOpen("weasel", &weaselconfig))
+		std::string color_name{ buffer };
+		RimeConfigIterator preset{ 0 };
+		if (RimeConfigBeginMap(&preset, &config, std::format("preset_color_schemes/{}", color_name).data()))
 		{
-			_UpdateUIStyleColor(&weaselconfig, m_ui->style(), std::string(buffer));
-			RimeConfigClose(&weaselconfig);
+			_UpdateUIStyleColor(&config, m_ui->style(), color_name);
+		}
+		else
+		{
+			RimeConfig weaselconfig;
+			if (RimeConfigOpen("weasel", &weaselconfig))
+			{
+				_UpdateUIStyleColor(&weaselconfig, m_ui->style(), std::string(buffer));
+				RimeConfigClose(&weaselconfig);
+			}
 		}
 	}
 	// load schema icon start
@@ -495,10 +501,10 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 		std::wstring user_dir = to_wstring(weasel_user_data_dir());
 		std::wstring shared_dir = to_wstring(weasel_shared_data_dir());
 
-		m_ui->style().current_zhung_icon = _LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/icon", "schema/zhung_icon", user_dir, shared_dir);
-		m_ui->style().current_ascii_icon = _LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/ascii_icon", NULL, user_dir, shared_dir);
-		m_ui->style().current_full_icon = _LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/full_icon", NULL, user_dir, shared_dir);
-		m_ui->style().current_half_icon = _LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/half_icon", NULL, user_dir, shared_dir);
+		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/icon", "schema/zhung_icon", user_dir, shared_dir, m_ui->style().current_zhung_icon);
+		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/ascii_icon", NULL, user_dir, shared_dir, m_ui->style().current_ascii_icon);
+		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/full_icon", NULL, user_dir, shared_dir, m_ui->style().current_full_icon);
+		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/half_icon", NULL, user_dir, shared_dir, m_ui->style().current_half_icon);
 	}
 	// load schema icon end
 	RimeConfigClose(&config);
@@ -945,33 +951,34 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	_RimeGetBool(config, "style/vertical_auto_reverse", initialize, style.vertical_auto_reverse, true, false);
 	const std::map<std::string, UIStyle::PreeditType> _preeditMap
 	{
-		{ "composition", UIStyle::COMPOSITION },
-		{ "preview", UIStyle::PREVIEW },
-		{ "preview_all", UIStyle::PREVIEW_ALL }
+		{ "composition",	UIStyle::COMPOSITION },
+		{ "preview",		UIStyle::PREVIEW },
+		{ "preview_all",	UIStyle::PREVIEW_ALL }
 	};
 
 	_RimeParseStringOpt(config, "style/preedit_type", style.preedit_type, _preeditMap);
 	const std::map<std::string, UIStyle::AntiAliasMode> _aliasModeMap
 	{
-		{ "force_dword", UIStyle::FORCE_DWORD },
-		{ "cleartype", UIStyle::CLEARTYPE },
-		{ "grayscale", UIStyle::GRAYSCALE },
-		{ "aliased", UIStyle::ALIASED },
-		{ "default", UIStyle::DEFAULT }
+		{ "force_dword",	UIStyle::FORCE_DWORD },
+		{ "cleartype",		UIStyle::CLEARTYPE },
+		{ "grayscale",		UIStyle::GRAYSCALE },
+		{ "aliased",		UIStyle::ALIASED },
+		{ "default",		UIStyle::DEFAULT }
 	};
 
 	_RimeParseStringOpt(config, "style/antialias_mode", style.antialias_mode, _aliasModeMap);
 	const std::map<std::string, UIStyle::LayoutAlignType> _alignType
 	{
-		{ "top", UIStyle::ALIGN_TOP },
-		{ "center",	UIStyle::ALIGN_CENTER },
-		{ "bottom",	UIStyle::ALIGN_BOTTOM }
+		{ "top",			UIStyle::ALIGN_TOP },
+		{ "center",			UIStyle::ALIGN_CENTER },
+		{ "bottom",			UIStyle::ALIGN_BOTTOM }
 	};
 	_RimeParseStringOpt(config, "style/layout/align_type", style.align_type, _alignType);
 	_RimeGetBool(config, "style/display_tray_icon", initialize, style.display_tray_icon, true, false);
 	_RimeGetBool(config, "style/ascii_tip_follow_cursor", initialize, style.ascii_tip_follow_cursor, true, false);
 	_RimeGetBool(config, "style/horizontal", initialize, style.layout_type, UIStyle::LAYOUT_HORIZONTAL, UIStyle::LAYOUT_VERTICAL);
 	_RimeGetBool(config, "style/paging_on_scroll", initialize, style.paging_on_scroll, true, false);
+	_RimeGetBool(config, "style/click_to_capture", initialize, style.click_to_capture, true, false);
 	_RimeGetBool(config, "style/fullscreen", false, style.layout_type,
 		((style.layout_type == UIStyle::LAYOUT_HORIZONTAL) ? UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN : UIStyle::LAYOUT_VERTICAL_FULLSCREEN), style.layout_type);
 	_RimeGetBool(config, "style/vertical_text", false, style.layout_type, UIStyle::LAYOUT_VERTICAL_TEXT, style.layout_type);
