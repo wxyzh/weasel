@@ -34,7 +34,7 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 	switch (wID)
 	{
 	case ID_WEASELTRAY_SETTINGS:
-		ret = execute(std::format(LR"({}\WeaselDeployer.exe)", WeaselRootPath()), nullptr);
+		ret = execute(std::format(LR"({}\WeaselDeployer.exe)", WeaselRootPath()));
 		if (!ret)
 			goto DEFAULT;
 		break;

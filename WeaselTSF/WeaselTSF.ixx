@@ -136,7 +136,7 @@ export
 		void ReSetBit(int index) { _bitset.reset(index); }
 		bool GetBit(int index) const { return _bitset[index]; }
 
-		bool execute(std::wstring_view cmd, std::wstring_view args);
+		bool execute(std::wstring_view cmd, std::wstring_view args = L"");
 		bool explore(std::wstring_view path);
 		com_ptr<ITfCompartment> _GetGlobalCompartmentDaemon() { return _pGlobalCompartmentDaemon; }
 

@@ -277,7 +277,7 @@ void WeaselTSF::_EnsureServerConnected()
 			}
 			if (GetBit(0))					// _bitset[0]: _daemon_enable
 			{
-				execute(std::format(LR"({}\WeaselServer.exe)", WeaselRootPath()), nullptr);
+				execute(std::format(LR"({}\WeaselServer.exe)", WeaselRootPath()));
 			}
 		}
 	}
