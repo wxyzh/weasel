@@ -58,6 +58,7 @@ export
 		void Destroy();
 		void StartUI();
 		void EndUI();
+		void SetCaretFollowing(bool following);
 
 		// Event for ITfThreadFocusSink
 		virtual HRESULT OnSetThreadFocus();

@@ -45,7 +45,7 @@ void WeaselTSF::_EndComposition(ITfContext* pContext, BOOL clear)
 	_cand->EndUI();
 #ifdef TEST
 #ifdef _M_X64
-	LOG(INFO) << std::format("From _EndComposition. hr = {:#x}", (unsigned)hr);
+	LOG(INFO) << std::format("From _EndComposition. hr = 0x{:X}", (unsigned)hr);
 #endif // _M_X64
 #endif // TEST
 }
@@ -148,7 +148,10 @@ void WeaselTSF::_UpdateComposition(ITfContext* pContext)
 {
 	HRESULT hr;
 	_pEditSessionContext = pContext;
-	_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);		
+	ReSetBit(15);
+	_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+	if (hr == TF_S_ASYNC)
+		SetBit(15);
 #ifdef TEST
 #ifdef _M_X64
 	LOG(INFO) << std::format("From _UpdateComposition. hr = {:#x}, pContext = {:#x}, _tfClientId = {:#x}", (unsigned)hr, (size_t)pContext, _tfClientId);

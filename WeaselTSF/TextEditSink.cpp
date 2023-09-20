@@ -61,25 +61,28 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 #ifdef _M_X64
 		LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. pEditRecord->GetTextAndPropertyUpdates.");
 #endif // _M_X64
-#endif // TEST
-		static int count{};
+#endif // TEST		
 		if (SUCCEEDED(pEnumTextChanges->Next(1, &pRange, NULL)))
 		{
 			pRange.Release();
 		}
 		pEnumTextChanges.Release();
 
-		if (GetBit(13))			// _bitset[13]: _FistKeyComposition
+		if (GetBit(17))				// _bitset[17]: _CaretFollowing
 		{
-			if (++count == 2)
+			static int count{};
+			if (GetBit(13))			// _bitset[13]: _FistKeyComposition
+			{
+				if (++count == 2)
+				{
+					count = 0;
+					_UpdateCompositionWindow(pContext);
+				}
+			}
+			else
 			{
 				count = 0;
-				_UpdateCompositionWindow(pContext);
 			}
-		}
-		else
-		{
-			count = 0;
 		}
 	}
 	return S_OK;
@@ -104,7 +107,8 @@ STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext, TfLayoutCode lcode, ITfCo
 		break;
 
 	case TF_LC_CHANGE:
-		_UpdateCompositionWindow(pContext);
+		if (GetBit(17))					// _bitset[17]: _CaretFollowing
+			_UpdateCompositionWindow(pContext);
 		break;
 
 	case TF_LC_DESTROY:

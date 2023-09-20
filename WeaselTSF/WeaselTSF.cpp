@@ -50,7 +50,8 @@ WeaselTSF::WeaselTSF()
 	_activeLanguageProfileNotifySinkCookie = TF_INVALID_COOKIE;
 
 	_cand.Attach(new CCandidateList(*this));
-	SetBit(8);	// _bitset[8]: _SupportDisplayAttribute
+	SetBit(8);		// _bitset[8]: _SupportDisplayAttribute
+	SetBit(17);		// _bitset[17]: _CaretFollowing
 	
 	DllAddRef();
 	// CatchUnhandledException();

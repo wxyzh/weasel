@@ -30,13 +30,36 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 		*pfEaten = (BOOL)m_client.ProcessKeyEvent(ke);
 		switch ((unsigned)ke)
 		{
-		case 0x4005'0024:
+		case 0xFFE5:			// Caps Lock down
+			if (_IsComposing())
+			{
+				SetBit(16);		// _bitset[16]: _CompositionWithCapsLock
+			}
+			break;
+
+		case 0x4002'FFE5:		// Caps Lock up
+			if (GetBit(16))		// _bitset[16]: _CompositionWithCapsLock
+			{
+				ReSetBit(16);
+				unsigned send{};
+				std::array<INPUT, 2> inputs;
+
+				inputs[0].type = INPUT_KEYBOARD;
+				inputs[0].ki = { VK_CAPITAL, 0x14, 0, 0, 0 };
+
+				inputs[1].type = INPUT_KEYBOARD;
+				inputs[1].ki = { VK_CAPITAL, 0x14, KEYEVENTF_KEYUP, 0, 0 };
+				send = SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
+			}
+			break;
+
+		case 0x4005'0024:		// Ctrl + Shift + 4
 			SetBit(12);			// _bitset[12]: _simplication_state
 			break;
 		}
 #ifdef TEST
 #ifdef _M_X64
-		LOG(INFO) << std::format("From WeaselTSF::_ProcessKeyEvent. ke = 0x{:X}", (unsigned)ke);
+		LOG(INFO) << std::format("From WeaselTSF::_ProcessKeyEvent. ke = 0x{:X}, Caps_Lock = {}", (unsigned)ke, GetBit(16));
 #endif // _M_X64
 #endif // TEST
 	}
@@ -107,7 +130,7 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 	}
 	else
 	{
-		_ProcessKeyEvent(wParam, lParam, pfEaten);		
+		_ProcessKeyEvent(wParam, lParam, pfEaten);
 	}
 	_UpdateComposition(pContext);
 	return S_OK;
@@ -153,7 +176,7 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BO
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
 		_UpdateComposition(pContext);
 	}
-	
+
 	return S_OK;
 }
 

@@ -88,6 +88,12 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 
 	case ID_WEASELTRAY_FULL_SHAPE:
 		SetBit(6);
+		goto DEFAULT;
+
+	case ID_STYLE_CARET_FOLLOWING:
+		_bitset.flip(17);							// _bitset[17]: _CaretFollowing
+		_cand->SetCaretFollowing(_bitset[17]);
+		break;
 
 	DEFAULT:
 	default:

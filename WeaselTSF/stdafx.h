@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <format>
+#include <array>
 #include <functional>
 
 template<typename I>

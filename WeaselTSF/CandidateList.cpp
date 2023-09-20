@@ -353,6 +353,7 @@ void CCandidateList::StartUI()
 	}
 
 	_ui->SetSelectCallback([this](int* const sel, int* const hov, bool* const next) { _tsf.HandleUICallback(sel, hov, next); });
+	_ui->SetRectCallback([this](const RECT& rc) { _tsf.SetRect(rc); });
 	// ToDo: send select candidate info back to rime
 
 	pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
@@ -383,6 +384,12 @@ void CCandidateList::EndUI()
 	if (emgr != NULL)
 		emgr->EndUIElement(uiid);
 	_DisposeUIWindow();
+}
+
+void CCandidateList::SetCaretFollowing(bool following)
+{
+	if (_ui)
+		_ui->SetCaretFollowing(_tsf.GetBit(17));		// _bitset[17]: _CaretFollowing
 }
 
 HRESULT CCandidateList::OnSetThreadFocus()

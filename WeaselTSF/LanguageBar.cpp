@@ -309,6 +309,10 @@ void CLangBarItemButton::RightClick(POINT& pt)
 			ModifyMenu(mii.hSubMenu, _textService.GetBit(2) ? 1 : 0, MF_BYPOSITION | MF_CHECKED, 0, _textService.GetBit(2) ? L"全角" : L"半角");	// _bitset[2]:  _full_shape
 		}
 		SetMenuItemInfo(popupMenu, 0, true, &mii);
+
+		HMENU hSubMenu = GetSubMenu(popupMenu, 1);
+		CheckMenuItem(hSubMenu, ID_STYLE_CARET_FOLLOWING, MF_BYCOMMAND | (_textService.GetBit(17) ? MF_CHECKED : MF_UNCHECKED));					// _bitset[17]: _CaretFollowing
+		
 		VARIANT var{};
 		if (SUCCEEDED(_textService._GetGlobalCompartmentDaemon()->GetValue(&var)))
 		{

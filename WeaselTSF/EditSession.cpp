@@ -36,7 +36,14 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 		if ((state || GetBit(12)) && !_IsComposing())	// _bitset[12]: _simplication_state
 		{
 			_StartComposition(_pEditSessionContext, !config.inline_preedit);
-			_UpdateCompositionWindow(_pEditSessionContext);
+			if (GetBit(17))								// _bitset[17]: _CaretFollowing
+			{
+				_UpdateCompositionWindow(_pEditSessionContext);
+			}
+			else
+			{
+				_SetCompositionPosition(m_rcFallback);
+			}
 			_EndComposition(_pEditSessionContext, true);
 			ReSetBit(12);								// _bitset[12]: _simplication_state
 		}
@@ -65,7 +72,14 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 				_ShowInlinePreedit(_pEditSessionContext, context);
 				SetBit(5);					// _bitset[5]: _InlinePreedit
 			}
-			_UpdateCompositionWindow(_pEditSessionContext);
+			if (GetBit(17))					// _bitset[17]: _CaretFollowing
+			{
+				_UpdateCompositionWindow(_pEditSessionContext);
+			}
+			else
+			{
+				_SetCompositionPosition(m_rcFallback);
+			}
 		}
 	}
 	_UpdateUI(*context, _status);

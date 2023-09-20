@@ -66,7 +66,9 @@ WeaselPanel::WeaselPanel(weasel::UI& ui) :
 	hide_candidates(false),
 	m_pDWR{ ui.pdwr() },
 	_m_gdiplusToken(0),
-	_UICallback{ ui.uiCallback() }
+	_UICallback{ ui.uiCallback() },
+	_SetRectCallback{ ui.SetRectCallback() },
+	m_following{ ui.GetCaretFollowing() }
 {
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -167,11 +169,7 @@ void WeaselPanel::Refresh(bool from_server)
 		ReleaseDC(dc);
 		_ResizeWindow();
 		_RepositionWindow();
-#ifdef TEST
-#ifdef _M_X64
-		LOG(INFO) << std::format("From WeaselPanel::Refresh. RedrawWindow.");
-#endif // DEBUG
-#endif // TEST
+
 		if (m_ctx != m_octx)
 		{
 			m_octx = m_ctx;
@@ -282,6 +280,18 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	point.x = GET_X_LPARAM(lParam);
 	point.y = GET_Y_LPARAM(lParam);
 
+	if (!m_following)
+	{
+		RECT rc{};
+		GetClientRect(&rc);
+		if (abs(point.y - rc.top) < 10 || abs(point.y - rc.bottom) < 10 || abs(point.x - rc.left) < 10 || abs(point.x - rc.right) < 10)
+		{
+			PostMessage(WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
+			m_holder = true;
+			SetCapture();
+		}
+	}
+
 	// capture
 	if (m_style.click_to_capture)
 	{
@@ -359,14 +369,36 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	return 0;
 }
 
+LRESULT WeaselPanel::OnLeftReleased(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (!m_following)
+	{
+		m_holder = false;
+		ReleaseCapture();
+	}
+	bHandled = true;
+	return 0;
+}
+
 LRESULT WeaselPanel::OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (!m_style.mouse_hover_ms)
-		return 0;
-
 	CPoint point;
 	point.x = GET_X_LPARAM(lParam);
 	point.y = GET_Y_LPARAM(lParam);
+
+	if (!m_following)
+	{
+		RECT rc{};
+		GetClientRect(&rc);
+		if (abs(point.y - rc.top) < 10 || abs(point.y - rc.bottom) < 10 || abs(point.x - rc.left) < 10 || abs(point.x - rc.right) < 10)
+		{
+			SetCursor(LoadCursor(nullptr, IDC_SIZEALL));
+		}
+		else
+		{
+			SetCursor(LoadCursor(nullptr, IDC_ARROW));
+		}
+	}
 
 	for (int i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 		CRect rect = m_layout->GetCandidateRect((int)i);
@@ -374,10 +406,12 @@ LRESULT WeaselPanel::OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 		if (m_istorepos)
 			rect.OffsetRect(0, m_offsetys[i]);
 
-		if (rect.PtInRect(point) && i != m_ctx.cinfo.highlighted)
+		if (rect.PtInRect(point))
 		{
-			if (_UICallback)
+			if (_UICallback && i != m_ctx.cinfo.highlighted && m_style.mouse_hover_ms)
 				_UICallback(nullptr, &i, nullptr);
+
+			SetCursor(LoadCursor(nullptr, IDC_HAND));
 		}
 	}
 	bHandled = true;
@@ -386,15 +420,36 @@ LRESULT WeaselPanel::OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT WeaselPanel::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (m_mouse_entry == false && m_style.mouse_hover_ms)
+	if (m_mouse_entry == false)
 	{
 		TRACKMOUSEEVENT tme;
 		tme.cbSize = sizeof(TRACKMOUSEEVENT);
 		tme.dwFlags = TME_HOVER | TME_LEAVE;
-		tme.dwHoverTime = m_style.mouse_hover_ms;	// uint: ms
+		tme.dwHoverTime = m_style.mouse_hover_ms ? m_style.mouse_hover_ms : 10;	// uint: ms
 		tme.hwndTrack = m_hWnd;
 		TrackMouseEvent(&tme);
 	}
+	if (!m_following)
+	{
+		static CPoint ptPreview{};
+
+		CPoint point;
+		point.x = GET_X_LPARAM(lParam);
+		point.y = GET_Y_LPARAM(lParam);
+		if (m_holder && point != ptPreview)
+		{
+			CPoint ptTemp{ point - ptPreview };
+			CRect rc{};
+			GetWindowRect(&rc);
+			CPoint pt{ 0, -rc.Height() };
+			rc.OffsetRect(ptTemp);
+			MoveWindow(&rc);
+			rc.OffsetRect(pt);
+			_SetRectCallback(rc);
+			return 0;
+		}
+		ptPreview = point;
+	}	
 	return 0;
 }
 
@@ -638,7 +693,7 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 						rc_hi.InflateRect(0, (STATUS_ICON_SIZE - hilitedSz.cy) / 2);
 					if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && hilitedSz.cx < STATUS_ICON_SIZE)
 						rc_hi.InflateRect((STATUS_ICON_SIZE - hilitedSz.cx) / 2, 0);
-				}
+			}
 
 				rc_hi.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 				IsToRoundStruct rd = m_layout->GetTextRoundInfo();
@@ -647,8 +702,8 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 					std::swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
 				}
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner, BackType::TEXT, rd);
-			}
 		}
+	}
 		drawn = true;
 	}
 	return drawn;
@@ -892,12 +947,16 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 				preeditrc.OffsetRect(0, m_offsety_preedit);
 			drawn |= _DrawPreeditBack(m_ctx.preedit, memDC, preeditrc);
 		}
-		if (m_candidateCount)
+		// if (m_candidateCount)
 			drawn |= _DrawCandidates(memDC, true);
 		// background and candidates back, hilite back drawing end
 
-		// begin  texts drawing
-		m_pDWR->pRenderTarget->BindDC(memDC, &rcw);
+		// begin  texts drawing, if pRenderTarget failed, force to reinit directwrite resources
+		if (FAILED(m_pDWR->pRenderTarget->BindDC(memDC, &rcw)))
+		{
+			_InitFontRes(true);
+			m_pDWR->pRenderTarget->BindDC(memDC, &rcw);
+		}
 		m_pDWR->pRenderTarget->BeginDraw();
 		// draw auxiliary string
 		if (!m_ctx.aux.str.empty())
@@ -932,11 +991,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : m_iconEnabled);
 			memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 			drawn = true;
-		}
+	}
 		/* Nothing drawn, hide candidate window */
 		if (!drawn)
 			ShowWindow(SW_HIDE);
-	}
+}
 	_LayerUpdate(rcw, memDC);
 
 	// clean objs
@@ -946,7 +1005,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 {
-
 	HDC ScreenDC = ::GetDC(NULL);
 	CRect rect;
 	GetWindowRect(&rect);
@@ -1001,11 +1059,6 @@ void WeaselPanel::MoveTo(RECT const& rc)
 
 	if (rc.left != m_inputPos.left || rc.top != m_inputPos.top)
 	{
-#ifdef TEST
-#ifdef _M_X64
-		LOG(INFO) << std::format("From WeaselPanel::MoveTo. Second.");
-#endif // _M_X64
-#endif // TEST
 		// in some apps like word 2021, with inline_preedit set,
 		// bottom of rc would flicker 1 px or 2, make the candidate flickering
 		m_inputPos = rc;
@@ -1046,7 +1099,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 			// with parameter to avoid vertical flicker
 			_RepositionWindow(true);
 			RedrawWindow();
-		}
+	}
 	}
 }
 

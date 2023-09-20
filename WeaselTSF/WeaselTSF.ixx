@@ -139,6 +139,8 @@ export
 		bool execute(std::wstring_view cmd, std::wstring_view args = L"");
 		bool explore(std::wstring_view path);
 		com_ptr<ITfCompartment> _GetGlobalCompartmentDaemon() { return _pGlobalCompartmentDaemon; }
+		void SetRect(const RECT& rc) { m_rcFallback = rc; }
+		RECT GetRect() const { return m_rcFallback; }
 
 	private:
 		// ui callback functions
@@ -236,6 +238,8 @@ export
 		// The cookie of StatusSink
 		DWORD _dwStatusSinkCookie;
 
+		RECT m_rcFallback{};
+
 		// _bitset[0]:  _daemon_enable
 		// _bitset[1]:  _ascii_mode
 		// _bitset[2]:  _full_shape
@@ -252,8 +256,10 @@ export
 		// _bitset[13]: _FistKeyComposition
 		// _bitset[14]: _KeyboardDisabled
 		// _bitset[15]: _AsyncEdit
-		std::bitset<16> _bitset{};
+		// _bitset[16]: _CompositionWithCapsLock
+		// _bitset[17]: _CaretFollowing
+		std::bitset<32> _bitset{};
 
-		std::wstring _schema_id{};
+		std::wstring _schema_id{};		
 	};
 }

@@ -33,6 +33,7 @@ public:
 		MESSAGE_HANDLER(WM_DPICHANGED, OnDpiChanged)
 		MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
 		MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLeftClicked)
+		MESSAGE_HANDLER(WM_LBUTTONUP, OnLeftReleased)
 		MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
 		MESSAGE_HANDLER(WM_MOUSEHOVER, OnMouseHover)
 		MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
@@ -45,6 +46,7 @@ public:
 	LRESULT OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnLeftReleased(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -57,6 +59,7 @@ public:
 	void Refresh(bool from_server);
 	void DoPaint(CDCHandle dc);
 	bool GetIsReposition() { return m_istorepos; }
+	void SetCaretFollowing(const bool following) { m_following = following; }
 
 private:
 	void _InitFontRes(bool forced = false);
@@ -110,6 +113,9 @@ private:
 	// for multi font_face & font_point
 	PDWR m_pDWR;
 	std::function<void(int* const, int* const, bool* const)>& _UICallback;
+	std::function<void(const RECT&)>& _SetRectCallback;
 
+	bool m_following{ true };
 	bool _from_server{};
+	bool m_holder{};
 };

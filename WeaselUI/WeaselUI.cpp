@@ -1,3 +1,4 @@
+#include "WeaselUI.h"
 #include "pch.h"
 #include <WeaselUI.h>
 #include "WeaselPanel.h"
@@ -228,4 +229,11 @@ bool weasel::UI::GetIsReposition()
 	if (pimpl_)
 		return pimpl_->panel.GetIsReposition();
 	return false;
+}
+
+void weasel::UI::SetCaretFollowing(const bool following)
+{
+	_CaretFollowing = following;
+	if (pimpl_)
+		pimpl_->panel.SetCaretFollowing(following);
 }
