@@ -4,10 +4,8 @@ module;
 #include <resource.h>
 #include "test.h"
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif
 #endif // TEST
 module WeaselTSF;
 import Compartment;
@@ -101,9 +99,7 @@ HRESULT WeaselTSF::_SetKeyboardOpen(BOOL fOpen)
 		}
 	}
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::_SetKeyboardOpen. fOpen = {}, hr = 0x{:X}", fOpen, (unsigned)hr);
-#endif // _M_X64
 #endif // TEST
 
 	return hr;
@@ -122,9 +118,7 @@ BOOL WeaselTSF::_InitCompartment()
 		GUID_COMPARTMENT_KEYBOARD_OPENCLOSE
 	);
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::_InitCompartment. hr = 0x{:X}", (unsigned)hr);
-#endif // _M_X64
 #endif // TEST
 
 	_pConversionCompartmentSink = new CCompartmentEventSink(callback);
@@ -135,9 +129,7 @@ BOOL WeaselTSF::_InitCompartment()
 		GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION
 	);
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::_InitCompartment. hr = 0x{:X}", (unsigned)hr);
-#endif // _M_X64
 #endif // TEST
 
 	return SUCCEEDED(hr);
@@ -169,9 +161,7 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 		}
 		_EnableLanguageBar(isOpen);
 #ifdef TEST
-#ifdef _M_X64
 		LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. GUID_COMPARTMENT_KEYBOARD_OPENCLOSE: isOpen = {}", isOpen);
-#endif // _M_X64
 #endif // TEST
 	}
 	else if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION))
@@ -180,16 +170,12 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 		bool ok = m_client.GetResponseData(std::ref(parser));
 		_UpdateLanguageBar(_status);*/
 #ifdef TEST
-#ifdef _M_X64
 		LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION");
-#endif // _M_X64
 #endif // TEST
 	}
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. guidCompartment = {:X}-{:X}-{:X}-{:X}{:X}{:X}{:X}{:X}{:X}{:X}{:X}", guidCompartment.Data1, guidCompartment.Data2, guidCompartment.Data3, guidCompartment.Data4[0],
 		guidCompartment.Data4[1], guidCompartment.Data4[2], guidCompartment.Data4[3], guidCompartment.Data4[4], guidCompartment.Data4[5], guidCompartment.Data4[6], guidCompartment.Data4[7]);
-#endif // _M_X64
 #endif // TEST
 
 	return S_OK;

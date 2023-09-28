@@ -2,10 +2,8 @@ module;
 #include "stdafx.h"
 #include "test.h"
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif
 #endif // TEST
 module WeaselTSF;
 import CandidateList;
@@ -13,31 +11,22 @@ import CandidateList;
 STDAPI WeaselTSF::OnInitDocumentMgr(ITfDocumentMgr *pDocMgr)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::OnInitDocumentMgr. pDocMgr = {:#x}", (size_t)pDocMgr);
-#endif // _M_X64
 #endif // TEST
 	return S_OK;
 }
 
 STDAPI WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr)
 {
-#ifdef TEST
-#ifdef _M_X64
-	LOG(INFO) << std::format("From WeaselTSF::OnUninitDocumentMgr. pDocMgr = {:#x}", (size_t)pDocMgr);
-#endif // _M_X64
-#endif // TEST
 	return S_OK;
 }
 
 STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus)
 {
-	auto ret = _InitTextEditSink(pDocMgrFocus);
+		_InitTextEditSink(pDocMgrFocus);
 
 #ifdef TEST
-#ifdef _M_X64
-	LOG(INFO) << std::format("From WeaselTSF::OnSetFocus. pDocMgrFocus = {:#x}, pDocMrgPrevFocus = {:#x}, ret = {}", (size_t)pDocMgrFocus, (size_t)pDocMgrPrevFocus, ret);
-#endif // _M_X64
+	LOG(INFO) << std::format("From WeaselTSF::OnSetFocus. pDocMgrFocus = {:#x}, pDocMrgPrevFocus = {:#x}", (size_t)pDocMgrFocus, (size_t)pDocMgrPrevFocus);
 #endif // TEST
 
 	if (!pDocMgrFocus)
@@ -71,20 +60,13 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocM
 STDAPI WeaselTSF::OnPushContext(ITfContext *pContext)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::OnPushContext. pContext = {:#x}", (size_t)pContext);
-#endif // _M_X64
 #endif // TEST
 	return S_OK;
 }
 
 STDAPI WeaselTSF::OnPopContext(ITfContext *pContext)
 {
-#ifdef TEST
-#ifdef _M_X64
-	LOG(INFO) << std::format("From WeaselTSF::OnPopContext. pContext = {:#x}", (size_t)pContext);
-#endif // _M_X64
-#endif // TEST
 	return S_OK;
 }
 

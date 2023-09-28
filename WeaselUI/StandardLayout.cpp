@@ -1,13 +1,8 @@
 #include "pch.h"
 #include "StandardLayout.h"
+#include <wrl/client.h>
 #include "test.h"
 
-#ifdef TEST
-#ifdef _M_X64
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif
-#endif // TEST
 #define IS_FULLSCREENLAYOUT(style)	(style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 #define NOT_FULLSCREENLAYOUT(style)	(style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN && style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 
@@ -20,7 +15,7 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 	return std::wstring(buffer);
 }
 
-void weasel::StandardLayout::GetTextSizeDW(std::wstring_view text, size_t nCount, IDWriteTextFormat1* pTextFormat, PDWR pDWR,  LPSIZE lpSize) const
+void weasel::StandardLayout::GetTextSizeDW(std::wstring_view text, size_t nCount, ComPtr<IDWriteTextFormat1> pTextFormat, PDWR pDWR,  LPSIZE lpSize) const
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
@@ -34,9 +29,9 @@ void weasel::StandardLayout::GetTextSizeDW(std::wstring_view text, size_t nCount
 	// 创建文本布局 
 	if (pTextFormat != NULL){
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat, 0, _style.max_height);
+			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat.Get(), 0, _style.max_height);
 		else
-			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat, _style.max_width, 0);
+			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat.Get(), _style.max_width, 0);
 	}
 
 	if (SUCCEEDED(hr))
@@ -59,12 +54,12 @@ void weasel::StandardLayout::GetTextSizeDW(std::wstring_view text, size_t nCount
 		if(_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
 			size_t max_width = _style.max_width == 0 ? textMetrics.width : _style.max_width;
-			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat, max_width, textMetrics.height);
+			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat.Get(), max_width, textMetrics.height);
 		}
 		else
 		{
 			size_t max_height = _style.max_height == 0 ? textMetrics.height : _style.max_height;
-			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat, textMetrics.width, max_height);
+			hr = pDWR->CreateTextLayout(text.data(), nCount, pTextFormat.Get(), textMetrics.width, max_height);
 		}
 
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
@@ -88,7 +83,7 @@ void weasel::StandardLayout::GetTextSizeDW(std::wstring_view text, size_t nCount
 	pDWR->ResetLayout();
 }
 
-CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat1* pTextFormat, PDWR pDWR) const
+CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, ComPtr<IDWriteTextFormat1> pTextFormat, PDWR pDWR) const
 {
 	const std::wstring& preedit = text.str;
 	const std::vector<weasel::TextAttribute> &attrs = text.attributes;
@@ -220,7 +215,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 				{
 					// not inline_preedit
 					{
-						{false, false, false, false},		// FIRST_CAND
+						{false, false, false, false},	// FIRST_CAND
 						{false, false, false, false},	// MID_CAND
 						{false, true, false, true},		// LAST_CAND
 						{false, true, false, true},		// ONLY_CAND
@@ -254,7 +249,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 				{
 					// not inline_preedit
 					{
-						{false, false, false, false},		// FIRST_CAND
+						{false, false, false, false},	// FIRST_CAND
 						{false, false, false, false},	// MID_CAND
 						{true, true, false, false},		// LAST_CAND
 						{false, false, true, true},		// ONLY_CAND
@@ -320,11 +315,6 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 
 void StandardLayout::UpdateStatusIconLayout(int& width, int& height)
 {
-#ifdef TEST
-#ifdef _M_X64
-	LOG(INFO) << std::format("From StandardLayout::UpdateStatusIconLayout.");
-#endif // DEBUG
-#endif // TEST
 	// rule 1. status icon is middle-aligned with preedit text or auxiliary text, whichever comes first
 	// rule 2. there is a spacing between preedit/aux text and the status icon
 	// rule 3. status icon is right aligned in WeaselPanel, when [margin_x + width(preedit/aux) + spacing + width(icon) + margin_x] < style.min_width
@@ -414,12 +404,6 @@ bool StandardLayout::ShouldDisplayStatusIcon() const
 	// rule 2. show status icon when switching mode
 	// rule 3. always show status icon with tips 
 	// rule 4. rule 3 excluding tips FullScreenLayout with strings
-#ifdef TEST
-#ifdef _M_X64
-	LOG(INFO) << std::format("From StandardLayout::ShouldDisplayStatusIcon.");
-	LOG(INFO) << std::format("ascii_mode = {}, inline_preedit = {}, composing = {}, aux.empty() = {}, layout_type = {}", _status.ascii_mode, _style.inline_preedit, _status.composing, _context.aux.empty(), (int)_style.layout_type);
-#endif // DEBUG
-#endif // TEST
 	return ((_status.ascii_mode && !_style.inline_preedit) 
 		|| !_status.composing || !_context.aux.empty()) 
 		&& !((_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN 

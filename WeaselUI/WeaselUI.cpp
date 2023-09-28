@@ -4,10 +4,8 @@
 #include "WeaselPanel.h"
 #include "test.h"
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif
 #else
 #include "logging.h"
 #endif // TEST
@@ -25,11 +23,9 @@ public:
 	~UIImpl()
 	{
 	}
-	void Refresh(bool from_server) {
+	void Refresh() {
 #ifdef TEST
-#ifdef _M_X64
 		LOG(INFO) << std::format("From UIImpl::Refresh. panel.IsWindow() = {}", panel.IsWindow());
-#endif // _M_X64
 #endif // TEST
 		if (!panel.IsWindow()) return;
 		if (timer)
@@ -38,7 +34,7 @@ public:
 			KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
 			timer = 0;
 		}
-		panel.Refresh(from_server);
+		panel.Refresh();
 	}
 	void Show();
 	void Hide();
@@ -61,9 +57,7 @@ UINT_PTR UIImpl::timer = 0;
 void UIImpl::Show()
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From UIImpl::Show. panel.IsWindow() = {}", panel.IsWindow());
-#endif // _M_X64
 #endif // TEST
 	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_SHOWNA);
@@ -117,9 +111,7 @@ VOID CALLBACK UIImpl::OnTimer(
 bool UI::Create(HWND parent)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From UI::Create.");
-#endif // _M_X64
 #endif // TEST
 	if (pimpl_)
 	{
@@ -148,9 +140,7 @@ void UI::Destroy(bool full)
 		{
 			pimpl_->panel.DestroyWindow();
 #ifdef TEST
-#ifdef _M_X64
 			LOG(INFO) << std::format("From UI::Destroy. pimpl_->panel.DestroyWindow()");
-#endif // _M_X64
 #endif // TEST
 		}
 		if (full)
@@ -165,9 +155,7 @@ void UI::Destroy(bool full)
 void UI::Show()
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From UI::Show.");
-#endif // _M_X64
 #endif // TEST
 	if (pimpl_)
 	{
@@ -201,11 +189,11 @@ bool UI::IsShown() const
 	return pimpl_ && pimpl_->IsShown();
 }
 
-void UI::Refresh(bool from_server)
+void UI::Refresh()
 {
 	if (pimpl_)
 	{
-		pimpl_->Refresh(from_server);
+		pimpl_->Refresh();
 	}
 }
 
@@ -217,11 +205,11 @@ void UI::UpdateInputPosition(RECT const& rc)
 	}
 }
 
-void UI::Update(const Context &ctx, const Status &status, bool from_server)
+void UI::Update(const Context &ctx, const Status &status)
 {
 	ctx_ = ctx;
 	status_ = status;
-	Refresh(from_server);
+	Refresh();
 }
 
 bool weasel::UI::GetIsReposition()

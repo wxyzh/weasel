@@ -23,6 +23,9 @@ LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	BOOL value{ TRUE };
 	::DwmSetWindowAttribute(m_hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
 
+	DWM_SYSTEMBACKDROP_TYPE systemBackDrop{ DWMSBT_MAINWINDOW };
+	::DwmSetWindowAttribute(m_hWnd, DWMWA_SYSTEMBACKDROP_TYPE, &systemBackDrop, sizeof(DWM_SYSTEMBACKDROP_TYPE));
+
 	cn_.Attach(GetDlgItem(IDC_RADIO_CN));
 	tw_.Attach(GetDlgItem(IDC_RADIO_TW));
 	remove_.Attach(GetDlgItem(IDC_REMOVE));

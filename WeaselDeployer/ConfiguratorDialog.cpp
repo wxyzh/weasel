@@ -35,6 +35,9 @@ LRESULT ConfiguratorDialog::OnInitDialog(UINT, WPARAM, LPARAM lParam, BOOL&)
 	BOOL value{ TRUE };
 	::DwmSetWindowAttribute(m_hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
 
+	DWM_SYSTEMBACKDROP_TYPE systemBackDrop{ DWMSBT_TABBEDWINDOW };
+	::DwmSetWindowAttribute(m_hWnd, DWMWA_SYSTEMBACKDROP_TYPE, &systemBackDrop, sizeof(DWM_SYSTEMBACKDROP_TYPE));
+
 	// center the dialog on the screen
 	CDialogImpl::CenterWindow();
 

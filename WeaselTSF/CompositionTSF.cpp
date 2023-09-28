@@ -2,10 +2,8 @@ module;
 #include "stdafx.h"
 #include "test.h"
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif
 #endif // TEST
 module WeaselTSF;
 import Composition;
@@ -24,9 +22,7 @@ void WeaselTSF::_StartComposition(ITfContext* pContext, bool not_inline_preedit)
 		SetBit(6);						// _bitset[6]:	_BeginComposition
 		SetBit(13);						// _bitset[13]: _FistKeyComposition
 #ifdef TEST
-#ifdef _M_X64
 			LOG(INFO) << std::format("From _StartComposition. hr = {:#x}, ret = {:#x}", (unsigned)hr, (unsigned)ret);
-#endif // _M_X64
 #endif // TEST
 	}
 }
@@ -44,9 +40,7 @@ void WeaselTSF::_EndComposition(ITfContext* pContext, BOOL clear)
 	// after pEditSession, less flicker
 	_cand->EndUI();
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From _EndComposition. hr = 0x{:X}", (unsigned)hr);
-#endif // _M_X64
 #endif // TEST
 }
 
@@ -58,9 +52,7 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 
 	hr = pContext->GetActiveView(&pContextView);
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From _UpdateCompositionWindow. hr = {:#x}", (unsigned)hr);
-#endif // _M_X64
 #endif // TEST
 	if (FAILED(hr))
 		return FALSE;
@@ -73,9 +65,7 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 	
 	auto ret = pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READ, &hr);
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From _UpdateCompositionWindow. hr = {:#x}, ret = {:#x}", (unsigned)hr, (unsigned)ret);
-#endif // _M_X64
 #endif // TEST
 	return SUCCEEDED(ret);
 }
@@ -94,17 +84,13 @@ void WeaselTSF::_SetCompositionPosition(const RECT& rc)
 		{
 			_fCUASWorkaroundEnabled = true;
 #ifdef TEST
-#ifdef _M_X64
 			LOG(INFO) << std::format("From _SetCompositionPosition. _fCUASWorkaroundEnabled = {}, CUASWorkaroundMode = {}", _fCUASWorkaroundEnabled, GetBit(9));
-#endif // _M_X64
 #endif // TEST
 		}
 	}
 
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From _SetCompositionPosition. left = {}, top = {}, right = {}, bottom = {}", rc.left, rc.top, rc.right, rc.bottom);
-#endif // _M_X64
 #endif // TEST
 
 	m_client.UpdateInputPosition(rc);
@@ -136,9 +122,7 @@ BOOL WeaselTSF::_InsertText(ITfContext* pContext, std::wstring_view text)
 	}
 
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From _InsertText. text = {}, hr = 0x{:X}", to_string(text.data(), CP_UTF8), (unsigned)hr);
-#endif // _M_X64
 #endif // TEST
 
 	return TRUE;
@@ -153,9 +137,7 @@ void WeaselTSF::_UpdateComposition(ITfContext* pContext)
 	if (hr == TF_S_ASYNC)
 		SetBit(15);
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From _UpdateComposition. hr = {:#x}, pContext = {:#x}, _tfClientId = {:#x}", (unsigned)hr, (size_t)pContext, _tfClientId);
-#endif // _M_X64
 #endif // TEST
 }
 
@@ -167,9 +149,7 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 	// Even if it is closed normally.
 	// Silly M$.
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From OnCompositionTerminated. _AbortComposition. _AutoCADTest = {}", GetBit(9));
-#endif // _M_X64
 #endif // TEST
 	_AbortComposition();
 

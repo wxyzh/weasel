@@ -2,10 +2,8 @@ module;
 #include "stdafx.h"
 #include "test.h"
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif
 #endif // TEST
 module WeaselTSF;
 import CandidateList;
@@ -13,9 +11,7 @@ import CandidateList;
 STDMETHODIMP WeaselTSF::OnSetThreadFocus()
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::OnSetThreadFocus.");
-#endif // _M_X64
 #endif // TEST
 	if (_cand)
 	{
@@ -35,9 +31,7 @@ STDMETHODIMP WeaselTSF::OnSetThreadFocus()
 STDMETHODIMP WeaselTSF::OnKillThreadFocus()
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::OnKillThreadFocus.");
-#endif // _M_X64
 #endif // TEST
 	if (_cand)
 	{

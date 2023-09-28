@@ -19,10 +19,8 @@
 #define NOT_FULLSCREENLAYOUT(style)	(style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN && style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif
 #endif // TEST
 
 #pragma comment(lib, "Shcore.lib")
@@ -92,9 +90,7 @@ WeaselPanel::~WeaselPanel()
 void WeaselPanel::_ResizeWindow()
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::_ResizeWindow");
-#endif // DEBUG
 #endif // TEST
 	CDCHandle dc = GetDC();
 	CSize m_size = m_layout->GetContentSize();
@@ -105,9 +101,7 @@ void WeaselPanel::_ResizeWindow()
 void WeaselPanel::_CreateLayout()
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::_CreateLayout");
-#endif // DEBUG
 #endif // TEST
 	if (m_layout != NULL)
 		delete m_layout;
@@ -137,9 +131,8 @@ void WeaselPanel::_CreateLayout()
 }
 
 //更新界面
-void WeaselPanel::Refresh(bool from_server)
+void WeaselPanel::Refresh()
 {
-	_from_server = from_server;
 	bool should_show_icon = (m_status.ascii_mode || !m_status.composing || !m_ctx.aux.empty());
 	m_candidateCount = (BYTE)m_ctx.cinfo.candies.size();
 	// check if to hide candidates window
@@ -153,9 +146,7 @@ void WeaselPanel::Refresh(bool from_server)
 	hide_candidates = margin_negative && !show_tips && !show_schema_menu;
 
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::Refresh. hide_candidates = {}, margin_negative = {}, should_show_icon = {}, show_tips = {}", hide_candidates, margin_negative, should_show_icon, show_tips);
-#endif // DEBUG
 #endif // TEST
 
 	// only RedrawWindow if no need to hide candidates window
@@ -449,7 +440,7 @@ LRESULT WeaselPanel::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 			return 0;
 		}
 		ptPreview = point;
-	}	
+	}
 	return 0;
 }
 
@@ -547,9 +538,7 @@ void WeaselPanel::_HighlightText(CDCHandle& dc, const CRect& rc, const COLORREF&
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::_DrawPreedit. text = {}, rc.left = {}, rc.top = {}", weasel::to_string(text.str, CP_UTF8), rc.left, rc.top);
-#endif // _M_X64
 #endif // TEST
 	bool drawn = false;
 	std::wstring const& t = text.str;
@@ -644,9 +633,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& rc)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::_DrawPreeditBack. text = {}, rc.left = {}, rc.top = {}", to_string(text.str, CP_UTF8), rc.left, rc.top);
-#endif // _M_X64
 #endif // TEST
 	bool drawn = false;
 	std::wstring const& t = text.str;
@@ -685,15 +672,13 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 				if (m_layout->ShouldDisplayStatusIcon())
 				{
 #ifdef TEST
-#ifdef _M_X64
 					LOG(INFO) << std::format("From WeaselPanel::_DrawPreeditBack. m_layout->ShouldDisplayStatusIcon() = true");
-#endif // _M_X64
 #endif // TEST
 					if ((m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL) && hilitedSz.cy < STATUS_ICON_SIZE)
 						rc_hi.InflateRect(0, (STATUS_ICON_SIZE - hilitedSz.cy) / 2);
 					if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && hilitedSz.cx < STATUS_ICON_SIZE)
 						rc_hi.InflateRect((STATUS_ICON_SIZE - hilitedSz.cx) / 2, 0);
-			}
+				}
 
 				rc_hi.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 				IsToRoundStruct rd = m_layout->GetTextRoundInfo();
@@ -702,8 +687,8 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 					std::swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
 				}
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner, BackType::TEXT, rd);
+			}
 		}
-	}
 		drawn = true;
 	}
 	return drawn;
@@ -712,9 +697,7 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::_DrawCandidates. back = {}", back);
-#endif // DEBUG
 #endif // TEST
 	bool drawn = false;
 	const std::vector<Text>& candidates(m_ctx.cinfo.candies);
@@ -855,9 +838,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 				if (m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
 				_TextOut(rect, text.c_str(), text.length(), candidate_text_color, txtFormat.Get());
 #ifdef TEST
-#ifdef _M_X64
 				LOG(INFO) << std::format("text = {}", to_string(text, CP_UTF8));
-#endif // DEBUG
 #endif // TEST
 			}
 			// Draw comment
@@ -879,10 +860,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// turn off WS_EX_TRANSPARENT, for better resp performance
 	auto ret = ModifyStyleEx(WS_EX_TRANSPARENT, WS_EX_LAYERED);
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::DoPaint. m_inputPos.left = {}, m_inputPos.top = {}, hide_candidates = {}, m_ctx.empty() = {}, m_status.composing = {}, inline_preedit = {}, ret = {}, m_candidateCount = {}",
 		m_inputPos.left, m_inputPos.top, hide_candidates, m_ctx.empty(), m_status.composing, m_style.inline_preedit, ret, m_candidateCount);
-#endif // _M_X64
 #endif // TEST
 
 	GetClientRect(&rcw);
@@ -947,7 +926,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 				preeditrc.OffsetRect(0, m_offsety_preedit);
 			drawn |= _DrawPreeditBack(m_ctx.preedit, memDC, preeditrc);
 		}
-		// if (m_candidateCount)
+		if (m_candidateCount)
 			drawn |= _DrawCandidates(memDC, true);
 		// background and candidates back, hilite back drawing end
 
@@ -973,9 +952,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		// status icon (I guess Metro IME stole my idea :)
 		if (m_layout->ShouldDisplayStatusIcon()) {
 #ifdef TEST
-#ifdef _M_X64
-			LOG(INFO) << std::format("From WeaselPanel::DoPaint. m_layout->ShouldDisplayStatusIcon() = true");
-#endif // _M_X64
+			LOG(INFO) << std::format("From WeaselPanel::DoPaint. m_layout->ShouldDisplayStatusIcon() = true, ascii_mode = {}", m_status.ascii_mode);
 #endif // TEST
 			// decide if custom schema zhung icon to show
 			LoadIconNecessary(m_current_zhung_icon, m_style.current_zhung_icon, m_iconEnabled, IDI_ZH);
@@ -991,11 +968,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : m_iconEnabled);
 			memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 			drawn = true;
+		}
 	}
-		/* Nothing drawn, hide candidate window */
-		if (!drawn)
-			ShowWindow(SW_HIDE);
-}
 	_LayerUpdate(rcw, memDC);
 
 	// clean objs
@@ -1017,21 +991,17 @@ void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 	ReleaseDC(ScreenDC);
 
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::_LayerUpdate. rc.left = {}, rc.top = {}, result = {}", rc.left, rc.top, result);
-#endif // _M_X64
 #endif // TEST
 }
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::OnCreate. m_inputPos.left = {}, m_inputPos.top = {}", m_inputPos.left, m_inputPos.top);
-#endif // _M_X64
 #endif // TEST
 	GetWindowRect(&m_inputPos);
-	Refresh(_from_server);
+	Refresh();
 	return TRUE;
 }
 
@@ -1044,20 +1014,29 @@ LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
 LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	Refresh(_from_server);
+	Refresh();
 	return 0;
 }
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::MoveTo. left = {}, bottom = {}, m_oinputPos.left = {}, m_oinputPos.bottom = {}, m_ctx.aux = {}, from_server = {}", rc.left, rc.bottom, m_oinputPos.left, m_oinputPos.bottom, to_string(m_ctx.aux.str, CP_UTF8), _from_server);
-#endif // _M_X64
 #endif // TEST
 	if (!m_layout)	return;			// avoid handling nullptr in _RepositionWindow
 
-	if (rc.left != m_inputPos.left || rc.top != m_inputPos.top)
+	// if ascii_tip_follow_cursor set, move tip icon to mouse cursor
+	if (m_style.ascii_tip_follow_cursor && m_ctx.aux.empty() && (!m_status.composing) && m_layout->ShouldDisplayStatusIcon())	// ascii icon
+	{
+		POINT p;
+		::GetCursorPos(&p);
+		RECT irc{ p.x - STATUS_ICON_SIZE, p.y - STATUS_ICON_SIZE, p.x, p.y };
+		m_inputPos = irc;
+		m_oinputPos = irc;
+		_RepositionWindow(true);
+		RedrawWindow();
+	}
+	else if (rc.left != m_inputPos.left || rc.top != m_inputPos.top || !m_ctx.aux.empty() || (m_ctx.empty() && m_layout->ShouldDisplayStatusIcon()))
 	{
 		// in some apps like word 2021, with inline_preedit set,
 		// bottom of rc would flicker 1 px or 2, make the candidate flickering
@@ -1070,45 +1049,16 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		// m_istorepos status changed by _RepositionWindow, or tips to show,
 		// redrawing is required
 		if (m_istorepos != m_istorepos_buf || !m_ctx.aux.empty() || (m_ctx.empty() && m_layout->ShouldDisplayStatusIcon()))
-			RedrawWindow();
-	}
-	if (_from_server)
-	{
-		// if ascii_tip_follow_cursor set, move tip icon to mouse cursor
-		if (m_style.ascii_tip_follow_cursor && m_ctx.aux.empty() && (!m_status.composing) && m_layout->ShouldDisplayStatusIcon())	// ascii icon
 		{
-			POINT p;
-			::GetCursorPos(&p);
-			RECT irc{ p.x - STATUS_ICON_SIZE, p.y - STATUS_ICON_SIZE, p.x, p.y };
-			m_inputPos = irc;
-			m_oinputPos = irc;
-			_RepositionWindow(true);
 			RedrawWindow();
 		}
-		else if ((!m_ctx.aux.empty() || (m_ctx.aux.empty() && m_layout->ShouldDisplayStatusIcon())) && m_inputPos.left != 0)
-		{
-#ifdef TEST
-#ifdef _M_X64
-			LOG(INFO) << std::format("From WeaselPanel::MoveTo. Third: m_oinputPos.left = {}, from_rime = {}", m_oinputPos.left);
-#endif // _M_X64
-#endif // TEST
-			m_inputPos = rc;
-			m_oinputPos = m_inputPos;
-			// buffer current m_istorepos status
-			bool m_istorepos_buf = m_istorepos;
-			// with parameter to avoid vertical flicker
-			_RepositionWindow(true);
-			RedrawWindow();
-	}
 	}
 }
 
 void WeaselPanel::_RepositionWindow(bool adj)
 {
 #ifdef TEST
-#ifdef _M_X64
-	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. adj = {}, m_inputPos.left = {}, m_inputPos.top = {}, m_inputPos.bottom = {}", adj, m_inputPos.left, m_inputPos.top, m_inputPos.bottom);
-#endif // _M_X64
+	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. adj = {}, m_inputPos.left = {}, m_inputPos.top = {}, m_inputPos.bottom = {}, m_iconEnabled.IsNull = {}", adj, m_inputPos.left, m_inputPos.top, m_inputPos.bottom, m_iconEnabled.IsNull());
 #endif // TEST
 	RECT rcWorkArea;
 	memset(&rcWorkArea, 0, sizeof(rcWorkArea));
@@ -1154,9 +1104,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	if (x < rcWorkArea.left) x = rcWorkArea.left;		// over workarea left
 	// show panel above the input focus if we're around the bottom
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. First: x = {}, y = {}, height = {}, rcWorkArea.bottom = {}, adj = {}", x, y, height, rcWorkArea.bottom, adj);
-#endif // _M_X64
 #endif // TEST
 	if (reversed)
 	{
@@ -1176,27 +1124,21 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	}
 
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. Second: x = {}, y = {}, adj = {}", x, y, adj);
-#endif // _M_X64
 #endif // TEST
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREDRAW);
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. Third: x = {}, y = {}", x, y);
-#endif // _M_X64
 #endif // TEST
 }
 
 void WeaselPanel::_TextOut(CRect const& rc, std::wstring_view psz, size_t cch, int inColor, IDWriteTextFormat1* const pTextFormat)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselPanel::_TextOut. rc.left = {}, rc.top = {}, psz = {}", rc.left, rc.top, to_string(psz.data(), CP_UTF8));
-#endif // _M_X64
 #endif // TEST
 	if (pTextFormat == NULL) return;
 	float r = (float)(GetRValue(inColor)) / 255.0f;

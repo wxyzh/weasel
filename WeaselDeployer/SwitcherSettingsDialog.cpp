@@ -3,17 +3,10 @@
 #include "WeaselDeployer.h"
 #include "resource.h"
 #include "SwitcherSettingsDialog.h"
-#include <dwmapi.h>
 import <algorithm>;
 import <set>;
 import WeaselUtility;
 import Config;
-
-#pragma comment(lib, "Dwmapi.lib")
-
-#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
-#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
-#endif
 
 SwitcherSettingsDialog::SwitcherSettingsDialog(RimeSwitcherSettings* settings, bool& selected)
 	: settings_(settings), loaded_(false), modified_(false), m_selected{ selected }
@@ -88,9 +81,8 @@ void SwitcherSettingsDialog::CloseDialog(int nVal)
 	::PostQuitMessage(nVal);
 }
 
-LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
-	BOOL value{ TRUE };
-	::DwmSetWindowAttribute(m_hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
+LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
+{
 	schema_list_.SubclassWindow(GetDlgItem(IDC_SCHEMA_LIST));
 	schema_list_.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 	schema_list_.AddColumn(L"方案名称", 0);

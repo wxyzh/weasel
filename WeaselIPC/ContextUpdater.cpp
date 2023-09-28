@@ -148,4 +148,10 @@ void StatusUpdater::Store(Deserializer::KeyType const& k, std::wstring const& va
 		m_pTarget->p_status->ascii_punct = bool_value;
 		return;
 	}
+
+	if (k[1] == L"s2t")
+	{
+		m_pTarget->p_status->s2t = bool_value;
+		return;
+	}
 }

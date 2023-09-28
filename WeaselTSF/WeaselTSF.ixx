@@ -252,12 +252,13 @@ export
 		// _bitset[9]:  _AutoCAD
 		// _bitset[10]: _DynamicInput
 		// _bitset[11]: _NonDynamicInput
-		// _bitset[12]: _simplication_state
+		// _bitset[12]: _s2t
 		// _bitset[13]: _FistKeyComposition
 		// _bitset[14]: _KeyboardDisabled
 		// _bitset[15]: _AsyncEdit
 		// _bitset[16]: _CompositionWithCapsLock
 		// _bitset[17]: _CaretFollowing
+		// _bitset[18]: _Firefox
 		std::bitset<32> _bitset{};
 
 		std::wstring _schema_id{};		

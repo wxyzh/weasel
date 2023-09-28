@@ -30,9 +30,7 @@ namespace weasel
 
 	class UIImpl;
 	class DirectWriteResources;
-	template<typename T>
-	using an = std::shared_ptr<T>;
-	using PDWR = an<DirectWriteResources>;
+	using PDWR = std::shared_ptr<DirectWriteResources>;
 
 	//
 	// 输入法界面接口类
@@ -70,13 +68,13 @@ namespace weasel
 		bool IsShown() const;
 		
 		// 重绘界面
-		void Refresh(bool from_server);
+		void Refresh();
 
 		// 置输入焦点位置（光标跟随时移动候选窗）但不重绘
 		void UpdateInputPosition(RECT const& rc);
 
 		// 更新界面显示内容
-		void Update(Context const& ctx, Status const& status, bool from_server = false);
+		void Update(Context const& ctx, Status const& status);
 
 		Context& ctx() { return ctx_; }
 		Context& octx() { return octx_; }

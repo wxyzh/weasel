@@ -7,10 +7,8 @@ module;
 #include "resource.h"
 // #include "test.h"
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif
 #endif // TEST
 module WeaselTSF;
 import LanguageBar;
@@ -75,9 +73,7 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 			hr = _pGlobalCompartmentDaemon->SetValue(_tfClientId, &var);
 		}
 #ifdef TEST
-#ifdef _M_X64
 		LOG(INFO) << std::format("From WeaselTSF::_HandleLangBarMenuSelect. hr = {:#x}", (size_t)hr);
-#endif // _M_X64
 #endif // TEST
 	}
 	break;
@@ -177,9 +173,7 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 	DWORD flags{};
 	_pCompartmentConversion->_GetCompartmentDWORD(flags);
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::_UpdateLanguageBar. flags = {:#x}, ascii_mode = {}, full_shape = {}, ascii_punct = {}, _InitInputMethodState = {}", flags, stat.ascii_mode, stat.full_shape, stat.ascii_punct, !GetBit(4));
-#endif // _M_X64
 #endif // TEST
 
 	if (!GetBit(4))								// _bitset[4]: _InitInputMethodState
@@ -188,6 +182,7 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 		SetBit(1, _status.ascii_mode);			// _bitset[1]: _ascii_mode
 		SetBit(2, _status.full_shape);			// _bitset[2]: _full_mode
 		SetBit(3, _status.ascii_punct);			// _bitset[3]: _ascii_punct
+		SetBit(12, _status.s2t);				// _bitset[12]: _
 		_schema_id = _status.schema_id;
 
 		if (stat.ascii_mode)
@@ -258,6 +253,11 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			}
 			state = true;
 		}
+		else if (GetBit(12) != stat.s2t)		// _bitset[12]: _s2t
+		{
+			SetBit(12, stat.s2t);
+			state = true;
+		}
 		else if (_schema_id != stat.schema_id)
 		{
 			_schema_id = stat.schema_id;
@@ -266,9 +266,7 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 	}
 
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::_UpdateLanguageBar. flags = {:#x}", flags);
-#endif // _M_X64
 #endif // TEST
 
 	// _SetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);

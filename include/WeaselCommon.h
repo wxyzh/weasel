@@ -197,7 +197,7 @@ namespace weasel
 	// 由ime管理
 	struct Status
 	{
-		Status() : ascii_mode(false), composing(false), disabled(false), full_shape(false), ascii_punct{}, simplication{} {}
+		Status() : ascii_mode(false), composing(false), disabled(false), full_shape(false), ascii_punct{}, s2t{} {}
 		void reset()
 		{
 			schema_name.clear();
@@ -207,7 +207,7 @@ namespace weasel
 			disabled = false;
 			full_shape = false;
 			ascii_punct = false;
-			simplication = false;
+			s2t = false;
 		}
 		// 输入方案
 		std::wstring schema_name{};
@@ -224,7 +224,7 @@ namespace weasel
 		// 标点符号
 		bool ascii_punct;
 		// 简体中文
-		bool simplication;
+		bool s2t;
 	};
 
 	// 用于向前端告知设置信息

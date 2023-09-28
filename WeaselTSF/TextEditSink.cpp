@@ -2,10 +2,8 @@ module;
 #include "stdafx.h"
 #include "test.h"
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif
 #endif // TEST
 module WeaselTSF;
 
@@ -23,9 +21,7 @@ static BOOL IsRangeCovered(TfEditCookie ec, ITfRange* pRangeTest, ITfRange* pRan
 STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEditRecord* pEditRecord)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::OnEndEdit.");
-#endif // _M_X64
 #endif // TEST
 
 	/* did the selection change? */
@@ -58,9 +54,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 	if (SUCCEEDED(pEditRecord->GetTextAndPropertyUpdates(TF_GTP_INCL_TEXT, NULL, 0, &pEnumTextChanges)))
 	{
 #ifdef TEST
-#ifdef _M_X64
 		LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. pEditRecord->GetTextAndPropertyUpdates.");
-#endif // _M_X64
 #endif // TEST		
 		if (SUCCEEDED(pEnumTextChanges->Next(1, &pRange, NULL)))
 		{
@@ -91,9 +85,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext, TfLayoutCode lcode, ITfContextView* pContextView)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::OnLayoutChange. lcode = {:#x}", (unsigned)lcode);
-#endif // _M_X64
 #endif // TEST
 	if (!_IsComposing())
 		return S_OK;
@@ -138,9 +130,7 @@ BOOL WeaselTSF::_InitTextEditSink(ITfDocumentMgr* pDocMgr)
 	}
 
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::_InitTextEditSink. pDocMgr = {:#x}, _dwTextEditSinkCookie = {:#x}, hr1 = 0x{:X}, hr2 = 0x{:X}", (size_t)pDocMgr, (unsigned)_dwTextEditSinkCookie, (unsigned)hr1, (unsigned)hr2);
-#endif // _M_X64
 #endif // TEST
 
 	if (pDocMgr == NULL)

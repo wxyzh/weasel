@@ -4,10 +4,8 @@ module;
 #include <WeaselCommon.h>
 #include "test.h"
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif
 #endif // TEST
 module CandidateList;
 import WeaselUtility;
@@ -232,10 +230,8 @@ STDMETHODIMP CCandidateList::FinalizeExactCompositionString()
 void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 {
 #ifdef TEST
-#ifdef _M_X64
 	if (!ctx.cinfo.candies.empty())
 		LOG(INFO) << std::format("From CCandidateList::UpdateUI. _pbShow = {}, status.composing = {}, cand = {}", _pbShow, status.composing, to_string(ctx.cinfo.candies[0].str, CP_UTF8));
-#endif // _M_X64
 #endif // TEST
 
 	if (_ui->style().inline_preedit) {
@@ -306,9 +302,7 @@ HWND CCandidateList::_GetActiveWnd()
 		_pContextDocument = pContext;
 		pContextView->GetWnd(&w);
 #ifdef TEST
-#ifdef _M_X64
 		LOG(INFO) << std::format("From CCandidateList::_GetActiveWnd. hwnd = {:#x}, pContext = {:#x}, _pDocumentMgr = {:#x}", (size_t)w, (size_t)pContext.p, (size_t)pDocumentMgr.p);
-#endif // _M_X64
 #endif // TEST
 	}
 
@@ -359,9 +353,7 @@ void CCandidateList::StartUI()
 	pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
 	//pUIElementMgr->UpdateUIElement(uiid);
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From CCandidateList::StartUI. _pbShow = {}", _pbShow);
-#endif // _M_X64
 #endif // TEST
 	if (_pbShow)
 	{

@@ -3,10 +3,8 @@ module;
 #include <WeaselCommon.h>
 #include "test.h"
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif
 #endif // TEST
 module WeaselTSF;
 import CandidateList;
@@ -26,14 +24,12 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	auto state = _UpdateLanguageBar(_status);
 
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, simplication = {}", state, _status.simplication);
-#endif // _M_X64
 #endif // TEST
 
 	if (ok)
 	{
-		if ((state || GetBit(12)) && !_IsComposing())	// _bitset[12]: _simplication_state
+		if (state && !_IsComposing())
 		{
 			_StartComposition(_pEditSessionContext, !config.inline_preedit);
 			if (GetBit(17))								// _bitset[17]: _CaretFollowing
@@ -45,7 +41,6 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 				_SetCompositionPosition(m_rcFallback);
 			}
 			_EndComposition(_pEditSessionContext, true);
-			ReSetBit(12);								// _bitset[12]: _simplication_state
 		}
 		else
 		{

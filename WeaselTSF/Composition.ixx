@@ -1,14 +1,12 @@
-module;
+﻿module;
 #include "stdafx.h"
 #include <WeaselCommon.h>
 #include "cmath"
 #include <UIAutomation.h>
 #include "test.h"
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif
 #endif // TEST
 export module Composition;
 import WeaselTSF;
@@ -30,6 +28,7 @@ export
 
 		/* ITfEditSession */
 		STDMETHODIMP DoEditSession(TfEditCookie ec);
+		bool IsValid(TfEditCookie ec, ITfComposition* pComposition);
 
 	private:
 		bool _not_inline_preedit;
@@ -131,27 +130,57 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		 *   The workaround is only needed when inline preedit is not enabled.
 		 *   See https://github.com/rime/weasel/pull/883#issuecomment-1567625762
 		 */
-		HRESULT ret;
+		bool testValid{};
 		if (_not_inline_preedit && !_pTextService->GetBit(15))
 		{
-			ret = pRangeComposition->SetText(ec, TF_ST_CORRECTION, L"\u200b", 1);	
+INSERT_DUMMY_CHAR:
+			if (!_pTextService->GetBit(18) || testValid)
+				hr = pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
 		}
 #ifdef TEST
-#ifdef _M_X64
-		LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. ret = {:#x}", (unsigned)ret);
-#endif // _M_X64
+		LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. hr = {:#x}", (unsigned)hr);
 #endif // TEST
-
 		pRangeComposition->Collapse(ec, TF_ANCHOR_START);
 		/* set selection */
 		TF_SELECTION tfSelection;
 		tfSelection.range = pRangeComposition;
 		tfSelection.style.ase = TF_AE_NONE;
 		tfSelection.style.fInterimChar = FALSE;
-		_pContext->SetSelection(ec, 1, &tfSelection);
+		hr = _pContext->SetSelection(ec, 1, &tfSelection);
+
+		if (_not_inline_preedit && _pTextService->GetBit(18) && !testValid && !IsValid(ec, pComposition))
+		{
+			testValid = true;
+			pRangeComposition.Release();
+			pComposition->GetRange(&pRangeComposition);			
+			goto INSERT_DUMMY_CHAR;
+		}
 	}
 
-	return S_OK;
+	return hr;
+}
+
+bool CStartCompositionEditSession::IsValid(TfEditCookie ec, ITfComposition* pComposition)
+{
+	com_ptr<ITfContextView> pContextView;
+	_pContext->GetActiveView(&pContextView);
+
+	com_ptr<ITfRange> pRange;
+	pComposition->GetRange(&pRange);
+
+	RECT rc{};
+	BOOL clipped{};
+	if (SUCCEEDED(pContextView->GetTextExt(ec, pRange, &rc, &clipped)))
+	{
+#ifdef TEST
+		LOG(INFO) << std::format("From CStartCompositionEditSession::IsValid. left = {}, top = {}, right = {}, bottom = {}", rc.left, rc.top, rc.right, rc.bottom);
+#endif // TEST
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
@@ -195,9 +224,7 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 
 	hr = _pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped);
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {}", rc.left, rc.top, (unsigned)hr, fClipped);
-#endif // _M_X64
 #endif // TEST
 	if (hr == 0x80040057)
 	{
@@ -257,9 +284,7 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 
 	HRESULT hr = pRangeComposition->SetText(ec, 0, preedit.c_str(), preedit.length());
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From CInlinePreeditEditSession::DoEditSession. preedit = {}, hr = 0x{:X}", to_string(preedit), (unsigned)hr);
-#endif // _M_X64
 #endif // TEST
 	if (FAILED(hr))
 	{
@@ -267,7 +292,7 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 		_pTextService->SetBit(11);		// _bitset[11]: _NonDynamicInput
 		_pTextService->_AbortComposition();
 		return hr;
-}
+	}
 
 	/* TODO: Check the availability and correctness of these values */
 	int sel_cursor{};
@@ -309,9 +334,7 @@ STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec)
 
 	auto ret = pRange->SetText(ec, 0, _text.c_str(), _text.length());
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From CInsertTextEditSession::DoEditSession. _text = {}, ret = 0x{:X}", to_string(_text, CP_UTF8), (unsigned)ret);
-#endif // _M_X64
 #endif // TEST
 	if (FAILED(ret))
 	{

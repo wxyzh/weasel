@@ -418,13 +418,13 @@ void RimeWithWeaselHandler::_UpdateUI(RimeSessionId session_id)
 
 	if (weasel_status.composing)
 	{
-		 /*m_ui->Update(weasel_context, weasel_status, true);
-		 if (!is_tsf) m_ui->Show();*/
+		 m_ui->Update(weasel_context, weasel_status);
+		 // if (is_tsf) m_ui->Show();
 	}
 	else if (!_ShowMessage(weasel_context, weasel_status))
 	{
 		m_ui->Hide();
-		m_ui->Update(weasel_context, weasel_status, true);
+		m_ui->Update(weasel_context, weasel_status);
 	}
 
 	_RefreshTrayIcon(session_id, _UpdateUICallback);
@@ -597,12 +597,16 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 			tips = L"漢字";
 		else if (m_message_value == "simplification")
 			tips = L"汉字";
+		else if (m_message_value == "!s2t")
+			tips = L"简体";
+		else if (m_message_value == "s2t")
+			tips = L"繁体";
 	}
 	if (tips.empty() && !show_icon)
 		return m_ui->IsCountingDown();
 
 	// LOG(INFO) << std::format("From RimeWithWeaselHandler::_ShowMessage. ctx.aux = {}", to_string(ctx.aux.str, CP_UTF8));
-	m_ui->Update(ctx, status, true);
+	m_ui->Update(ctx, status);
 	m_ui->ShowWithTimeout(1200 + 200 * tips.length());
 	return true;
 }
@@ -642,7 +646,7 @@ bool RimeWithWeaselHandler::_Respond(RimeSessionId session_id, EatLine eat)
 		messages.emplace_back(std::format("status.disabled={}\n", status.is_disabled));
 		messages.emplace_back(std::format("status.full_shape={}\n", status.is_full_shape));
 		messages.emplace_back(std::format("status.ascii_punct={}\n", status.is_ascii_punct));
-		messages.emplace_back(std::format("status.simplication={}\n", status.is_simplified));
+		messages.emplace_back(std::format("status.s2t={}\n", status.is_s2t));
 		messages.emplace_back(std::format("status.schema_id={}\n", status.schema_id));
 		RimeFreeStatus(&status);
 	}
@@ -1146,7 +1150,7 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status& stat, RimeSessionId sessi
 		stat.disabled = !!status.is_disabled;
 		stat.full_shape = !!status.is_full_shape;
 		stat.ascii_punct = !!status.is_ascii_punct;
-		stat.simplication = !!status.is_simplified;
+		stat.s2t = !!status.is_s2t;
 		if (schema_id != m_last_schema_id)
 		{
 			m_last_schema_id = schema_id;
@@ -1157,7 +1161,7 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status& stat, RimeSessionId sessi
 				_UpdateInlinePreeditStatus(session_id);				// in case of inline_preedit set in schema
 				_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
 				ctx.aux.str = stat.schema_name;
-				m_ui->Update(ctx, stat, true);
+				m_ui->Update(ctx, stat);
 				m_ui->ShowWithTimeout(1200);
 			}
 		}

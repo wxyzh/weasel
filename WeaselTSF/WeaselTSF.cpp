@@ -4,16 +4,15 @@
 #include "Globals.h"
 #include <resource.h>
 #include <psapi.h>
+#include <filesystem>
 #include "test.h"
 #ifdef TEST
-#ifdef _M_X64
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#include <filesystem>
+#endif // TEST
+
 #pragma comment(lib, "psapi.lib")
 namespace fs = std::filesystem;
-#endif // _M_X64
-#endif // TEST
 
 //#pragma data_seg("Shared")
 //bool g_checked = true;
@@ -50,14 +49,12 @@ WeaselTSF::WeaselTSF()
 	_activeLanguageProfileNotifySinkCookie = TF_INVALID_COOKIE;
 
 	_cand.Attach(new CCandidateList(*this));
-	SetBit(8);		// _bitset[8]: _SupportDisplayAttribute
-	SetBit(17);		// _bitset[17]: _CaretFollowing
+	SetBit(8);			// _bitset[8]: _SupportDisplayAttribute
+	SetBit(17);			// _bitset[17]: _CaretFollowing
 	
 	DllAddRef();
 	// CatchUnhandledException();
 
-#ifdef TEST
-#ifdef _M_X64
 	auto pid = GetCurrentProcessId();
 
 	auto hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
@@ -68,8 +65,14 @@ WeaselTSF::WeaselTSF()
 	GetProcessImageFileName(hProcess, name.data(), name.capacity());
 	CloseHandle(hProcess);
 	name = name.data();
+
+	if (fs::path(name).filename().wstring() == L"firefox.exe")
+	{
+		SetBit(18);		// _bitset[18]: _Firefox
+	}
+
+#ifdef TEST
 	LOG(INFO) << std::format("Process {} starting log. AppName: {}", pid, fs::path(name).filename().string()).data();
-#endif // _M_X64
 #endif // TEST
 }
 
@@ -171,9 +174,7 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	_tfClientId = tfClientId;	
 
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitThreadMgrEventSink.");
-#endif // _M_X64
 #endif // TEST
 	if (!_InitThreadMgrEventSink())
 		goto ExitError;
@@ -187,9 +188,7 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 		goto ExitError;
 
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitActiveLanguageProfileNotifySink");
-#endif // _M_X64
 #endif // TEST
 
 	if (!_InitActiveLanguageProfileNotifySink())
@@ -217,9 +216,7 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	_EnsureServerConnected();
 
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitCompartment");
-#endif // _M_X64
 #endif // TEST
 
 	if (!_InitCompartment())
@@ -235,9 +232,7 @@ ExitError:
 STDMETHODIMP WeaselTSF::OnActivated(REFCLSID clsid, REFGUID guidProfile, BOOL isActivated)
 {
 #ifdef TEST
-#ifdef _M_X64
 	LOG(INFO) << std::format("From WeaselTSF::OnActivated. isActivated = {}", isActivated);
-#endif // _M_X64
 #endif // TEST
 	if (!IsEqualCLSID(clsid, c_clsidTextService))
 	{

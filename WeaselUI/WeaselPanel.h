@@ -56,7 +56,7 @@ public:
 	~WeaselPanel();
 
 	void MoveTo(RECT const& rc);
-	void Refresh(bool from_server);
+	void Refresh();
 	void DoPaint(CDCHandle dc);
 	bool GetIsReposition() { return m_istorepos; }
 	void SetCaretFollowing(const bool following) { m_following = following; }
@@ -116,6 +116,5 @@ private:
 	std::function<void(const RECT&)>& _SetRectCallback;
 
 	bool m_following{ true };
-	bool _from_server{};
 	bool m_holder{};
 };
