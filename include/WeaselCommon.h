@@ -175,7 +175,7 @@ namespace weasel
 		}
 		bool operator!=(const Context& ctx)
 		{
-			return !(operator==(ctx));
+			return !(*this == ctx);
 		}
 
 		bool operator!()

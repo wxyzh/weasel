@@ -1,8 +1,6 @@
 #include "pch.h"
-#include <string>
-#include <algorithm>
-#include <map>
-#include <WeaselUI.h>
+#include "VersionHelpers.hpp"
+#include "DirectWriteResources.h"
 
 using namespace weasel;
 

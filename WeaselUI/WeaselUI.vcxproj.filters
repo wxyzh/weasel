@@ -96,6 +96,9 @@
     <ClInclude Include="VHorizontalLayout.h">
       <Filter>Header Files\Layouts</Filter>
     </ClInclude>
+    <ClInclude Include="DirectWriteResources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />

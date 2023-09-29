@@ -1,4 +1,3 @@
-#include "WeaselUI.h"
 #include "pch.h"
 #include <WeaselUI.h>
 #include "WeaselPanel.h"
@@ -12,21 +11,20 @@
 
 using namespace weasel;
 
-class weasel::UIImpl {
+class UI::UIImpl
+{
 public:
 	WeaselPanel panel;
 
-	UIImpl(weasel::UI &ui)
-		: panel(ui), shown(false) 
+	UIImpl(weasel::UI& ui)
+		: panel(ui), shown(false)
 	{
 	}
 	~UIImpl()
 	{
 	}
-	void Refresh() {
-#ifdef TEST
-		LOG(INFO) << std::format("From UIImpl::Refresh. panel.IsWindow() = {}", panel.IsWindow());
-#endif // TEST
+	void Refresh()
+	{
 		if (!panel.IsWindow()) return;
 		if (timer)
 		{
@@ -42,19 +40,19 @@ public:
 	bool IsShown() const { return shown; }
 
 	static VOID CALLBACK OnTimer(
-		  _In_  HWND hwnd,
-		  _In_  UINT uMsg,
-		  _In_  UINT_PTR idEvent,
-		  _In_  DWORD dwTime
+		_In_  HWND hwnd,
+		_In_  UINT uMsg,
+		_In_  UINT_PTR idEvent,
+		_In_  DWORD dwTime
 	);
 	static const int AUTOHIDE_TIMER = 20121220;
 	static UINT_PTR timer;
 	bool shown;
 };
 
-UINT_PTR UIImpl::timer = 0;
+UINT_PTR UI::UIImpl::timer = 0;
 
-void UIImpl::Show()
+void UI::UIImpl::Show()
 {
 #ifdef TEST
 	LOG(INFO) << std::format("From UIImpl::Show. panel.IsWindow() = {}", panel.IsWindow());
@@ -69,7 +67,7 @@ void UIImpl::Show()
 	}
 }
 
-void UIImpl::Hide()
+void UI::UIImpl::Hide()
 {
 	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_HIDE);
@@ -81,7 +79,7 @@ void UIImpl::Hide()
 	}
 }
 
-void UIImpl::ShowWithTimeout(DWORD millisec)
+void UI::UIImpl::ShowWithTimeout(DWORD millisec)
 {
 	if (!panel.IsWindow()) return;
 	DLOG(INFO) << "ShowWithTimeout: " << millisec;
@@ -90,7 +88,7 @@ void UIImpl::ShowWithTimeout(DWORD millisec)
 	SetTimer(panel.m_hWnd, AUTOHIDE_TIMER, millisec, &UIImpl::OnTimer);
 	timer = UINT_PTR(this);
 }
-VOID CALLBACK UIImpl::OnTimer(
+VOID CALLBACK UI::UIImpl::OnTimer(
   _In_  HWND hwnd,
   _In_  UINT uMsg,
   _In_  UINT_PTR idEvent,
@@ -108,23 +106,28 @@ VOID CALLBACK UIImpl::OnTimer(
 	}
 }
 
+UI::UI()
+{
+	pimpl_ = nullptr;
+}
+
+UI::~UI()
+{
+	if (pimpl_)
+		Destroy(true);
+	if (pDWR_)
+	{
+		pDWR_ = nullptr;
+	}
+}
+
 bool UI::Create(HWND parent)
 {
 #ifdef TEST
 	LOG(INFO) << std::format("From UI::Create.");
 #endif // TEST
-	if (pimpl_)
-	{
-		// re create panel cause destroied before
-		/*if(pimpl_->panel.IsWindow())
-			pimpl_->panel.DestroyWindow();*/
-		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT, 0U, 0);
-		return true;
-	}
-
-	pimpl_ = new UIImpl(*this);
 	if (!pimpl_)
-		return false;
+		pimpl_ = std::make_unique<UIImpl>(*this);
 
 	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT, 0U, 0);
 	return true;
@@ -145,7 +148,6 @@ void UI::Destroy(bool full)
 		}
 		if (full)
 		{
-			delete pimpl_;
 			pimpl_ = nullptr;
 			pDWR_.reset();
 		}

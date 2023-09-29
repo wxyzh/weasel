@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "StandardLayout.h"
-#include <wrl/client.h>
 #include "test.h"
 
 #define IS_FULLSCREENLAYOUT(style)	(style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)

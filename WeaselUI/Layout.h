@@ -2,8 +2,11 @@
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
 #include <gdiplus.h>
+#include "DirectWriteResources.h"
 
 #pragma comment(lib, "gdiplus.lib")
+
+using namespace Microsoft::WRL;
 
 namespace weasel
 {

@@ -1,7 +1,7 @@
 ﻿#include "pch.h"
+#include "DirectWriteResources.h"
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
-#include <ShellScalingApi.h>
 #include "VersionHelpers.hpp"
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"

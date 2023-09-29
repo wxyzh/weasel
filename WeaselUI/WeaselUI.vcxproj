@@ -289,6 +289,7 @@
     <ClCompile Include="WeaselUI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DirectWriteResources.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Layout.h" />
     <ClInclude Include="FullScreenLayout.h" />
