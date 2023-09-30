@@ -11,7 +11,7 @@
 
 授权条款：GPLv3
 
-项目主叶：https://rime.im
+项目主页：https://rime.im
 
 您可能还需要 RIME 用于其他操作系统的发行版：
 
