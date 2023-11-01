@@ -19,7 +19,7 @@ ActionLoader::~ActionLoader()
 {
 }
 
-void ActionLoader::Store(Deserializer::KeyType const& key, std::wstring const& value)
+void ActionLoader::Store(const Deserializer::KeyType& key, std::wstring const& value)
 {
 	if (key.size() == 1)  // no extention parts
 	{

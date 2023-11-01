@@ -18,6 +18,8 @@ CCandidateList::CCandidateList(WeaselTSF& textService)
 	, _pbShow(TRUE)
 {
 	_cRef = 1;
+	_ui->SetSelectCallback([this](int* const sel, int* const hov, bool* const next) { _tsf.HandleUICallback(sel, hov, next); });
+	_ui->SetRectCallback([this](const RECT& rc) { _tsf.SetRect(rc); });
 }
 
 CCandidateList::~CCandidateList()
@@ -346,8 +348,6 @@ void CCandidateList::StartUI()
 		return;
 	}
 
-	_ui->SetSelectCallback([this](int* const sel, int* const hov, bool* const next) { _tsf.HandleUICallback(sel, hov, next); });
-	_ui->SetRectCallback([this](const RECT& rc) { _tsf.SetRect(rc); });
 	// ToDo: send select candidate info back to rime
 
 	pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);

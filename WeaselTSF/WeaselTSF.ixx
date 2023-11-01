@@ -141,6 +141,7 @@ export
 		com_ptr<ITfCompartment> _GetGlobalCompartmentDaemon() { return _pGlobalCompartmentDaemon; }
 		void SetRect(const RECT& rc) { m_rcFallback = rc; }
 		RECT GetRect() const { return m_rcFallback; }
+		WCHAR GetInput() const { return static_cast<WCHAR>(_inputKey); }
 
 	private:
 		// ui callback functions
@@ -258,9 +259,10 @@ export
 		// _bitset[15]: _AsyncEdit
 		// _bitset[16]: _CompositionWithCapsLock
 		// _bitset[17]: _CaretFollowing
-		// _bitset[18]: _Firefox
+		// _bitset[18]: _Eaten
 		std::bitset<32> _bitset{};
 
-		std::wstring _schema_id{};		
+		std::wstring _schema_id{};
+		unsigned _inputKey{};
 	};
 }

@@ -22,7 +22,7 @@ export namespace weasel
 		Config* p_config;
 		UIStyle* p_style;
 
-		ResponseParser(std::wstring* commit, Context* context = 0, Status* status = 0, Config* config = 0, UIStyle* style = 0);
+		ResponseParser(std::wstring* commit, Context* context = nullptr, Status* status = nullptr, Config* config = nullptr, UIStyle* style = nullptr);
 
 		// 重载函数调用运算符, 以扮做ResponseHandler
 		bool operator() (LPWSTR buffer, UINT length);

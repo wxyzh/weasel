@@ -67,7 +67,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 			static int count{};
 			if (GetBit(13))			// _bitset[13]: _FistKeyComposition
 			{
-				if (++count == 2)
+				if (++count == 2)	// _bitset[15]: _AsyncEdit
 				{
 					count = 0;
 					_UpdateCompositionWindow(pContext);

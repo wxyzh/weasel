@@ -1,7 +1,6 @@
 ﻿module;
 // #define WEASEL_ENABLE_LOGGING
 #include "stdafx.h"
-#include <WeaselCommon.h>
 #include <WeaselUI.h>
 #include <logging.h>
 #include <WeaselVersion.h>

@@ -11,13 +11,28 @@
 
 using namespace weasel;
 
+struct UI::Data
+{
+	Context ctx;
+	Context octx;
+	Status status;
+	UIStyle style;
+	UIStyle ostyle;
+
+	PDWR pDWR;
+	std::function<void(int* const, int* const, bool* const)> UICallback;
+	std::function<void(const RECT&)> SetRectCallback;
+	bool caretFollowing{ true };
+	bool shown{ false };
+};
+
 class UI::UIImpl
 {
 public:
 	WeaselPanel panel;
 
 	UIImpl(weasel::UI& ui)
-		: panel(ui), shown(false)
+		: panel(ui), m_ui{ ui }
 	{
 	}
 	~UIImpl()
@@ -34,10 +49,12 @@ public:
 		}
 		panel.Refresh();
 	}
+
 	void Show();
 	void Hide();
 	void ShowWithTimeout(DWORD millisec);
-	bool IsShown() const { return shown; }
+
+	bool GetIsReposition();
 
 	static VOID CALLBACK OnTimer(
 		_In_  HWND hwnd,
@@ -45,9 +62,12 @@ public:
 		_In_  UINT_PTR idEvent,
 		_In_  DWORD dwTime
 	);
+
 	static const int AUTOHIDE_TIMER = 20121220;
 	static UINT_PTR timer;
-	bool shown;
+	
+private:
+	UI& m_ui;
 };
 
 UINT_PTR UI::UIImpl::timer = 0;
@@ -59,7 +79,7 @@ void UI::UIImpl::Show()
 #endif // TEST
 	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_SHOWNA);
-	shown = true;
+	m_ui.m_data->shown = true;
 	if (timer)
 	{
 		KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
@@ -71,7 +91,7 @@ void UI::UIImpl::Hide()
 {
 	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_HIDE);
-	shown = false;
+	m_ui.m_data->shown = false;
 	if (timer)
 	{
 		KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
@@ -84,10 +104,15 @@ void UI::UIImpl::ShowWithTimeout(DWORD millisec)
 	if (!panel.IsWindow()) return;
 	DLOG(INFO) << "ShowWithTimeout: " << millisec;
 	panel.ShowWindow(SW_SHOWNA);
-	shown = true;
+	m_ui.m_data->shown = true;
 	SetTimer(panel.m_hWnd, AUTOHIDE_TIMER, millisec, &UIImpl::OnTimer);
 	timer = UINT_PTR(this);
 }
+bool UI::UIImpl::GetIsReposition()
+{
+	return panel.GetIsReposition();
+}
+
 VOID CALLBACK UI::UIImpl::OnTimer(
   _In_  HWND hwnd,
   _In_  UINT uMsg,
@@ -102,23 +127,20 @@ VOID CALLBACK UI::UIImpl::OnTimer(
 	if (self)
 	{
 		self->Hide();
-		self->shown = false;
+		self->m_ui.m_data->shown = false;
 	}
 }
 
 UI::UI()
 {
-	pimpl_ = nullptr;
+	m_data = std::make_unique<Data>();
 }
 
 UI::~UI()
 {
 	if (pimpl_)
 		Destroy(true);
-	if (pDWR_)
-	{
-		pDWR_ = nullptr;
-	}
+	m_data = nullptr;
 }
 
 bool UI::Create(HWND parent)
@@ -127,7 +149,9 @@ bool UI::Create(HWND parent)
 	LOG(INFO) << std::format("From UI::Create.");
 #endif // TEST
 	if (!pimpl_)
+	{
 		pimpl_ = std::make_unique<UIImpl>(*this);
+	}
 
 	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT, 0U, 0);
 	return true;
@@ -149,7 +173,7 @@ void UI::Destroy(bool full)
 		if (full)
 		{
 			pimpl_ = nullptr;
-			pDWR_.reset();
+			m_data->pDWR.reset();
 		}
 	}
 }
@@ -188,7 +212,7 @@ bool UI::IsCountingDown() const
 
 bool UI::IsShown() const
 {
-	return pimpl_ && pimpl_->IsShown();
+	return m_data->shown;
 }
 
 void UI::Refresh()
@@ -209,9 +233,39 @@ void UI::UpdateInputPosition(RECT const& rc)
 
 void UI::Update(const Context &ctx, const Status &status)
 {
-	ctx_ = ctx;
-	status_ = status;
+	m_data->ctx = ctx;
+	m_data->status = status;
 	Refresh();
+}
+
+Context& UI::ctx()
+{
+	return m_data->ctx;
+}
+
+Context& UI::octx()
+{
+	return m_data->octx;
+}
+
+Status& UI::status()
+{
+	return m_data->status;
+}
+
+UIStyle& UI::style() 
+{
+	return m_data->style;
+}
+
+UIStyle& UI::ostyle()
+{
+	return m_data->ostyle;
+}
+
+PDWR UI::pdwr()
+{
+	return m_data->pDWR;
 }
 
 bool weasel::UI::GetIsReposition()
@@ -223,7 +277,32 @@ bool weasel::UI::GetIsReposition()
 
 void weasel::UI::SetCaretFollowing(const bool following)
 {
-	_CaretFollowing = following;
+	m_data->caretFollowing = following;
 	if (pimpl_)
 		pimpl_->panel.SetCaretFollowing(following);
+}
+
+bool UI::GetCaretFollowing() const
+{
+	return m_data->caretFollowing;
+}
+
+std::function<void(int* const, int* const, bool* const)>& UI::uiCallback()
+{
+	return m_data->UICallback;
+}
+
+void UI::SetSelectCallback(std::function<void(int* const, int* const, bool* const)> const& func)
+{
+	m_data->UICallback = func;
+}
+
+std::function<void(const RECT&)>& UI::SetRectCallback()
+{
+	return m_data->SetRectCallback;
+}
+
+void UI::SetRectCallback(std::function<void(const RECT&)> func)
+{
+	m_data->SetRectCallback = func;
 }

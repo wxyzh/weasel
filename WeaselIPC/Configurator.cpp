@@ -20,7 +20,7 @@ Configurator::~Configurator()
 {
 }
 
-void Configurator::Store(Deserializer::KeyType const& key, std::wstring const& value)
+void Configurator::Store(const Deserializer::KeyType& key, std::wstring const& value)
 {
 	if (!m_pTarget->p_context || key.size() < 2)
 		return;

@@ -1,5 +1,5 @@
 module;
-#include <WeaselCommon.h>
+#include <Windows.h>
 #include <WeaselUI.h>
 #include <rime_api.h>
 export module RimeWithWeasel;
@@ -21,21 +21,21 @@ export
 	public:
 		RimeWithWeaselHandler(weasel::UI* ui);
 		virtual ~RimeWithWeaselHandler();
-		virtual void Initialize();
-		virtual void Finalize();
-		virtual RimeSessionId FindSession(RimeSessionId session_id);
-		virtual RimeSessionId AddSession(LPWSTR buffer, EatLine eat = 0);
-		virtual RimeSessionId RemoveSession(RimeSessionId session_id);
-		virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, RimeSessionId session_id, EatLine eat);
-		virtual void CommitComposition(RimeSessionId session_id);
-		virtual void ClearComposition(RimeSessionId session_id);
-		virtual void SelectCandidateOnCurrentPage(const size_t index, RimeSessionId session_id);
-		virtual void FocusIn(PARAM param, RimeSessionId session_id);
-		virtual void FocusOut(PARAM param, RimeSessionId session_id);
-		virtual void UpdateInputPosition(RECT const& rc, RimeSessionId session_id);
-		virtual void StartMaintenance();
-		virtual void EndMaintenance();
-		virtual void SetOption(RimeSessionId session_id, const std::string& opt, bool val);
+		virtual void Initialize() override;
+		virtual void Finalize() override;
+		virtual RimeSessionId FindSession(RimeSessionId session_id) override;
+		virtual RimeSessionId AddSession(LPWSTR buffer, EatLine eat = 0) override;
+		virtual RimeSessionId RemoveSession(RimeSessionId session_id) override;
+		virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, RimeSessionId session_id, EatLine eat) override;
+		virtual void CommitComposition(RimeSessionId session_id) override;
+		virtual void ClearComposition(RimeSessionId session_id) override;
+		virtual void SelectCandidateOnCurrentPage(const size_t index, RimeSessionId session_id) override;
+		virtual void FocusIn(PARAM param, RimeSessionId session_id) override;
+		virtual void FocusOut(PARAM param, RimeSessionId session_id) override;
+		virtual void UpdateInputPosition(RECT const& rc, RimeSessionId session_id) override;
+		virtual void StartMaintenance() override;
+		virtual void EndMaintenance() override;
+		virtual void SetOption(RimeSessionId session_id, const std::string& opt, bool val) override;
 
 		void OnUpdateUI(std::function<void()> const& cb);
 

@@ -119,6 +119,8 @@ Function .onInit
   !insertmacro TIP_WHEN_AMD64_INSTALLER_RUNAT_X86
   SetShellVarContext all
 
+  System::Call 'SHCore::SetProcessDpiAwareness(i 2)i.R0'
+
   SetRegView 64
 
   ReadRegStr $R0 HKLM \
@@ -134,6 +136,7 @@ Function .onInit
   Abort
 
 uninst:
+  System::Call 'SHCore::SetProcessDpiAwareness(i 2)i.R0'
   ; Backup data directory from previous installation, user files may exist
   ReadRegStr $R1 HKLM SOFTWARE\Rime\Weasel "WeaselRoot"
   StrCmp $R1 "" call_uninstaller

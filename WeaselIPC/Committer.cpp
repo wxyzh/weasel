@@ -1,8 +1,6 @@
 module;
 #include "stdafx.h"
 module Committer;
-import Deserializer;
-import Committer;
 
 using namespace weasel;
 
@@ -21,7 +19,7 @@ Committer::~Committer()
 {
 }
 
-void Committer::Store(Deserializer::KeyType const& key, std::wstring const& value)
+void Committer::Store(const Deserializer::KeyType& key, std::wstring const& value)
 {
 	if (!m_pTarget->p_commit)
 		return;

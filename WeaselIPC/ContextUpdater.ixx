@@ -11,10 +11,10 @@ export
 	public:
 		ContextUpdater(weasel::ResponseParser* pTarget);
 		virtual ~ContextUpdater();
-		virtual void Store(weasel::Deserializer::KeyType const& key, std::wstring const& value);
+		virtual void Store(const weasel::Deserializer::KeyType& key, std::wstring const& value) override;
 
-		void _StoreText(weasel::Text& target, Deserializer::KeyType k, std::wstring const& value);
-		void _StoreCand(Deserializer::KeyType k, std::wstring const& value);
+		void _StoreText(weasel::Text& target, Deserializer::KeyType k, std::wstring_view value);
+		void _StoreCand(Deserializer::KeyType k, std::wstring_view value);
 
 		static weasel::Deserializer::Ptr Create(weasel::ResponseParser* pTarget);
 	};
@@ -24,7 +24,7 @@ export
 	public:
 		StatusUpdater(weasel::ResponseParser* pTarget);
 		virtual ~StatusUpdater();
-		virtual void Store(weasel::Deserializer::KeyType const& key, std::wstring const& value);
+		virtual void Store(const weasel::Deserializer::KeyType& key, std::wstring const& value) override;
 
 		static weasel::Deserializer::Ptr Create(weasel::ResponseParser* pTarget);
 	};

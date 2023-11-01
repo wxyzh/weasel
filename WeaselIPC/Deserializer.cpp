@@ -7,6 +7,7 @@ import ContextUpdater;
 import Configurator;
 import Styler;
 import ResponseParser;
+// import Schemata;
 
 using namespace weasel;
 
@@ -32,18 +33,18 @@ void Deserializer::Initialize(ResponseParser* pTarget)
 	Require(L"action", pTarget);
 }
 
-void Deserializer::Define(std::wstring const& action, Factory factory)
+void Deserializer::Define(std::wstring_view action, Factory factory)
 {
-	s_factories[action] = factory;
+	s_factories[action.data()] = factory;
 	//s_factories.insert(make_pair(action, factory));
 }
 
-bool Deserializer::Require(std::wstring const& action, ResponseParser* pTarget)
+bool Deserializer::Require(std::wstring_view action, ResponseParser* pTarget)
 {
 	if (!pTarget)
 		return false;
 
-	std::map<std::wstring, Factory>::iterator i = s_factories.find(action);
+	std::map<std::wstring, Factory>::iterator i = s_factories.find(action.data());
 	if (i == s_factories.end())
 	{
 		// unknown action type
@@ -52,7 +53,7 @@ bool Deserializer::Require(std::wstring const& action, ResponseParser* pTarget)
 
 	Factory& factory = i->second;
 
-	pTarget->deserializers[action] = factory(pTarget);
+	pTarget->deserializers[action.data()] = factory(pTarget);
 	//pTarget->deserializers.insert(make_pair(action, factory(pTarget)));
 	return true;
 }

@@ -24,10 +24,16 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	auto state = _UpdateLanguageBar(_status);
 
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, simplication = {}", state, _status.simplication);
+	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, ok = {}", state, ok);
 #endif // TEST
 
-	if (ok)
+	if (GetBit(18))		// _bitset[18]: _Eaten
+	{
+		_StartComposition(_pEditSessionContext, !config.inline_preedit);		
+		_EndComposition(_pEditSessionContext, false);
+		ReSetBit(18);	// _bitset[18]: _Eaten
+	}
+	else if (ok)
 	{
 		if (state && !_IsComposing())
 		{

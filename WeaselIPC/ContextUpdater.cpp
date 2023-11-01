@@ -48,12 +48,12 @@ void ContextUpdater::Store(Deserializer::KeyType const& k, std::wstring const& v
 	}
 }
 
-void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, std::wstring const& value)
+void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, std::wstring_view value)
 {
 	if(k.size() == 2)
 	{
 		target.clear();
-		target.str = value;
+		target.str = value.data();
 		return;
 	}
 	if(k.size() == 3)
@@ -62,7 +62,7 @@ void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, std::wstr
 		if (k[2] == L"cursor")
 		{
 			std::vector<std::wstring> vec;
-			split(vec, value, L",");
+			split(vec, value.data(), L",");
 			if (vec.size() < 2)
 				return;
 
@@ -82,10 +82,10 @@ void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, std::wstr
 	}
 }
 
-void ContextUpdater::_StoreCand(Deserializer::KeyType k, std::wstring const& value)
+void ContextUpdater::_StoreCand(Deserializer::KeyType k, std::wstring_view value)
 {
 	auto& cinfo = m_pTarget->p_context->cinfo;
-	std::wstringstream ss{ value };
+	std::wstringstream ss{ value.data() };
 	boost::archive::text_wiarchive ia{ ss };
 
 	ia >> cinfo;
@@ -107,7 +107,7 @@ StatusUpdater::~StatusUpdater()
 {
 }
 
-void StatusUpdater::Store(Deserializer::KeyType const& k, std::wstring const& value)
+void StatusUpdater::Store(const Deserializer::KeyType& k, std::wstring const& value)
 {
 	if(!m_pTarget->p_status || k.size() < 2)
 		return;

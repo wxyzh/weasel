@@ -192,7 +192,6 @@ bool ClientImpl::GetResponseData(ResponseHandler const& handler)
 	return channel.HandleResponseData(handler);
 }
 
-
 bool ClientImpl::_WriteClientInfo()
 {
 	channel << L"action=session\n";

@@ -56,8 +56,8 @@ BOOL WeaselTSF::_SetCompositionDisplayAttributes(TfEditCookie ec, _In_ ITfContex
 
 BOOL WeaselTSF::_InitDisplayAttributeGuidAtom()
 {
-    ITfCategoryMgr* pCategoryMgr = nullptr;
-    HRESULT hr = CoCreateInstance(CLSID_TF_CategoryMgr, nullptr, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void**)&pCategoryMgr);
+    com_ptr<ITfCategoryMgr> pCategoryMgr;
+    HRESULT hr = _pThreadMgr->QueryInterface(&pCategoryMgr);
 
     if (FAILED(hr))
     {
@@ -71,7 +71,5 @@ BOOL WeaselTSF::_InitDisplayAttributeGuidAtom()
     }
 
 Exit:
-    pCategoryMgr->Release();
-
     return (hr == S_OK);
 }

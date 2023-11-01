@@ -51,6 +51,12 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 			}
 			break;
 		}
+		if (!(*pfEaten) && !_fTestKeyDownPending && !(lParam >> 31) && (isdigit(ke.keycode) || ispunct(ke.keycode)))
+		{
+			SetBit(18);
+			_inputKey = ke.keycode;
+			*pfEaten = true;
+		}
 #ifdef TEST
 		LOG(INFO) << std::format("From WeaselTSF::_ProcessKeyEvent. ke = 0x{:X}, Caps_Lock = {}", (unsigned)ke, GetBit(16));
 #endif // TEST
@@ -117,6 +123,9 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 	else
 	{
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
+#ifdef TEST
+		LOG(INFO) << std::format("From OnKeyDown. *pfEaten = {}", *pfEaten);
+#endif // TEST
 	}
 	_UpdateComposition(pContext);
 	return S_OK;
@@ -156,7 +165,11 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BO
 	else
 	{
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
-		_UpdateComposition(pContext);
+#ifdef TEST
+		LOG(INFO) << std::format("From OnKeyUp. *pfEaten = {}", *pfEaten);
+#endif // TEST
+		if (!GetBit(15))	// _bitset[15]: _AsyncEdit
+			_UpdateComposition(pContext);
 	}
 
 	return S_OK;

@@ -91,7 +91,7 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 		_cand->SetCaretFollowing(_bitset[17]);
 		break;
 
-	DEFAULT:
+DEFAULT:
 	default:
 		m_client.TrayCommand(wID);
 	}
@@ -176,13 +176,13 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 	LOG(INFO) << std::format("From WeaselTSF::_UpdateLanguageBar. flags = {:#x}, ascii_mode = {}, full_shape = {}, ascii_punct = {}, _InitInputMethodState = {}", flags, stat.ascii_mode, stat.full_shape, stat.ascii_punct, !GetBit(4));
 #endif // TEST
 
-	if (!GetBit(4))								// _bitset[4]: _InitInputMethodState
+	if (!GetBit(4))								// _bitset[4]:  _InitInputMethodState
 	{
-		SetBit(4);								// _bitset[4]: _InitInputMethodState
-		SetBit(1, _status.ascii_mode);			// _bitset[1]: _ascii_mode
-		SetBit(2, _status.full_shape);			// _bitset[2]: _full_mode
-		SetBit(3, _status.ascii_punct);			// _bitset[3]: _ascii_punct
-		SetBit(12, _status.s2t);				// _bitset[12]: _
+		SetBit(4);								// _bitset[4]:  _InitInputMethodState
+		SetBit(1, _status.ascii_mode);			// _bitset[1]:  _ascii_mode
+		SetBit(2, _status.full_shape);			// _bitset[2]:  _full_mode
+		SetBit(3, _status.ascii_punct);			// _bitset[3]:  _ascii_punct
+		SetBit(12, _status.s2t);				// _bitset[12]: _s2t
 		_schema_id = _status.schema_id;
 
 		if (stat.ascii_mode)

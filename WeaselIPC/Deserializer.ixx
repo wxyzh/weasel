@@ -15,11 +15,11 @@ export namespace weasel
 
 		Deserializer(ResponseParser* pTarget) : m_pTarget(pTarget) {}
 		virtual ~Deserializer() {}
-		virtual void Store(KeyType const& key, std::wstring const& value) {}
+		virtual void Store(const KeyType& key, std::wstring const& value) = 0;
 
 		static void Initialize(ResponseParser* pTarget);
-		static void Define(std::wstring const& action, Factory factory);
-		static bool Require(std::wstring const& action, ResponseParser* pTarget);
+		static void Define(std::wstring_view action, Factory factory);
+		static bool Require(std::wstring_view action, ResponseParser* pTarget);
 
 	protected:
 		ResponseParser* m_pTarget;

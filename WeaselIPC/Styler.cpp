@@ -14,7 +14,7 @@ Styler::~Styler()
 {
 }
 
-void Styler::Store(weasel::Deserializer::KeyType const & key, std::wstring const & value)
+void Styler::Store(const weasel::Deserializer::KeyType& key, std::wstring const& value)
 {
 	if (!m_pTarget->p_style) return;
 

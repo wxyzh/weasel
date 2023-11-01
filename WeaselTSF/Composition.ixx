@@ -28,7 +28,6 @@ export
 
 		/* ITfEditSession */
 		STDMETHODIMP DoEditSession(TfEditCookie ec);
-		bool IsValid(TfEditCookie ec, ITfComposition* pComposition);
 
 	private:
 		bool _not_inline_preedit;
@@ -124,63 +123,40 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 	{
 		_pTextService->_SetComposition(pComposition);
 
-		/* WORKAROUND:
-		 *   CUAS does not provide a correct GetTextExt() position unless the composition is filled with characters.
-		 *   So we insert a zero width space here.
-		 *   The workaround is only needed when inline preedit is not enabled.
-		 *   See https://github.com/rime/weasel/pull/883#issuecomment-1567625762
-		 */
-		bool testValid{};
-		if (_not_inline_preedit && !_pTextService->GetBit(15))
+		
+		if (_pTextService->GetBit(18))	// _bitset[18]: _Eaten
 		{
-INSERT_DUMMY_CHAR:
-			if (!_pTextService->GetBit(18) || testValid)
-				hr = pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
+			std::wstring input{ _pTextService->GetInput() };
+			hr = pRangeComposition->SetText(ec, 0, input.data(), 1);
+			pRangeComposition->Collapse(ec, TF_ANCHOR_END);
 		}
-#ifdef TEST
-		LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. hr = {:#x}", (unsigned)hr);
-#endif // TEST
-		pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+		else
+		{
+			/* WORKAROUND:
+			 * CUAS does not provide a correct GetTextExt() position unless the composition is filled with characters.
+			 * So we insert a zero width space here.
+			 * The workaround is only needed when inline preedit is not enabled.
+			 * See https://github.com/rime/weasel/pull/883#issuecomment-1567625762
+			 */
+			if (_not_inline_preedit && !_pTextService->GetBit(15))		// _bitset[15]: _AsyncEdit
+			{
+				hr = pRangeComposition->SetText(ec, TF_ST_CORRECTION, L"|", 1);
+			}
+
+			pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+		}
 		/* set selection */
 		TF_SELECTION tfSelection;
 		tfSelection.range = pRangeComposition;
 		tfSelection.style.ase = TF_AE_NONE;
 		tfSelection.style.fInterimChar = FALSE;
 		hr = _pContext->SetSelection(ec, 1, &tfSelection);
-
-		if (_not_inline_preedit && _pTextService->GetBit(18) && !testValid && !IsValid(ec, pComposition))
-		{
-			testValid = true;
-			pRangeComposition.Release();
-			pComposition->GetRange(&pRangeComposition);			
-			goto INSERT_DUMMY_CHAR;
-		}
 	}
+#ifdef TEST
+	LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. hr = {:#x}", (unsigned)hr);
+#endif // TEST
 
 	return hr;
-}
-
-bool CStartCompositionEditSession::IsValid(TfEditCookie ec, ITfComposition* pComposition)
-{
-	com_ptr<ITfContextView> pContextView;
-	_pContext->GetActiveView(&pContextView);
-
-	com_ptr<ITfRange> pRange;
-	pComposition->GetRange(&pRange);
-
-	RECT rc{};
-	BOOL clipped{};
-	if (SUCCEEDED(pContextView->GetTextExt(ec, pRange, &rc, &clipped)))
-	{
-#ifdef TEST
-		LOG(INFO) << std::format("From CStartCompositionEditSession::IsValid. left = {}, top = {}, right = {}, bottom = {}", rc.left, rc.top, rc.right, rc.bottom);
-#endif // TEST
-		return true;
-	}
-	else
-	{
-		return false;
-	}
 }
 
 STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)

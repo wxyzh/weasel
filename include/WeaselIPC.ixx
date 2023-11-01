@@ -6,6 +6,7 @@ export module WeaselIPC;
 import <functional>;
 import <memory>;
 import <string>;
+import <format>;
 import WeaselUtility;
 
 export
@@ -72,22 +73,22 @@ export
 		{
 			using EatLine = std::function<bool(std::wstring_view)>;
 			RequestHandler() {}
-			virtual ~RequestHandler() {}
-			virtual void Initialize() {}
-			virtual void Finalize() {}
-			virtual RimeSessionId FindSession(RimeSessionId session_id) { return 0; }
-			virtual RimeSessionId AddSession(LPWSTR buffer, EatLine eat = 0) { return 0; }
-			virtual RimeSessionId RemoveSession(RimeSessionId session_id) { return 0; }
-			virtual BOOL ProcessKeyEvent(KeyEvent keyEvent, RimeSessionId session_id, EatLine eat) { return FALSE; }
-			virtual void CommitComposition(RimeSessionId session_id) {}
-			virtual void ClearComposition(RimeSessionId session_id) {}
-			virtual void SelectCandidateOnCurrentPage(size_t index, RimeSessionId session_id){}
-			virtual void FocusIn(PARAM param, RimeSessionId session_id) {}
-			virtual void FocusOut(PARAM param, RimeSessionId session_id) {}
-			virtual void UpdateInputPosition(RECT const& rc, RimeSessionId session_id) {}
-			virtual void StartMaintenance() {}
-			virtual void EndMaintenance() {}
-			virtual void SetOption(RimeSessionId session_id, const std::string& opt, bool val) {}
+			virtual ~RequestHandler(){}
+			virtual void Initialize(){}
+			virtual void Finalize(){}
+			virtual RimeSessionId FindSession(RimeSessionId session_id) = 0;
+			virtual RimeSessionId AddSession(LPWSTR buffer, EatLine eat = 0) = 0;
+			virtual RimeSessionId RemoveSession(RimeSessionId session_id) = 0;
+			virtual BOOL ProcessKeyEvent(KeyEvent keyEvent, RimeSessionId session_id, EatLine eat) = 0;
+			virtual void CommitComposition(RimeSessionId session_id) = 0;
+			virtual void ClearComposition(RimeSessionId session_id) = 0;
+			virtual void SelectCandidateOnCurrentPage(size_t index, RimeSessionId session_id) = 0;
+			virtual void FocusIn(PARAM param, RimeSessionId session_id) = 0;
+			virtual void FocusOut(PARAM param, RimeSessionId session_id) = 0;
+			virtual void UpdateInputPosition(RECT const& rc, RimeSessionId session_id) = 0;
+			virtual void StartMaintenance() = 0;
+			virtual void EndMaintenance() = 0;
+			virtual void SetOption(RimeSessionId session_id, const std::string& opt, bool val) = 0;
 		};
 
 		// 处理server端回应之物件
@@ -174,11 +175,7 @@ export
 
 		inline std::wstring GetPipeName()
 		{
-			std::wstring pipe_name;
-			pipe_name += L"\\\\.\\pipe\\";
-			pipe_name += getUsername();
-			pipe_name += L"\\";
-			pipe_name += WEASEL_IPC_PIPE_NAME;
+			std::wstring pipe_name{ std::format(LR"(\\.\pipe\{}\{})", getUsername(), WEASEL_IPC_PIPE_NAME) };
 			return pipe_name;
 		}
 	}

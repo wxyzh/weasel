@@ -132,10 +132,10 @@ void WeaselTSF::_UpdateComposition(ITfContext* pContext)
 {
 	HRESULT hr;
 	_pEditSessionContext = pContext;
-	ReSetBit(15);
+	ReSetBit(15);		// _bitset[15]: _AsyncEdit
 	_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 	if (hr == TF_S_ASYNC)
-		SetBit(15);
+		SetBit(15);		// _bitset[15]: _AsyncEdit
 #ifdef TEST
 	LOG(INFO) << std::format("From _UpdateComposition. hr = {:#x}, pContext = {:#x}, _tfClientId = {:#x}", (unsigned)hr, (size_t)pContext, _tfClientId);
 #endif // TEST

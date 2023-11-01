@@ -11,7 +11,7 @@ export
 		ActionLoader(weasel::ResponseParser* pTarget);
 		virtual ~ActionLoader();
 		// store data
-		virtual void Store(weasel::Deserializer::KeyType const& key, std::wstring const& value);
+		virtual void Store(const weasel::Deserializer::KeyType& key, std::wstring const& value) override;
 		// factory method
 		static weasel::Deserializer::Ptr Create(weasel::ResponseParser* pTarget);
 	};

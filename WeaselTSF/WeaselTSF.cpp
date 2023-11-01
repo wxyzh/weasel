@@ -9,10 +9,9 @@
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#endif // TEST
-
 #pragma comment(lib, "psapi.lib")
 namespace fs = std::filesystem;
+#endif // TEST
 
 //#pragma data_seg("Shared")
 //bool g_checked = true;
@@ -53,10 +52,10 @@ WeaselTSF::WeaselTSF()
 	SetBit(17);			// _bitset[17]: _CaretFollowing
 	
 	DllAddRef();
-	// CatchUnhandledException();
+	// CatchUnhandledException();	
 
+#ifdef TEST
 	auto pid = GetCurrentProcessId();
-
 	auto hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
 
 	std::wstring name;
@@ -66,12 +65,6 @@ WeaselTSF::WeaselTSF()
 	CloseHandle(hProcess);
 	name = name.data();
 
-	if (fs::path(name).filename().wstring() == L"firefox.exe")
-	{
-		SetBit(18);		// _bitset[18]: _Firefox
-	}
-
-#ifdef TEST
 	LOG(INFO) << std::format("Process {} starting log. AppName: {}", pid, fs::path(name).filename().string()).data();
 #endif // TEST
 }
