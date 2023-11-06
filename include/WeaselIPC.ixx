@@ -16,7 +16,7 @@ export
 
 	const size_t WEASEL_IPC_METADATA_SIZE{ 1024 };
 	const size_t WEASEL_IPC_BUFFER_SIZE{ 4 * 1024 };
-	const size_t WEASEL_IPC_BUFFER_LENGTH{ WEASEL_IPC_BUFFER_SIZE / sizeof(WCHAR) };	
+	const size_t WEASEL_IPC_BUFFER_LENGTH{ WEASEL_IPC_BUFFER_SIZE / sizeof(WCHAR) };
 
 	enum WEASEL_IPC_COMMAND
 	{

@@ -39,6 +39,14 @@ export
 		STDMETHODIMP SetPageIndex(UINT* pIndex, UINT uPageCnt);
 		STDMETHODIMP GetCurrentPage(UINT* puPage);
 
+		// ITfReadingInformationUIElement
+		/*STDMETHODIMP GetContext(_Out_ ITfContext** ppic);
+		STDMETHODIMP GetErrorIndex(_Out_ UINT* pErrorIndex);
+		STDMETHODIMP GetMaxReadingStringLength(_Out_ UINT* pcchMax);
+		STDMETHODIMP GetString(_Out_ BSTR* pstr);
+		STDMETHODIMP GetUpdateFlags(_Out_ DWORD* pdwFlags);
+		STDMETHODIMP IsVerticalOrderPreferred(_Out_ BOOL* pfVertical);*/
+
 		// ITfCandidateListUIElementBehavior methods
 		STDMETHODIMP SetSelection(UINT nIndex);
 		STDMETHODIMP Finalize(void);
@@ -84,7 +92,7 @@ export
 		// 改为引用后，成员变量的初始化顺序是依据定义时的顺序，需要调整下定义的位置
 		WeaselTSF& _tsf;
 		DWORD _cRef;
-		DWORD uiid;
+		DWORD uiid{};
 		TfIntegratableCandidateListSelectionStyle _selectionStyle = STYLE_ACTIVE_SELECTION;
 
 		BOOL _pbShow;

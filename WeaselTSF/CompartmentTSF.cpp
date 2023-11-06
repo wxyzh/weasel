@@ -153,11 +153,11 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 		BOOL isOpen = _IsKeyboardOpen();
 		if (isOpen) {
 			m_client.TrayCommand(ID_WEASELTRAY_DISABLE_ASCII);
-			ReSetBit(14);	// _bitset[14]: _KeyboardDisabled
+			ReSetBit(WeaselFlag::KEYBOARD_DISABLE);	// _bitset[14]: _KeyboardDisable
 		}
 		else
 		{
-			SetBit(14);		// _bitset[14]: _KeyboardDisabled
+			SetBit(WeaselFlag::KEYBOARD_DISABLE);	// _bitset[14]: _KeyboardDisable
 		}
 		_EnableLanguageBar(isOpen);
 #ifdef TEST

@@ -123,8 +123,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 	{
 		_pTextService->_SetComposition(pComposition);
 
-		
-		if (_pTextService->GetBit(18))	// _bitset[18]: _Eaten
+		if (_pTextService->GetBit(WeaselFlag::EATEN))	// _bitset[18]: _Eaten
 		{
 			std::wstring input{ _pTextService->GetInput() };
 			hr = pRangeComposition->SetText(ec, 0, input.data(), 1);
@@ -138,7 +137,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 			 * The workaround is only needed when inline preedit is not enabled.
 			 * See https://github.com/rime/weasel/pull/883#issuecomment-1567625762
 			 */
-			if (_not_inline_preedit && !_pTextService->GetBit(15))		// _bitset[15]: _AsyncEdit
+			if (_not_inline_preedit && !_pTextService->GetBit(WeaselFlag::ASYNC_EDIT))		// _bitset[15]: _AsyncEdit
 			{
 				hr = pRangeComposition->SetText(ec, TF_ST_CORRECTION, L"|", 1);
 			}
@@ -164,7 +163,7 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 	/* Clear the dummy text we set before, if any. */
 	if (_pComposition == nullptr) return S_OK;
 
-	if (_pTextService->GetBit(8))	// _bitset[8]: _SupportDisplayAttribute
+	if (_pTextService->GetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE))						// _bitset[8]: _SupportDisplayAttribute
 	{
 		_pTextService->_ClearCompositionDisplayAttributes(ec, _pContext);
 	}
@@ -175,9 +174,12 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 		pCompositionRange->SetText(ec, 0, L"", 0);
 	}
 
-	_pComposition->EndComposition(ec);
+	auto hr = _pComposition->EndComposition(ec);
+#ifdef TEST
+	LOG(INFO) << std::format("From CEndCompositionEditSession::DoEditSession. hr = {:#x}", (unsigned)hr);
+#endif // TEST
 	_pTextService->_FinalizeComposition();
-	return S_OK;
+	return hr;
 }
 
 STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
@@ -204,8 +206,8 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 #endif // TEST
 	if (hr == 0x80040057)
 	{
-		_pTextService->SetBit(9);		// _bitset[9]:  _AutoCAD
-		_pTextService->SetBit(11);		// _bitset[11]: _NonDynamicInput
+		_pTextService->SetBit(WeaselFlag::AUTOCAD);							// _bitset[9]:  _AutoCAD
+		_pTextService->SetBit(WeaselFlag::NON_DYNAMIC_INPUT);				// _bitset[11]: _NonDynamicInput
 		_pTextService->_AbortComposition();
 		return hr;
 	}
@@ -214,18 +216,18 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	{
 		_pTextService->SetRect(rc);
 
-		if (_pTextService->GetBit(5))				// _bitset[5]: _InlinePreedit
+		if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT))				// _bitset[5]: _InlinePreedit
 		{
 			static RECT rcFirst{};
-			if (_pTextService->GetBit(6))			// _bitset[6]: _BeginComposition
+			if (_pTextService->GetBit(WeaselFlag::BEGIN_COMPOSITION))		// _bitset[6]: _BeginComposition
 			{
 				rcFirst = rc;
-				_pTextService->ReSetBit(6);			// _bitset[6]: _BeginComposition
+				_pTextService->ReSetBit(WeaselFlag::BEGIN_COMPOSITION);		// _bitset[6]: _BeginComposition
 			}
-			if (_pTextService->GetBit(7))			// _bitset[7]: _FocusChanged
+			if (_pTextService->GetBit(WeaselFlag::FOCUS_CHANGED))			// _bitset[7]: _FocusChanged
 			{
 				rcFirst = rc;
-				_pTextService->ReSetBit(7);			// _bitset[7]: _FocusChanged
+				_pTextService->ReSetBit(WeaselFlag::FOCUS_CHANGED);			// _bitset[7]: _FocusChanged
 			}
 			else if (5 < abs(rcFirst.top - rc.top))
 			{
@@ -264,8 +266,8 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 #endif // TEST
 	if (FAILED(hr))
 	{
-		_pTextService->SetBit(9);		// _bitset[9]:  _AutoCAD
-		_pTextService->SetBit(11);		// _bitset[11]: _NonDynamicInput
+		_pTextService->SetBit(WeaselFlag::AUTOCAD);						// _bitset[9]:  _AutoCAD
+		_pTextService->SetBit(WeaselFlag::NON_DYNAMIC_INPUT);			// _bitset[11]: _NonDynamicInput
 		_pTextService->_AbortComposition();
 		return hr;
 	}
@@ -281,7 +283,7 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 		}
 	}
 
-	if (_pTextService->GetBit(8))	// _bitset[8]: _SupportDisplayAttribute
+	if (_pTextService->GetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE))	// _bitset[8]: _SupportDisplayAttribute
 	{
 		_pTextService->_SetCompositionDisplayAttributes(ec, _pContext, pRangeComposition);
 	}

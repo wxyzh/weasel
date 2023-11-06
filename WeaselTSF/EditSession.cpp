@@ -1,7 +1,7 @@
 module;
 #include "stdafx.h"
 #include <WeaselCommon.h>
-#include "test.h"
+// #include "test.h"
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
@@ -27,18 +27,18 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, ok = {}", state, ok);
 #endif // TEST
 
-	if (GetBit(18))		// _bitset[18]: _Eaten
+	if (GetBit(WeaselFlag::EATEN))		// _bitset[18]: _Eaten
 	{
 		_StartComposition(_pEditSessionContext, !config.inline_preedit);		
 		_EndComposition(_pEditSessionContext, false);
-		ReSetBit(18);	// _bitset[18]: _Eaten
+		ReSetBit(WeaselFlag::EATEN);	// _bitset[18]: _Eaten
 	}
 	else if (ok)
 	{
 		if (state && !_IsComposing())
 		{
 			_StartComposition(_pEditSessionContext, !config.inline_preedit);
-			if (GetBit(17))								// _bitset[17]: _CaretFollowing
+			if (GetBit(WeaselFlag::CARET_FOLLOWING))				// _bitset[17]: _CaretFollowing
 			{
 				_UpdateCompositionWindow(_pEditSessionContext);
 			}
@@ -59,6 +59,26 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 				}
 				_InsertText(_pEditSessionContext, commit);
 				_EndComposition(_pEditSessionContext, false);
+
+				if (GetBit(WeaselFlag::CLEAR_CANDIDATES))
+				{
+					ReSetBit(WeaselFlag::CLEAR_CANDIDATES);
+					unsigned send{};
+					std::array<INPUT, 4> inputs;
+
+					inputs[0].type = INPUT_KEYBOARD;
+					inputs[0].ki = { 0x41, 0x41, 0, 0, 0 };
+
+					inputs[1].type = INPUT_KEYBOARD;
+					inputs[1].ki = { 0x41, 0x41, KEYEVENTF_KEYUP, 0, 0 };
+
+					inputs[2].type = INPUT_KEYBOARD;
+					inputs[2].ki = { VK_BACK, 0x08, 0, 0, 0 };
+
+					inputs[3].type = INPUT_KEYBOARD;
+					inputs[3].ki = { VK_BACK, 0x08, KEYEVENTF_KEYUP, 0, 0 };
+					send = SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
+				}
 			}
 			if (_status.composing && !_IsComposing())
 			{
@@ -71,9 +91,9 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 			if (_IsComposing() && config.inline_preedit)
 			{
 				_ShowInlinePreedit(_pEditSessionContext, context);
-				SetBit(5);					// _bitset[5]: _InlinePreedit
+				SetBit(WeaselFlag::INLINE_PREEDIT);					// _bitset[5]: _InlinePreedit
 			}
-			if (GetBit(17))					// _bitset[17]: _CaretFollowing
+			if (GetBit(WeaselFlag::CARET_FOLLOWING))				// _bitset[17]: _CaretFollowing
 			{
 				_UpdateCompositionWindow(_pEditSessionContext);
 			}
@@ -82,9 +102,9 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 				_SetCompositionPosition(m_rcFallback);
 			}
 		}
-	}
+	}		
 	_UpdateUI(*context, _status);
 
-	return TRUE;
+	return S_OK;
 }
 

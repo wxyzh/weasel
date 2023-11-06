@@ -13,6 +13,8 @@ class CCompartmentEventSink;
 
 export
 {
+	enum class WeaselFlag;
+
 	class WeaselTSF :
 		public ITfTextInputProcessorEx,
 		public ITfThreadMgrEventSink,
@@ -131,10 +133,10 @@ export
 		HRESULT _SetCompartmentDWORD(DWORD value, const GUID guid);
 		HRESULT _InitGlobalCompartment();
 
-		void SetBit(int index) { _bitset.set(index); }
-		void SetBit(int index, bool value) { _bitset.set(index, value); }
-		void ReSetBit(int index) { _bitset.reset(index); }
-		bool GetBit(int index) const { return _bitset[index]; }
+		void SetBit(WeaselFlag flag) { _bitset.set(static_cast<int>(flag)); }
+		void SetBit(WeaselFlag flag, bool value) { _bitset.set(static_cast<int>(flag), value); }
+		void ReSetBit(WeaselFlag flag) { _bitset.reset(static_cast<int>(flag)); }
+		bool GetBit(WeaselFlag flag) const { return _bitset[static_cast<int>(flag)]; }
 
 		bool execute(std::wstring_view cmd, std::wstring_view args = L"");
 		bool explore(std::wstring_view path);
@@ -241,28 +243,39 @@ export
 
 		RECT m_rcFallback{};
 
-		// _bitset[0]:  _daemon_enable
-		// _bitset[1]:  _ascii_mode
-		// _bitset[2]:  _full_shape
-		// _bitset[3]:  _ascii_punct
-		// _bitset[4]:  _InitInputMethodState
-		// _bitset[5]:  _InlinePreedit
-		// _bitset[6]:  _BeginComposition
-		// _bitset[7]:  _FocusChanged
-		// _bitset[8]:  _SupportDisplayAttribute
-		// _bitset[9]:  _AutoCAD
-		// _bitset[10]: _DynamicInput
-		// _bitset[11]: _NonDynamicInput
-		// _bitset[12]: _s2t
-		// _bitset[13]: _FistKeyComposition
-		// _bitset[14]: _KeyboardDisabled
-		// _bitset[15]: _AsyncEdit
-		// _bitset[16]: _CompositionWithCapsLock
-		// _bitset[17]: _CaretFollowing
-		// _bitset[18]: _Eaten
 		std::bitset<32> _bitset{};
 
 		std::wstring _schema_id{};
 		unsigned _inputKey{};
+		std::array<std::wstring, 2> _gameNames
+		{
+			L"War3.exe",
+			L"WoW.exe"
+		};
+	};
+
+	enum class WeaselFlag
+	{
+		DAEMON_ENABLE,
+		ASCII_MODE,
+		FULL_SHAPE,
+		ASCII_PUNCT,
+		INIT_INPUT_METHOD_STATE,
+		INLINE_PREEDIT,
+		BEGIN_COMPOSITION,
+		FOCUS_CHANGED,
+		SUPPORT_DISPLAY_ATTRIBUTE,
+		AUTOCAD,
+		DYNAMIC_INPUT,
+		NON_DYNAMIC_INPUT,
+		SIMPLIFIED_TO_TRADITIONAL,
+		FIRST_KEY_COMPOSITION,
+		KEYBOARD_DISABLE,
+		ASYNC_EDIT,
+		COMPOSITION_WITH_CAPSLOCK,
+		CARET_FOLLOWING,
+		EATEN,
+		IS_GAMING,
+		CLEAR_CANDIDATES
 	};
 }

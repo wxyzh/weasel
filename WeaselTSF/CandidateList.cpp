@@ -25,7 +25,7 @@ CCandidateList::CCandidateList(WeaselTSF& textService)
 CCandidateList::~CCandidateList()
 {}
 
-STDMETHODIMP CCandidateList::QueryInterface(REFIID riid, void ** ppvObj)
+STDMETHODIMP CCandidateList::QueryInterface(REFIID riid, void** ppvObj)
 {
 	if (ppvObj == nullptr)
 	{
@@ -74,7 +74,7 @@ STDMETHODIMP_(ULONG) CCandidateList::Release(void)
 	return cr;
 }
 
-STDMETHODIMP CCandidateList::GetDescription(BSTR * pbstr)
+STDMETHODIMP CCandidateList::GetDescription(BSTR* pbstr)
 {
 	static auto str = SysAllocString(L"Candidate List");
 	if (pbstr)
@@ -84,7 +84,7 @@ STDMETHODIMP CCandidateList::GetDescription(BSTR * pbstr)
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::GetGUID(GUID * pguid)
+STDMETHODIMP CCandidateList::GetGUID(GUID* pguid)
 {
 	/// 36c3c795-7159-45aa-ab12-30229a51dbd3
 	*pguid = { 0x36c3c795, 0x7159, 0x45aa, { 0xab, 0x12, 0x30, 0x22, 0x9a, 0x51, 0xdb, 0xd3 } };
@@ -94,28 +94,42 @@ STDMETHODIMP CCandidateList::GetGUID(GUID * pguid)
 STDMETHODIMP CCandidateList::Show(BOOL showCandidateWindow)
 {
 	if (showCandidateWindow)
+	{
 		_ui->Show();
+	}
 	else
+	{
 		_ui->Hide();
+	}
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::Show. show = {}", showCandidateWindow);
+#endif // TEST
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::IsShown(BOOL * pIsShow)
+STDMETHODIMP CCandidateList::IsShown(BOOL* pbShow)
 {
-	*pIsShow = _ui->IsShown();
+	*pbShow = _ui->IsShown();
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::IsShown. pbShow = {}", *pbShow);
+#endif // TEST
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::GetUpdatedFlags(DWORD * pdwFlags)
+STDMETHODIMP CCandidateList::GetUpdatedFlags(DWORD* pdwFlags)
 {
 	if (!pdwFlags)
 		return E_INVALIDARG;
 
 	*pdwFlags = TF_CLUIE_DOCUMENTMGR | TF_CLUIE_COUNT | TF_CLUIE_SELECTION | TF_CLUIE_STRING | TF_CLUIE_CURRENTPAGE;
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::GetUpdateFlags.");
+#endif // TEST
+
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::GetDocumentMgr(ITfDocumentMgr ** ppdim)
+STDMETHODIMP CCandidateList::GetDocumentMgr(ITfDocumentMgr** ppdim)
 {
 	*ppdim = nullptr;
 	auto pThreadMgr = _tsf._GetThreadMgr();
@@ -130,32 +144,41 @@ STDMETHODIMP CCandidateList::GetDocumentMgr(ITfDocumentMgr ** ppdim)
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::GetCount(UINT * pCandidateCount)
+STDMETHODIMP CCandidateList::GetCount(UINT* pCandidateCount)
 {
 	*pCandidateCount = _ui->ctx().cinfo.candies.size();
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::GetCount. count = {}", *pCandidateCount);
+#endif // TEST
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::GetSelection(UINT * pSelectedCandidateIndex)
+STDMETHODIMP CCandidateList::GetSelection(UINT* pSelectedCandidateIndex)
 {
+	if (_ui->ctx().cinfo.candies.empty())
+		return S_FALSE;
+
 	*pSelectedCandidateIndex = _ui->ctx().cinfo.highlighted;
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::GetString(UINT uIndex, BSTR * pbstr)
+STDMETHODIMP CCandidateList::GetString(UINT uIndex, BSTR* pbstr)
 {
 	*pbstr = nullptr;
-	auto &cinfo = _ui->ctx().cinfo;
+	auto& cinfo = _ui->ctx().cinfo;
 	if (uIndex >= cinfo.candies.size())
 		return E_INVALIDARG;
 
-	auto &str = cinfo.candies[uIndex].str;
+	auto& str = cinfo.candies[uIndex].str;
 	*pbstr = SysAllocStringLen(str.c_str(), str.size() + 1);
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::GetString. index = {}, str = {}", uIndex, to_string(_ui->ctx().cinfo.candies[uIndex].str, CP_UTF8));
+#endif // TEST
 
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::GetPageIndex(UINT * pIndex, UINT uSize, UINT * puPageCnt)
+STDMETHODIMP CCandidateList::GetPageIndex(UINT* pIndex, UINT uSize, UINT* puPageCnt)
 {
 	if (!puPageCnt)
 		return E_INVALIDARG;
@@ -166,21 +189,65 @@ STDMETHODIMP CCandidateList::GetPageIndex(UINT * pIndex, UINT uSize, UINT * puPa
 		}
 		*pIndex = 0;
 	}
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::GetPageIndex. size = {}", uSize);
+#endif // TEST
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::SetPageIndex(UINT * pIndex, UINT uPageCnt)
+STDMETHODIMP CCandidateList::SetPageIndex(UINT* pIndex, UINT uPageCnt)
 {
 	if (!pIndex)
 		return E_INVALIDARG;
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::GetCurrentPage(UINT * puPage)
+STDMETHODIMP CCandidateList::GetCurrentPage(UINT* puPage)
 {
 	*puPage = 0;
 	return S_OK;
 }
+
+//STDMETHODIMP CCandidateList::GetContext(ITfContext** ppic)
+//{
+//	*ppic = _pContextDocument;
+//	return S_OK;
+//}
+//
+//STDMETHODIMP CCandidateList::GetErrorIndex(UINT* pErrorIndex)
+//{
+//	pErrorIndex = nullptr;
+//	return S_OK;
+//}
+//
+//STDMETHODIMP CCandidateList::GetMaxReadingStringLength(UINT* pcchMax)
+//{
+//	return E_NOTIMPL;
+//}
+//
+//STDMETHODIMP CCandidateList::GetString(BSTR* pstr)
+//{
+//	return E_NOTIMPL;
+//}
+//
+//STDMETHODIMP CCandidateList::GetUpdateFlags(DWORD* pdwFlags)
+//{
+//	if (pdwFlags == nullptr)
+//		return E_INVALIDARG;
+//
+//	*pdwFlags = TF_RIUIE_CONTEXT | TF_RIUIE_STRING | TF_RIUIE_MAXREADINGSTRINGLENGTH;
+//
+//	return S_OK;
+//}
+//
+//STDMETHODIMP CCandidateList::IsVerticalOrderPreferred(BOOL* pfVertical)
+//{
+//	if (pfVertical == nullptr)
+//		return E_INVALIDARG;
+//
+//	*pfVertical = FALSE;
+//	return S_OK;
+//}
 
 STDMETHODIMP CCandidateList::SetSelection(UINT nIndex)
 {
@@ -196,7 +263,6 @@ STDMETHODIMP CCandidateList::Finalize(void)
 STDMETHODIMP CCandidateList::Abort(void)
 {
 	_tsf._AbortComposition(true);
-	Destroy();
 	return S_OK;
 }
 
@@ -205,19 +271,19 @@ STDMETHODIMP CCandidateList::SetIntegrationStyle(GUID guidIntegrationStyle)
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::GetSelectionStyle(TfIntegratableCandidateListSelectionStyle * ptfSelectionStyle)
+STDMETHODIMP CCandidateList::GetSelectionStyle(TfIntegratableCandidateListSelectionStyle* ptfSelectionStyle)
 {
 	*ptfSelectionStyle = _selectionStyle;
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::OnKeyDown(WPARAM wParam, LPARAM lParam, BOOL * pIsEaten)
+STDMETHODIMP CCandidateList::OnKeyDown(WPARAM wParam, LPARAM lParam, BOOL* pIsEaten)
 {
 	*pIsEaten = TRUE;
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::ShowCandidateNumbers(BOOL * pIsShow)
+STDMETHODIMP CCandidateList::ShowCandidateNumbers(BOOL* pIsShow)
 {
 	*pIsShow = TRUE;
 	return S_OK;
@@ -229,7 +295,7 @@ STDMETHODIMP CCandidateList::FinalizeExactCompositionString()
 	return E_NOTIMPL;
 }
 
-void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
+void CCandidateList::UpdateUI(const Context& ctx, const Status& status)
 {
 #ifdef TEST
 	if (!ctx.cinfo.candies.empty())
@@ -247,8 +313,14 @@ void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 	// if it is owned by active view window
 	//_UpdateOwner();
 	_ui->Update(ctx, status);
-	if (_pbShow == FALSE)
+	if (_pbShow == FALSE && status.composing)
+	{
 		_UpdateUIElement();
+	}
+
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::UpdateUI. _pbShow = {}", _pbShow);
+#endif // TEST
 
 	if (status.composing)
 	{
@@ -260,19 +332,19 @@ void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 	}
 }
 
-void CCandidateList::UpdateStyle(const UIStyle & sty)
+void CCandidateList::UpdateStyle(const UIStyle& sty)
 {
 	_ui->style() = sty;
 }
 
-void CCandidateList::UpdateInputPosition(RECT const & rc)
+void CCandidateList::UpdateInputPosition(RECT const& rc)
 {
 	_ui->UpdateInputPosition(rc);
 }
 
 void CCandidateList::Destroy()
 {
-	//EndUI();
+	// EndUI();
 	Show(FALSE);
 	_DisposeUIWindowAll();
 }
@@ -325,14 +397,13 @@ HRESULT CCandidateList::_UpdateUIElement()
 	{
 		return S_OK;
 	}
-	hr = pThreadMgr->QueryInterface(&pUIElementMgr);
 
-	if (hr == S_OK)
+	if (SUCCEEDED(pThreadMgr->QueryInterface(&pUIElementMgr)))
 	{
-		pUIElementMgr->UpdateUIElement(uiid);
+		hr = pUIElementMgr->UpdateUIElement(uiid);
 	}
 
-	return S_OK;
+	return hr;
 }
 
 void CCandidateList::StartUI()
@@ -350,38 +421,52 @@ void CCandidateList::StartUI()
 
 	// ToDo: send select candidate info back to rime
 
-	pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
+	hr = pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
 	//pUIElementMgr->UpdateUIElement(uiid);
 #ifdef TEST
-	LOG(INFO) << std::format("From CCandidateList::StartUI. _pbShow = {}", _pbShow);
+	LOG(INFO) << std::format("From CCandidateList::StartUI. _pbShow = {}, hr = 0x{:X}, id = 0x{:X}", _pbShow, (unsigned)hr, (unsigned)uiid);
 #endif // TEST
 	if (_pbShow)
 	{
+		if (_tsf.GetBit(WeaselFlag::IS_GAMING))
+		{
+			_pbShow = false;
+			return;
+		}
+		pUIElementMgr->EndUIElement(uiid);
 		_ui->style() = _style;
 		_MakeUIWindow();
 	}
 	else
 	{
-		pUIElementMgr->UpdateUIElement(uiid);
+		_tsf.SetBit(WeaselFlag::IS_GAMING);
 	}
 }
 
 void CCandidateList::EndUI()
 {
-	com_ptr<ITfThreadMgr> pThreadMgr = _tsf._GetThreadMgr();
-	com_ptr<ITfUIElementMgr> emgr;
-	auto hr = pThreadMgr->QueryInterface(&emgr);
-	if (FAILED(hr))
-		return;
-	if (emgr != NULL)
-		emgr->EndUIElement(uiid);
+	if (_tsf.GetBit(WeaselFlag::IS_GAMING))
+	{
+		com_ptr<ITfThreadMgr> pThreadMgr = _tsf._GetThreadMgr();
+		com_ptr<ITfUIElementMgr> emgr;
+		if (FAILED(pThreadMgr->QueryInterface(&emgr)))
+			return;
+		if (emgr != NULL)
+		{
+			if (SUCCEEDED(emgr->EndUIElement(uiid)))
+				_tsf.SetBit(WeaselFlag::CLEAR_CANDIDATES);
+		}
+#ifdef TEST
+		LOG(INFO) << std::format("From CCandidateList::EndUI. id = 0x{:X}", (unsigned)uiid);
+#endif // TEST
+	}
 	_DisposeUIWindow();
 }
 
 void CCandidateList::SetCaretFollowing(bool following)
 {
 	if (_ui)
-		_ui->SetCaretFollowing(_tsf.GetBit(17));		// _bitset[17]: _CaretFollowing
+		_ui->SetCaretFollowing(_tsf.GetBit(WeaselFlag::CARET_FOLLOWING));		// _bitset[17]: _CaretFollowing
 }
 
 HRESULT CCandidateList::OnSetThreadFocus()

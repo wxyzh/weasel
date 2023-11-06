@@ -1,6 +1,6 @@
 module;
 #include "stdafx.h"
-#include "test.h"
+// #include "test.h"
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
@@ -62,12 +62,12 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 		}
 		pEnumTextChanges.Release();
 
-		if (GetBit(17))				// _bitset[17]: _CaretFollowing
+		if (GetBit(WeaselFlag::CARET_FOLLOWING))				// _bitset[17]: _CaretFollowing
 		{
 			static int count{};
-			if (GetBit(13))			// _bitset[13]: _FistKeyComposition
+			if (GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))		// _bitset[13]: _FistKeyComposition
 			{
-				if (++count == 2)	// _bitset[15]: _AsyncEdit
+				if (++count == 2)
 				{
 					count = 0;
 					_UpdateCompositionWindow(pContext);
@@ -99,7 +99,7 @@ STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext, TfLayoutCode lcode, ITfCo
 		break;
 
 	case TF_LC_CHANGE:
-		if (GetBit(17))					// _bitset[17]: _CaretFollowing
+		if (GetBit(WeaselFlag::CARET_FOLLOWING))				// _bitset[17]: _CaretFollowing
 			_UpdateCompositionWindow(pContext);
 		break;
 

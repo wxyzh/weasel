@@ -62,7 +62,7 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 		{
 			VARIANT var{};
 			var.vt = VT_I4;
-			if (GetBit(0))						// _bitset[0]: _daemon_enable
+			if (GetBit(WeaselFlag::DAEMON_ENABLE))							// _bitset[0]: _daemon_enable
 			{
 				var.lVal = 0xFC00;
 			}
@@ -79,16 +79,16 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 	break;
 
 	case ID_WEASELTRAY_HALF_SHAPE:
-		ReSetBit(6);
+		ReSetBit(WeaselFlag::FULL_SHAPE);
 		goto DEFAULT;
 
 	case ID_WEASELTRAY_FULL_SHAPE:
-		SetBit(6);
+		SetBit(WeaselFlag::FULL_SHAPE);
 		goto DEFAULT;
 
 	case ID_STYLE_CARET_FOLLOWING:
-		_bitset.flip(17);							// _bitset[17]: _CaretFollowing
-		_cand->SetCaretFollowing(_bitset[17]);
+		_bitset.flip(static_cast<int>(WeaselFlag::CARET_FOLLOWING));							// _bitset[17]: _CaretFollowing
+		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
 		break;
 
 DEFAULT:
@@ -176,13 +176,13 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 	LOG(INFO) << std::format("From WeaselTSF::_UpdateLanguageBar. flags = {:#x}, ascii_mode = {}, full_shape = {}, ascii_punct = {}, _InitInputMethodState = {}", flags, stat.ascii_mode, stat.full_shape, stat.ascii_punct, !GetBit(4));
 #endif // TEST
 
-	if (!GetBit(4))								// _bitset[4]:  _InitInputMethodState
+	if (!GetBit(WeaselFlag::INIT_INPUT_METHOD_STATE))								// _bitset[4]:  _InitInputMethodState
 	{
-		SetBit(4);								// _bitset[4]:  _InitInputMethodState
-		SetBit(1, _status.ascii_mode);			// _bitset[1]:  _ascii_mode
-		SetBit(2, _status.full_shape);			// _bitset[2]:  _full_mode
-		SetBit(3, _status.ascii_punct);			// _bitset[3]:  _ascii_punct
-		SetBit(12, _status.s2t);				// _bitset[12]: _s2t
+		SetBit(WeaselFlag::INIT_INPUT_METHOD_STATE);								// _bitset[4]:  _InitInputMethodState
+		SetBit(WeaselFlag::ASCII_MODE, _status.ascii_mode);							// _bitset[1]:  _ascii_mode
+		SetBit(WeaselFlag::FULL_SHAPE, _status.full_shape);							// _bitset[2]:  _full_shape
+		SetBit(WeaselFlag::ASCII_PUNCT, _status.ascii_punct);						// _bitset[3]:  _ascii_punct
+		SetBit(WeaselFlag::SIMPLIFIED_TO_TRADITIONAL, _status.s2t);					// _bitset[12]: _s2t
 		_schema_id = _status.schema_id;
 
 		if (stat.ascii_mode)
@@ -214,9 +214,9 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 	}
 	else
 	{
-		if (GetBit(1) != stat.ascii_mode)		// _bitset[1]: _ascii_mode
+		if (GetBit(WeaselFlag::ASCII_MODE) != stat.ascii_mode)			// _bitset[1]: _ascii_mode
 		{
-			SetBit(1, stat.ascii_mode);			// _bitset[1]: _ascii_mode
+			SetBit(WeaselFlag::ASCII_MODE, stat.ascii_mode);			// _bitset[1]: _ascii_mode
 			if (stat.ascii_mode)
 			{
 				flags &= (~TF_CONVERSIONMODE_NATIVE);
@@ -227,9 +227,9 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			}
 			state = true;
 		}
-		else if (GetBit(2) != stat.full_shape)	// _bitset[2]: _full_mode
+		else if (GetBit(WeaselFlag::FULL_SHAPE) != stat.full_shape)				// _bitset[2]: _full_shape
 		{
-			SetBit(2, stat.full_shape);			// _bitset[2]: _full_mode
+			SetBit(WeaselFlag::FULL_SHAPE, stat.full_shape);					// _bitset[2]: _full_shape
 			if (stat.full_shape)
 			{
 				flags |= TF_CONVERSIONMODE_FULLSHAPE;
@@ -240,9 +240,9 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			}
 			state = true;
 		}
-		else if (GetBit(3) != stat.ascii_punct)	// _bitset[3]: _ascii_punct
+		else if (GetBit(WeaselFlag::ASCII_PUNCT) != stat.ascii_punct)			// _bitset[3]: _ascii_punct
 		{
-			SetBit(3, stat.ascii_punct);		// _bitset[3]: _ascii_punct
+			SetBit(WeaselFlag::ASCII_PUNCT, stat.ascii_punct);					// _bitset[3]: _ascii_punct
 			if (stat.ascii_punct)
 			{
 				flags |= TF_CONVERSIONMODE_SYMBOL;
@@ -253,9 +253,9 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			}
 			state = true;
 		}
-		else if (GetBit(12) != stat.s2t)		// _bitset[12]: _s2t
+		else if (GetBit(WeaselFlag::SIMPLIFIED_TO_TRADITIONAL) != stat.s2t)		// _bitset[12]: _s2t
 		{
-			SetBit(12, stat.s2t);
+			SetBit(WeaselFlag::SIMPLIFIED_TO_TRADITIONAL, stat.s2t);
 			state = true;
 		}
 		else if (_schema_id != stat.schema_id)

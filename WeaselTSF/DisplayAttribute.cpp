@@ -5,8 +5,8 @@ module WeaselTSF;
 
 void WeaselTSF::_ClearCompositionDisplayAttributes(TfEditCookie ec, _In_ ITfContext* pContext)
 {
-    ITfRange* pRangeComposition = nullptr;
-    ITfProperty* pDisplayAttributeProperty = nullptr;
+    com_ptr<ITfRange> pRangeComposition;
+    com_ptr<ITfProperty> pDisplayAttributeProperty;
 
     if (FAILED(_pComposition->GetRange(&pRangeComposition)))
     {
@@ -16,16 +16,12 @@ void WeaselTSF::_ClearCompositionDisplayAttributes(TfEditCookie ec, _In_ ITfCont
     if (SUCCEEDED(pContext->GetProperty(GUID_PROP_ATTRIBUTE, &pDisplayAttributeProperty)))
     {
         pDisplayAttributeProperty->Clear(ec, pRangeComposition);
-
-        pDisplayAttributeProperty->Release();
     }
-
-    pRangeComposition->Release();
 }
 
 BOOL WeaselTSF::_SetCompositionDisplayAttributes(TfEditCookie ec, _In_ ITfContext* pContext, ITfRange *pRangeComposition)
 {
-    ITfProperty* pDisplayAttributeProperty = nullptr;
+    com_ptr<ITfProperty> pDisplayAttributeProperty ;
     HRESULT hr = S_OK;
 
     if (pRangeComposition == nullptr)
@@ -44,8 +40,6 @@ BOOL WeaselTSF::_SetCompositionDisplayAttributes(TfEditCookie ec, _In_ ITfContex
         var.lVal = _gaDisplayAttributeInput;
 
         hr = pDisplayAttributeProperty->SetValue(ec, pRangeComposition, &var);
-
-        pDisplayAttributeProperty->Release();
     }
 
     // DO NOT release range composition here

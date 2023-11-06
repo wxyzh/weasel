@@ -1,6 +1,6 @@
 module;
 #include "stdafx.h"
-#include "test.h"
+// #include "test.h"
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
@@ -31,14 +31,14 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 		case 0xFFE5:			// Caps Lock down
 			if (_IsComposing())
 			{
-				SetBit(16);		// _bitset[16]: _CompositionWithCapsLock
+				SetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);		// _bitset[16]: _CompositionWithCapsLock
 			}
 			break;
 
 		case 0x4002'FFE5:		// Caps Lock up
-			if (GetBit(16))		// _bitset[16]: _CompositionWithCapsLock
+			if (GetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK))		// _bitset[16]: _CompositionWithCapsLock
 			{
-				ReSetBit(16);
+				ReSetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);
 				unsigned send{};
 				std::array<INPUT, 2> inputs;
 
@@ -53,12 +53,12 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 		}
 		if (!(*pfEaten) && !_fTestKeyDownPending && !(lParam >> 31) && (isdigit(ke.keycode) || ispunct(ke.keycode)))
 		{
-			SetBit(18);
+			SetBit(WeaselFlag::EATEN);
 			_inputKey = ke.keycode;
 			*pfEaten = true;
 		}
 #ifdef TEST
-		LOG(INFO) << std::format("From WeaselTSF::_ProcessKeyEvent. ke = 0x{:X}, Caps_Lock = {}", (unsigned)ke, GetBit(16));
+		LOG(INFO) << std::format("From WeaselTSF::_ProcessKeyEvent. ke = 0x{:X}, Caps_Lock = {}", (unsigned)ke, GetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK));
 #endif // TEST
 	}
 }
@@ -95,7 +95,7 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 	LOG(INFO) << std::format("From OnTestKeyDown. wParam = {:#x}, lParam = {:#x}, pContext = {:#x}", wParam, lParam, (size_t)pContext);
 #endif // TEST
 	_fTestKeyUpPending = false;
-	ReSetBit(13);		// _bitset[13]: _FistKeyComposition
+	ReSetBit(WeaselFlag::FIRST_KEY_COMPOSITION);		// _bitset[13]: _FistKeyComposition
 	if (_fTestKeyDownPending)
 	{
 		*pfEaten = TRUE;
@@ -168,7 +168,7 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BO
 #ifdef TEST
 		LOG(INFO) << std::format("From OnKeyUp. *pfEaten = {}", *pfEaten);
 #endif // TEST
-		if (!GetBit(15))	// _bitset[15]: _AsyncEdit
+		if (!GetBit(WeaselFlag::ASYNC_EDIT))	// _bitset[15]: _AsyncEdit
 			_UpdateComposition(pContext);
 	}
 
