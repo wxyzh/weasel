@@ -27,18 +27,30 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, ok = {}", state, ok);
 #endif // TEST
 
-	if (GetBit(WeaselFlag::EATEN))		// _bitset[18]: _Eaten
+	if (GetBit(WeaselFlag::CLEAR_FLAG))
+	{
+		if (GetBit(WeaselFlag::CLEAR_DOWN))
+		{
+			_StartComposition(_pEditSessionContext, !config.inline_preedit);
+		}
+		else
+		{
+			ResetBit(WeaselFlag::CLEAR_FLAG);
+			_EndComposition(_pEditSessionContext, true);
+		}
+	}
+	else if (GetBit(WeaselFlag::EATEN))
 	{
 		_StartComposition(_pEditSessionContext, !config.inline_preedit);		
 		_EndComposition(_pEditSessionContext, false);
-		ReSetBit(WeaselFlag::EATEN);	// _bitset[18]: _Eaten
+		ResetBit(WeaselFlag::EATEN);
 	}
 	else if (ok)
 	{
 		if (state && !_IsComposing())
 		{
 			_StartComposition(_pEditSessionContext, !config.inline_preedit);
-			if (GetBit(WeaselFlag::CARET_FOLLOWING))				// _bitset[17]: _CaretFollowing
+			if (GetBit(WeaselFlag::CARET_FOLLOWING))
 			{
 				_UpdateCompositionWindow(_pEditSessionContext);
 			}
@@ -60,23 +72,19 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 				_InsertText(_pEditSessionContext, commit);
 				_EndComposition(_pEditSessionContext, false);
 
-				if (GetBit(WeaselFlag::CLEAR_CANDIDATES))
+				// Ïû³ýWar3´ò×ÖÉÏÆÁºó²ÐÁôµÄ¿Õ°×¿ò
+				if (GetBit(WeaselFlag::CLEAR_CAND_LIST))
 				{
-					ReSetBit(WeaselFlag::CLEAR_CANDIDATES);
+					ResetBit(WeaselFlag::CLEAR_CAND_LIST);
 					unsigned send{};
-					std::array<INPUT, 4> inputs;
+					std::array<INPUT, 2> inputs;
 
 					inputs[0].type = INPUT_KEYBOARD;
-					inputs[0].ki = { 0x41, 0x41, 0, 0, 0 };
+					inputs[0].ki = { VK_CLEAR, 0x0C, 0, 0, 0 };
 
 					inputs[1].type = INPUT_KEYBOARD;
-					inputs[1].ki = { 0x41, 0x41, KEYEVENTF_KEYUP, 0, 0 };
+					inputs[1].ki = { VK_CLEAR, 0x0C, KEYEVENTF_KEYUP, 0, 0 };
 
-					inputs[2].type = INPUT_KEYBOARD;
-					inputs[2].ki = { VK_BACK, 0x08, 0, 0, 0 };
-
-					inputs[3].type = INPUT_KEYBOARD;
-					inputs[3].ki = { VK_BACK, 0x08, KEYEVENTF_KEYUP, 0, 0 };
 					send = SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
 				}
 			}
@@ -88,12 +96,12 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 			{
 				_EndComposition(_pEditSessionContext, true);
 			}
-			if (_IsComposing() && config.inline_preedit)
+			if (_IsComposing() && (config.inline_preedit || GetBit(WeaselFlag::GAME_MODE)))
 			{
 				_ShowInlinePreedit(_pEditSessionContext, context);
-				SetBit(WeaselFlag::INLINE_PREEDIT);					// _bitset[5]: _InlinePreedit
+				SetBit(WeaselFlag::INLINE_PREEDIT);
 			}
-			if (GetBit(WeaselFlag::CARET_FOLLOWING))				// _bitset[17]: _CaretFollowing
+			if (GetBit(WeaselFlag::CARET_FOLLOWING))
 			{
 				_UpdateCompositionWindow(_pEditSessionContext);
 			}

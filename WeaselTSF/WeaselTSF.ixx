@@ -135,7 +135,7 @@ export
 
 		void SetBit(WeaselFlag flag) { _bitset.set(static_cast<int>(flag)); }
 		void SetBit(WeaselFlag flag, bool value) { _bitset.set(static_cast<int>(flag), value); }
-		void ReSetBit(WeaselFlag flag) { _bitset.reset(static_cast<int>(flag)); }
+		void ResetBit(WeaselFlag flag) { _bitset.reset(static_cast<int>(flag)); }
 		bool GetBit(WeaselFlag flag) const { return _bitset[static_cast<int>(flag)]; }
 
 		bool execute(std::wstring_view cmd, std::wstring_view args = L"");
@@ -247,6 +247,9 @@ export
 
 		std::wstring _schema_id{};
 		unsigned _inputKey{};
+		TF_PRESERVEDKEY _preservedKeyGameMode;			// Ctrl+Shift+G
+		TF_PRESERVEDKEY _preservedKeyCaretFollowing;	// Ctrl+Shift+F
+		TF_PRESERVEDKEY _preservedKeyDaemon;			// Ctrl+Shift+D
 		std::array<std::wstring, 2> _gameNames
 		{
 			L"War3.exe",
@@ -262,7 +265,7 @@ export
 		ASCII_PUNCT,
 		INIT_INPUT_METHOD_STATE,
 		INLINE_PREEDIT,
-		BEGIN_COMPOSITION,
+		BEGIN_COMPOSITION,				// unuse
 		FOCUS_CHANGED,
 		SUPPORT_DISPLAY_ATTRIBUTE,
 		AUTOCAD,
@@ -275,7 +278,9 @@ export
 		COMPOSITION_WITH_CAPSLOCK,
 		CARET_FOLLOWING,
 		EATEN,
-		IS_GAMING,
-		CLEAR_CANDIDATES
+		GAME_MODE,
+		CLEAR_CAND_LIST,
+		CLEAR_DOWN,
+		CLEAR_FLAG
 	};
 }

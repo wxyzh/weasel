@@ -1,6 +1,7 @@
 module;
 #include "stdafx.h"
-// #include "test.h"
+#include "Globals.h"
+#include "test.h"
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
@@ -31,14 +32,14 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 		case 0xFFE5:			// Caps Lock down
 			if (_IsComposing())
 			{
-				SetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);		// _bitset[16]: _CompositionWithCapsLock
+				SetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);
 			}
 			break;
 
 		case 0x4002'FFE5:		// Caps Lock up
-			if (GetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK))		// _bitset[16]: _CompositionWithCapsLock
+			if (GetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK))
 			{
-				ReSetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);
+				ResetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);
 				unsigned send{};
 				std::array<INPUT, 2> inputs;
 
@@ -95,11 +96,22 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 	LOG(INFO) << std::format("From OnTestKeyDown. wParam = {:#x}, lParam = {:#x}, pContext = {:#x}", wParam, lParam, (size_t)pContext);
 #endif // TEST
 	_fTestKeyUpPending = false;
-	ReSetBit(WeaselFlag::FIRST_KEY_COMPOSITION);		// _bitset[13]: _FistKeyComposition
+	ResetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
 	if (_fTestKeyDownPending)
 	{
 		*pfEaten = TRUE;
 		return S_OK;
+	}
+	if (GetBit(WeaselFlag::GAME_MODE))
+	{
+		if (wParam == 0x0C)
+		{
+			*pfEaten = true;
+			_fTestKeyDownPending = true;
+			SetBit(WeaselFlag::CLEAR_DOWN);
+			SetBit(WeaselFlag::CLEAR_FLAG);
+			return S_OK;
+		}
 	}
 	_ProcessKeyEvent(wParam, lParam, pfEaten);
 	if (*pfEaten)
@@ -142,6 +154,12 @@ STDAPI WeaselTSF::OnTestKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam
 		*pfEaten = TRUE;
 		return S_OK;
 	}
+	if (GetBit(WeaselFlag::GAME_MODE) && wParam == 0x0C)
+	{
+		ResetBit(WeaselFlag::CLEAR_DOWN);
+		_UpdateComposition(pContext);
+		return S_OK;
+	}
 	_ProcessKeyEvent(wParam, lParam, pfEaten);
 	_UpdateComposition(pContext);
 	if (*pfEaten)
@@ -168,7 +186,7 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BO
 #ifdef TEST
 		LOG(INFO) << std::format("From OnKeyUp. *pfEaten = {}", *pfEaten);
 #endif // TEST
-		if (!GetBit(WeaselFlag::ASYNC_EDIT))	// _bitset[15]: _AsyncEdit
+		if (!GetBit(WeaselFlag::ASYNC_EDIT))
 			_UpdateComposition(pContext);
 	}
 
@@ -178,6 +196,33 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BO
 STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEaten)
 {
 	*pfEaten = FALSE;
+	if (IsEqualGUID(rguid, WEASEL_UILESS_MODE_PRESERVED_KEY))
+	{
+		_bitset.flip(static_cast<int>(WeaselFlag::GAME_MODE));
+	}
+	else if (IsEqualGUID(rguid, WEASEL_CARET_FOLLOWING_PRESERVED_KEY))
+	{
+		_bitset.flip(static_cast<int>(WeaselFlag::CARET_FOLLOWING));
+		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
+	}
+	else if (IsEqualGUID(rguid, WEASEL_DAEMON_PRESERVED_KEY))
+	{
+		_bitset.flip(static_cast<int>(WeaselFlag::DAEMON_ENABLE));
+		if (_pGlobalCompartmentDaemon)
+		{
+			VARIANT var{};
+			var.vt = VT_I4;
+			if (GetBit(WeaselFlag::DAEMON_ENABLE))
+			{
+				var.lVal = 0xFC01;
+			}
+			else
+			{
+				var.lVal = 0xFC00;
+			}
+			_pGlobalCompartmentDaemon->SetValue(_tfClientId, &var);
+		}
+	}
 	return S_OK;
 }
 
@@ -206,6 +251,25 @@ void WeaselTSF::_UninitKeyEventSink()
 
 BOOL WeaselTSF::_InitPreservedKey()
 {
+	com_ptr<ITfKeystrokeMgr> pKeystrokeMgr;
+	if (SUCCEEDED(_pThreadMgr->QueryInterface(&pKeystrokeMgr)))
+	{
+		_preservedKeyGameMode.uVKey = 0x47;			// 'G'
+		_preservedKeyGameMode.uModifiers = TF_MOD_CONTROL | TF_MOD_SHIFT;
+
+		_preservedKeyCaretFollowing.uVKey = 0x46;	// 'F'
+		_preservedKeyCaretFollowing.uModifiers = TF_MOD_CONTROL | TF_MOD_SHIFT;
+
+		_preservedKeyDaemon.uVKey = 0x44;			// 'D'
+		_preservedKeyDaemon.uModifiers = TF_MOD_CONTROL | TF_MOD_SHIFT;
+
+		std::wstring uilessMode{ L"сно╥дёй╫" };
+		auto hr = pKeystrokeMgr->PreserveKey(_tfClientId, WEASEL_UILESS_MODE_PRESERVED_KEY, &_preservedKeyGameMode, uilessMode.data(), uilessMode.size());
+		hr = pKeystrokeMgr->PreserveKey(_tfClientId, WEASEL_CARET_FOLLOWING_PRESERVED_KEY, &_preservedKeyCaretFollowing, L"", 0);
+		hr = pKeystrokeMgr->PreserveKey(_tfClientId, WEASEL_DAEMON_PRESERVED_KEY, &_preservedKeyDaemon, L"", 0);
+
+		return SUCCEEDED(hr);
+	}
 	return TRUE;
 #if 0
 	com_ptr<ITfKeystrokeMgr> pKeystrokeMgr;
@@ -230,4 +294,11 @@ BOOL WeaselTSF::_InitPreservedKey()
 
 void WeaselTSF::_UninitPreservedKey()
 {
+	com_ptr<ITfKeystrokeMgr> pKeystrokeMgr;
+	if (SUCCEEDED(_pThreadMgr->QueryInterface(&pKeystrokeMgr)))
+	{
+		pKeystrokeMgr->UnpreserveKey(WEASEL_UILESS_MODE_PRESERVED_KEY, &_preservedKeyGameMode);
+		pKeystrokeMgr->UnpreserveKey(WEASEL_CARET_FOLLOWING_PRESERVED_KEY, &_preservedKeyCaretFollowing);
+		pKeystrokeMgr->UnpreserveKey(WEASEL_DAEMON_PRESERVED_KEY, &_preservedKeyDaemon);
+	}
 }

@@ -3,7 +3,7 @@
 #include <WeaselCommon.h>
 #include "Globals.h"
 #include <resource.h>
-#include <psapi.h>
+// #include <psapi.h>
 #include <filesystem>
 #include "test.h"
 #ifdef TEST
@@ -11,7 +11,7 @@
 #include "logging.h"
 #endif // TEST
 
-#pragma comment(lib, "psapi.lib")
+// #pragma comment(lib, "psapi.lib")
 namespace fs = std::filesystem;
 
 //#pragma data_seg("Shared")
@@ -49,8 +49,8 @@ WeaselTSF::WeaselTSF()
 	_activeLanguageProfileNotifySinkCookie = TF_INVALID_COOKIE;
 
 	_cand.Attach(new CCandidateList(*this));
-	SetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);			// _bitset[8]: _SupportDisplayAttribute
-	SetBit(WeaselFlag::CARET_FOLLOWING);					// _bitset[17]: _CaretFollowing
+	SetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);
+	SetBit(WeaselFlag::CARET_FOLLOWING);
 	
 	DllAddRef();
 	// CatchUnhandledException();
@@ -60,8 +60,10 @@ WeaselTSF::WeaselTSF()
 
 	std::wstring name;
 	name.reserve(MAX_PATH);
+	DWORD len{ MAX_PATH };
 
-	GetProcessImageFileName(hProcess, name.data(), name.capacity());
+	// GetProcessImageFileName(hProcess, name.data(), name.capacity());
+	auto ret = QueryFullProcessImageName(hProcess, 0, name.data(), &len);
 	CloseHandle(hProcess);
 	name = name.data();
 
@@ -69,12 +71,12 @@ WeaselTSF::WeaselTSF()
 	{
 		if (fs::path(name).filename().wstring() == item)
 		{
-			SetBit(WeaselFlag::IS_GAMING);
+			SetBit(WeaselFlag::GAME_MODE);
 		}
 	}
 
 #ifdef TEST
-	LOG(INFO) << std::format("Process {} starting log. AppName: {}", pid, fs::path(name).filename().string()).data();
+	LOG(INFO) << std::format("Process {} starting log. AppName: {}, length = {}, is successful? {:s}", pid, fs::path(name).filename().string(), name.size(), static_cast<bool>(ret)).data();
 #endif // TEST
 }
 
@@ -200,7 +202,7 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 
 	if (!_InitDisplayAttributeGuidAtom())
 	{
-		ReSetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);	// _bitset[8]: _SupportDisplayAttribute
+		ResetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);
 	}
 
 	if (!_InitPreservedKey())
@@ -270,10 +272,10 @@ void WeaselTSF::_EnsureServerConnected()
 			{
 				if (var.vt == VT_I4)
 				{
-					SetBit(WeaselFlag::DAEMON_ENABLE, var.bVal);	// _bitset[0]: _daemon_enable
+					SetBit(WeaselFlag::DAEMON_ENABLE, var.bVal);
 				}
 			}
-			if (GetBit(WeaselFlag::DAEMON_ENABLE))					// _bitset[0]: _daemon_enable
+			if (GetBit(WeaselFlag::DAEMON_ENABLE))
 			{
 				execute(std::format(LR"({}\WeaselServer.exe)", WeaselRootPath()));
 			}

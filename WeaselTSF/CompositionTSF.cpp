@@ -19,8 +19,7 @@ void WeaselTSF::_StartComposition(ITfContext* pContext, bool not_inline_preedit)
 	{
 		HRESULT hr;
 		auto ret = pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
-		SetBit(WeaselFlag::BEGIN_COMPOSITION);						// _bitset[6]:	_BeginComposition
-		SetBit(WeaselFlag::FIRST_KEY_COMPOSITION);					// _bitset[13]: _FistKeyComposition
+		SetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
 #ifdef TEST
 			LOG(INFO) << std::format("From _StartComposition. hr = {:#x}, ret = {:#x}", (unsigned)hr, (unsigned)ret);
 #endif // TEST
@@ -132,10 +131,10 @@ void WeaselTSF::_UpdateComposition(ITfContext* pContext)
 {
 	HRESULT hr;
 	_pEditSessionContext = pContext;
-	ReSetBit(WeaselFlag::ASYNC_EDIT);		// _bitset[15]: _AsyncEdit
+	ResetBit(WeaselFlag::ASYNC_EDIT);
 	_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 	if (hr == TF_S_ASYNC)
-		SetBit(WeaselFlag::ASYNC_EDIT);		// _bitset[15]: _AsyncEdit
+		SetBit(WeaselFlag::ASYNC_EDIT);
 #ifdef TEST
 	LOG(INFO) << std::format("From _UpdateComposition. hr = {:#x}, pContext = {:#x}, _tfClientId = {:#x}", (unsigned)hr, (size_t)pContext, _tfClientId);
 #endif // TEST
@@ -158,13 +157,13 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 
 void WeaselTSF::_AbortComposition(bool clear)
 {
-	if (GetBit(WeaselFlag::AUTOCAD))															// _bitset[9]:  _AutoCAD
+	if (GetBit(WeaselFlag::AUTOCAD))
 	{
-		ReSetBit(WeaselFlag::AUTOCAD);															// _bitset[9]:  _AutoCAD
-		if (/*GetBit(WeaselFlag::DYNAMIC_INPUT) || */GetBit(WeaselFlag::NON_DYNAMIC_INPUT))		// _bitset[10]: _DynamicInput, _bitset[11]: _NonDynamicInput
+		ResetBit(WeaselFlag::AUTOCAD);
+		if (/*GetBit(WeaselFlag::DYNAMIC_INPUT) || */GetBit(WeaselFlag::NON_DYNAMIC_INPUT))
 		{			
-			// ReSetBit(WeaselFlag::DYNAMIC_INPUT);												// _bitset[10]: _DynamicInput
-			ReSetBit(WeaselFlag::NON_DYNAMIC_INPUT);											// _bitset[11]: _NonDynamicInput
+			// ResetBit(WeaselFlag::DYNAMIC_INPUT);
+			ResetBit(WeaselFlag::NON_DYNAMIC_INPUT);
 			BOOL eaten;
 			_ProcessKeyEvent(0x8, 0xE001, &eaten);
 		}

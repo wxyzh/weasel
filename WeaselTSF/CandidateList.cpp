@@ -208,47 +208,6 @@ STDMETHODIMP CCandidateList::GetCurrentPage(UINT* puPage)
 	return S_OK;
 }
 
-//STDMETHODIMP CCandidateList::GetContext(ITfContext** ppic)
-//{
-//	*ppic = _pContextDocument;
-//	return S_OK;
-//}
-//
-//STDMETHODIMP CCandidateList::GetErrorIndex(UINT* pErrorIndex)
-//{
-//	pErrorIndex = nullptr;
-//	return S_OK;
-//}
-//
-//STDMETHODIMP CCandidateList::GetMaxReadingStringLength(UINT* pcchMax)
-//{
-//	return E_NOTIMPL;
-//}
-//
-//STDMETHODIMP CCandidateList::GetString(BSTR* pstr)
-//{
-//	return E_NOTIMPL;
-//}
-//
-//STDMETHODIMP CCandidateList::GetUpdateFlags(DWORD* pdwFlags)
-//{
-//	if (pdwFlags == nullptr)
-//		return E_INVALIDARG;
-//
-//	*pdwFlags = TF_RIUIE_CONTEXT | TF_RIUIE_STRING | TF_RIUIE_MAXREADINGSTRINGLENGTH;
-//
-//	return S_OK;
-//}
-//
-//STDMETHODIMP CCandidateList::IsVerticalOrderPreferred(BOOL* pfVertical)
-//{
-//	if (pfVertical == nullptr)
-//		return E_INVALIDARG;
-//
-//	*pfVertical = FALSE;
-//	return S_OK;
-//}
-
 STDMETHODIMP CCandidateList::SetSelection(UINT nIndex)
 {
 	return S_OK;
@@ -422,13 +381,17 @@ void CCandidateList::StartUI()
 	// ToDo: send select candidate info back to rime
 
 	hr = pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
-	//pUIElementMgr->UpdateUIElement(uiid);
+	if (_tsf.GetBit(WeaselFlag::CLEAR_DOWN))
+	{
+		_ui->ctx().cinfo.candies.push_back(std::wstring(L" "));
+		pUIElementMgr->UpdateUIElement(uiid);
+	}	
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::StartUI. _pbShow = {}, hr = 0x{:X}, id = 0x{:X}", _pbShow, (unsigned)hr, (unsigned)uiid);
 #endif // TEST
 	if (_pbShow)
 	{
-		if (_tsf.GetBit(WeaselFlag::IS_GAMING))
+		if (_tsf.GetBit(WeaselFlag::GAME_MODE))
 		{
 			_pbShow = false;
 			return;
@@ -439,13 +402,13 @@ void CCandidateList::StartUI()
 	}
 	else
 	{
-		_tsf.SetBit(WeaselFlag::IS_GAMING);
+		_tsf.SetBit(WeaselFlag::GAME_MODE);
 	}
 }
 
 void CCandidateList::EndUI()
 {
-	if (_tsf.GetBit(WeaselFlag::IS_GAMING))
+	if (_tsf.GetBit(WeaselFlag::GAME_MODE))
 	{
 		com_ptr<ITfThreadMgr> pThreadMgr = _tsf._GetThreadMgr();
 		com_ptr<ITfUIElementMgr> emgr;
@@ -454,7 +417,7 @@ void CCandidateList::EndUI()
 		if (emgr != NULL)
 		{
 			if (SUCCEEDED(emgr->EndUIElement(uiid)))
-				_tsf.SetBit(WeaselFlag::CLEAR_CANDIDATES);
+				_tsf.SetBit(WeaselFlag::CLEAR_CAND_LIST);
 		}
 #ifdef TEST
 		LOG(INFO) << std::format("From CCandidateList::EndUI. id = 0x{:X}", (unsigned)uiid);
@@ -466,7 +429,7 @@ void CCandidateList::EndUI()
 void CCandidateList::SetCaretFollowing(bool following)
 {
 	if (_ui)
-		_ui->SetCaretFollowing(_tsf.GetBit(WeaselFlag::CARET_FOLLOWING));		// _bitset[17]: _CaretFollowing
+		_ui->SetCaretFollowing(_tsf.GetBit(WeaselFlag::CARET_FOLLOWING));
 }
 
 HRESULT CCandidateList::OnSetThreadFocus()

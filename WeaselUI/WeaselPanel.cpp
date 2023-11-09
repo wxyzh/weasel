@@ -1021,7 +1021,7 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 void WeaselPanel::MoveTo(RECT const& rc)
 {
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::MoveTo. left = {}, bottom = {}, m_oinputPos.left = {}, m_oinputPos.bottom = {}, m_ctx.aux = {}, from_server = {}", rc.left, rc.bottom, m_oinputPos.left, m_oinputPos.bottom, to_string(m_ctx.aux.str, CP_UTF8), _from_server);
+	LOG(INFO) << std::format("From WeaselPanel::MoveTo. left = {}, bottom = {}, m_oinputPos.left = {}, m_oinputPos.bottom = {}, m_ctx.aux = {}", rc.left, rc.bottom, m_oinputPos.left, m_oinputPos.bottom, to_string(m_ctx.aux.str, CP_UTF8));
 #endif // TEST
 	if (!m_layout)	return;			// avoid handling nullptr in _RepositionWindow
 

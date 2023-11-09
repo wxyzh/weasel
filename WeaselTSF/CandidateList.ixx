@@ -39,14 +39,6 @@ export
 		STDMETHODIMP SetPageIndex(UINT* pIndex, UINT uPageCnt);
 		STDMETHODIMP GetCurrentPage(UINT* puPage);
 
-		// ITfReadingInformationUIElement
-		/*STDMETHODIMP GetContext(_Out_ ITfContext** ppic);
-		STDMETHODIMP GetErrorIndex(_Out_ UINT* pErrorIndex);
-		STDMETHODIMP GetMaxReadingStringLength(_Out_ UINT* pcchMax);
-		STDMETHODIMP GetString(_Out_ BSTR* pstr);
-		STDMETHODIMP GetUpdateFlags(_Out_ DWORD* pdwFlags);
-		STDMETHODIMP IsVerticalOrderPreferred(_Out_ BOOL* pfVertical);*/
-
 		// ITfCandidateListUIElementBehavior methods
 		STDMETHODIMP SetSelection(UINT nIndex);
 		STDMETHODIMP Finalize(void);

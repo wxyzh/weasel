@@ -299,26 +299,26 @@ void CLangBarItemButton::RightClick(POINT& pt)
 		if (GetMenuItemInfo(popupMenu, 0, TRUE, &mii))
 		{
 			temp = temp.data();
-			temp[4] = _textService.GetBit(WeaselFlag::FULL_SHAPE) ? L'全' : L'半';									// _bitset[2]:  _full_shape
+			temp[4] = _textService.GetBit(WeaselFlag::FULL_SHAPE) ? L'全' : L'半';
 			ModifyMenu(mii.hSubMenu, _textService.GetBit(WeaselFlag::FULL_SHAPE) ? 1 : 0, 
-				MF_BYPOSITION | MF_CHECKED, 0, _textService.GetBit(WeaselFlag::FULL_SHAPE) ? L"全角" : L"半角");	// _bitset[2]:  _full_shape
+				MF_BYPOSITION | MF_CHECKED, 0, _textService.GetBit(WeaselFlag::FULL_SHAPE) ? L"全角" : L"半角");
 		}
 		SetMenuItemInfo(popupMenu, 0, true, &mii);
 
 		HMENU hSubMenu = GetSubMenu(popupMenu, 1);
 		CheckMenuItem(hSubMenu, ID_STYLE_CARET_FOLLOWING, 
-			MF_BYCOMMAND | (_textService.GetBit(WeaselFlag::CARET_FOLLOWING) ? MF_CHECKED : MF_UNCHECKED));			// _bitset[17]: _CaretFollowing
+			MF_BYCOMMAND | (_textService.GetBit(WeaselFlag::CARET_FOLLOWING) ? MF_CHECKED : MF_UNCHECKED));
 		
 		VARIANT var{};
 		if (SUCCEEDED(_textService._GetGlobalCompartmentDaemon()->GetValue(&var)))
 		{
 			if (var.vt == VT_I4)
 			{
-				_textService.SetBit(WeaselFlag::DAEMON_ENABLE, var.bVal);											// _bitset[0]: _daemon_enable
+				_textService.SetBit(WeaselFlag::DAEMON_ENABLE, var.bVal);
 			}
 		}
 		CheckMenuItem(popupMenu, ID_WEASELTRAY_DAEMON_ENABLE, 
-			MF_BYCOMMAND | (_textService.GetBit(WeaselFlag::DAEMON_ENABLE) ? MF_CHECKED : MF_UNCHECKED));			// _bitset[0]: _daemon_enable
+			MF_BYCOMMAND | (_textService.GetBit(WeaselFlag::DAEMON_ENABLE) ? MF_CHECKED : MF_UNCHECKED));
 		UINT wID = TrackPopupMenuEx(popupMenu, TPM_CENTERALIGN | TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x, pt.y - 32, hwnd, NULL);
 #ifdef TEST
 		LOG(INFO) << std::format("From CLangBarItemButton::OnClick. _daemon_enable = {}, wID = {}, var.lval = {:#x}", _textService.GetBit(WeaselFlag::DAEMON_ENABLE), wID, var.lVal);

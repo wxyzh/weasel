@@ -31,9 +31,9 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocM
 
 	if (!pDocMgrFocus)
 	{
-		SetBit(WeaselFlag::FOCUS_CHANGED);			// _bitset[7]: _FocusChanged
+		SetBit(WeaselFlag::FOCUS_CHANGED);
 	}
-	else if(GetBit(WeaselFlag::KEYBOARD_DISABLE))	// _bitset[14]: _KeyboardDisable
+	else if(GetBit(WeaselFlag::KEYBOARD_DISABLE))
 	{
 		_SetKeyboardOpen(TRUE);
 	}

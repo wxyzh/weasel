@@ -62,10 +62,10 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 		}
 		pEnumTextChanges.Release();
 
-		if (GetBit(WeaselFlag::CARET_FOLLOWING))				// _bitset[17]: _CaretFollowing
+		if (GetBit(WeaselFlag::CARET_FOLLOWING))
 		{
 			static int count{};
-			if (GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))		// _bitset[13]: _FistKeyComposition
+			if (GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))
 			{
 				if (++count == 2)
 				{
@@ -99,7 +99,7 @@ STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext, TfLayoutCode lcode, ITfCo
 		break;
 
 	case TF_LC_CHANGE:
-		if (GetBit(WeaselFlag::CARET_FOLLOWING))				// _bitset[17]: _CaretFollowing
+		if (GetBit(WeaselFlag::CARET_FOLLOWING))
 			_UpdateCompositionWindow(pContext);
 		break;
 
