@@ -23,7 +23,7 @@ STDAPI WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr)
 
 STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus)
 {
-		_InitTextEditSink(pDocMgrFocus);
+	_InitTextEditSink(pDocMgrFocus);
 
 #ifdef TEST
 	LOG(INFO) << std::format("From WeaselTSF::OnSetFocus. pDocMgrFocus = {:#x}, pDocMrgPrevFocus = {:#x}", (size_t)pDocMgrFocus, (size_t)pDocMgrPrevFocus);
@@ -44,11 +44,11 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocM
 	{
 		if (pCandidateListDocumentMgr != pDocMgrFocus)
 		{
-			_cand->OnKillThreadFocus();
+			_cand->KillThreadFocus();
 		}
 		else
 		{
-			_cand->OnSetThreadFocus();
+			_cand->SetThreadFocus();
 		}		
 	}
 

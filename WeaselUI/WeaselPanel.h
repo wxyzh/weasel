@@ -117,4 +117,5 @@ private:
 
 	bool m_following{ true };
 	bool m_holder{};
+	bool m_sticky{};
 };

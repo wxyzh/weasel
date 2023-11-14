@@ -143,7 +143,9 @@ export
 		com_ptr<ITfCompartment> _GetGlobalCompartmentDaemon() { return _pGlobalCompartmentDaemon; }
 		void SetRect(const RECT& rc) { m_rcFallback = rc; }
 		RECT GetRect() const { return m_rcFallback; }
-		WCHAR GetInput() const { return static_cast<WCHAR>(_inputKey); }
+		WCHAR GetInput() const { return static_cast<WCHAR>(_keycode); }
+
+		bool RetryKey();
 
 	private:
 		// ui callback functions
@@ -246,7 +248,8 @@ export
 		std::bitset<32> _bitset{};
 
 		std::wstring _schema_id{};
-		unsigned _inputKey{};
+		unsigned _keycode{};
+		unsigned short _lastKey{};
 		TF_PRESERVEDKEY _preservedKeyGameMode;			// Ctrl+Shift+G
 		TF_PRESERVEDKEY _preservedKeyCaretFollowing;	// Ctrl+Shift+F
 		TF_PRESERVEDKEY _preservedKeyDaemon;			// Ctrl+Shift+D
@@ -265,12 +268,12 @@ export
 		ASCII_PUNCT,
 		INIT_INPUT_METHOD_STATE,
 		INLINE_PREEDIT,
-		BEGIN_COMPOSITION,				// unuse
+		RETRY_COMPOSITION,
 		FOCUS_CHANGED,
 		SUPPORT_DISPLAY_ATTRIBUTE,
 		AUTOCAD,
-		DYNAMIC_INPUT,
-		NON_DYNAMIC_INPUT,
+		RETRY_INPUT,
+		WEZTERM_FIRST_KEY,
 		SIMPLIFIED_TO_TRADITIONAL,
 		FIRST_KEY_COMPOSITION,
 		KEYBOARD_DISABLE,
@@ -279,6 +282,7 @@ export
 		CARET_FOLLOWING,
 		EATEN,
 		GAME_MODE,
+		GAME_WAR3,
 		CLEAR_CAND_LIST,
 		CLEAR_DOWN,
 		CLEAR_FLAG

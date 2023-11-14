@@ -169,8 +169,10 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 		/*weasel::ResponseParser parser(nullptr, nullptr, &_status, nullptr, &_cand->style());
 		bool ok = m_client.GetResponseData(std::ref(parser));
 		_UpdateLanguageBar(_status);*/
+		DWORD flag;
+		_pCompartmentConversion->_GetCompartmentDWORD(flag);
 #ifdef TEST
-		LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION");
+		LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION, flag = 0x{:X}", (unsigned)flag);
 #endif // TEST
 	}
 #ifdef TEST

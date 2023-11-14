@@ -240,4 +240,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 	_contentRect.DeflateRect(deflatex, deflatey);
 	// eliminate the 1 pixel gap when border width odd and padding equal to margin
 	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
+
+#ifdef TEST
+	LOG(INFO) << std::format("From HorizontalLayout::DoLayout. done.");
+#endif // TEST
 }

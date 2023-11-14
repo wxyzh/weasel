@@ -303,6 +303,9 @@ void CCandidateList::UpdateInputPosition(RECT const& rc)
 
 void CCandidateList::Destroy()
 {
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::Destroy.");
+#endif // TEST
 	// EndUI();
 	Show(FALSE);
 	_DisposeUIWindowAll();
@@ -396,7 +399,10 @@ void CCandidateList::StartUI()
 			_pbShow = false;
 			return;
 		}
-		pUIElementMgr->EndUIElement(uiid);
+		auto ret = pUIElementMgr->EndUIElement(uiid);
+#ifdef TEST
+		LOG(INFO) << std::format("From CCandidateList::StartUI. ret = 0x{:X}", _pbShow, (unsigned)ret);
+#endif // TEST
 		_ui->style() = _style;
 		_MakeUIWindow();
 	}
@@ -432,23 +438,23 @@ void CCandidateList::SetCaretFollowing(bool following)
 		_ui->SetCaretFollowing(_tsf.GetBit(WeaselFlag::CARET_FOLLOWING));
 }
 
-HRESULT CCandidateList::OnSetThreadFocus()
+void CCandidateList::SetThreadFocus()
 {
 	if (_pbShow)
 	{
 		Show(TRUE);
 	}
-
-	return S_OK;
 }
 
-HRESULT CCandidateList::OnKillThreadFocus()
+void CCandidateList::KillThreadFocus()
 {
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::KillThreadFocus.");
+#endif // TEST
 	if (_pbShow)
 	{
 		Show(FALSE);
 	}
-	return S_OK;
 }
 
 com_ptr<ITfContext> CCandidateList::GetContextDocument()
@@ -488,5 +494,8 @@ void CCandidateList::_DisposeUIWindowAll()
 void CCandidateList::_MakeUIWindow()
 {
 	HWND p = _GetActiveWnd();
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::_MakeUIWindow.");
+#endif // TEST
 	_ui->Create(p);
 }

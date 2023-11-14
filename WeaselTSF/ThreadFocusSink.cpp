@@ -11,39 +11,34 @@ import CandidateList;
 STDMETHODIMP WeaselTSF::OnSetThreadFocus()
 {
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnSetThreadFocus.");
+	LOG(INFO) << std::format("From WeaselTSF::OnSetThreadFocus. _pComposition ? {:s}", (bool)_IsComposing());
 #endif // TEST
-	if (_cand)
+	com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
+	if (SUCCEEDED(_pTextEditSinkContext->GetDocumentMgr(&pCandidateListDocumentMgr)))
 	{
-		com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
-		
-		if (SUCCEEDED(_pTextEditSinkContext->GetDocumentMgr(&pCandidateListDocumentMgr)))
+		if (pCandidateListDocumentMgr == _pDocMgrLastFocused)
 		{
-			if (pCandidateListDocumentMgr == _pDocMgrLastFocused)
-			{
-				_cand->OnSetThreadFocus();
-			}
+			_cand->SetThreadFocus();
 		}
 	}
-
 	return S_OK;
 }
 STDMETHODIMP WeaselTSF::OnKillThreadFocus()
 {
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnKillThreadFocus.");
+	LOG(INFO) << std::format("From WeaselTSF::OnKillThreadFocus. _pComposition ? {:s}", (bool)_IsComposing());
 #endif // TEST
-	if (_cand)
-	{
-		com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
+	com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
 
-		if (SUCCEEDED(_pTextEditSinkContext->GetDocumentMgr(&pCandidateListDocumentMgr)))
+	if (SUCCEEDED(_pTextEditSinkContext->GetDocumentMgr(&pCandidateListDocumentMgr)))
+	{
+		if (_pDocMgrLastFocused)
 		{
-			_pDocMgrLastFocused = pCandidateListDocumentMgr;
-			_cand->OnKillThreadFocus();
+			_pDocMgrLastFocused.Release();
 		}
+		_pDocMgrLastFocused = pCandidateListDocumentMgr;
 	}
-	_AbortComposition();
+	_cand->KillThreadFocus();
 	return S_OK;
 }
 

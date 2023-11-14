@@ -1,7 +1,7 @@
 module;
 #include "stdafx.h"
 #include <WeaselCommon.h>
-// #include "test.h"
+#include "test.h"
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
@@ -27,7 +27,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, ok = {}", state, ok);
 #endif // TEST
 
-	if (GetBit(WeaselFlag::CLEAR_FLAG))
+	if (GetBit(WeaselFlag::CLEAR_FLAG))			// 消除游戏模式下合成后残留的空白框
 	{
 		if (GetBit(WeaselFlag::CLEAR_DOWN))
 		{
@@ -39,7 +39,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 			_EndComposition(_pEditSessionContext, true);
 		}
 	}
-	else if (GetBit(WeaselFlag::EATEN))
+	else if (GetBit(WeaselFlag::EATEN))			// Word 2021进入异步编辑时，遇到标点符号输入时，必须进入合成，否则句点输入就失去了数字后的智能判断
 	{
 		_StartComposition(_pEditSessionContext, !config.inline_preedit);		
 		_EndComposition(_pEditSessionContext, false);
@@ -47,7 +47,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	}
 	else if (ok)
 	{
-		if (state && !_IsComposing())
+		if (state && !_IsComposing())			// 执行算法服务内的UI状态更新，为它提供正确的坐标
 		{
 			_StartComposition(_pEditSessionContext, !config.inline_preedit);
 			if (GetBit(WeaselFlag::CARET_FOLLOWING))
@@ -71,9 +71,9 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 				}
 				_InsertText(_pEditSessionContext, commit);
 				_EndComposition(_pEditSessionContext, false);
-
+				
 				// 消除War3打字上屏后残留的空白框
-				if (GetBit(WeaselFlag::CLEAR_CAND_LIST))
+				if (GetBit(WeaselFlag::GAME_WAR3) && GetBit(WeaselFlag::CLEAR_CAND_LIST) && context->cinfo.candies.empty())
 				{
 					ResetBit(WeaselFlag::CLEAR_CAND_LIST);
 					unsigned send{};
@@ -85,6 +85,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 					inputs[1].type = INPUT_KEYBOARD;
 					inputs[1].ki = { VK_CLEAR, 0x0C, KEYEVENTF_KEYUP, 0, 0 };
 
+					// 模拟clear键down/up
 					send = SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
 				}
 			}

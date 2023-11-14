@@ -123,10 +123,10 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 	{
 		_pTextService->_SetComposition(pComposition);
 
-		if (_pTextService->GetBit(WeaselFlag::EATEN))
+		if (_pTextService->GetBit(WeaselFlag::EATEN))	// 处理数字和标点的合成
 		{
 			std::wstring input{ _pTextService->GetInput() };
-			hr = pRangeComposition->SetText(ec, 0, input.data(), 1);
+			hr = pRangeComposition->SetText(ec, 0, input.data(), input.size());
 			pRangeComposition->Collapse(ec, TF_ANCHOR_END);
 		}
 		else
@@ -137,12 +137,12 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 			 * The workaround is only needed when inline preedit is not enabled.
 			 * See https://github.com/rime/weasel/pull/883#issuecomment-1567625762
 			 */
-			if (_not_inline_preedit && !_pTextService->GetBit(WeaselFlag::ASYNC_EDIT))
+			if (_not_inline_preedit && !_pTextService->GetBit(WeaselFlag::ASYNC_EDIT) && !_pTextService->GetBit(WeaselFlag::RETRY_COMPOSITION))
 			{
-				hr = pRangeComposition->SetText(ec, TF_ST_CORRECTION, L"|", 1);
+				hr = pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
 			}
-
-			pRangeComposition->Collapse(ec, TF_ANCHOR_END);
+			_pTextService->ResetBit(WeaselFlag::RETRY_COMPOSITION);
+			pRangeComposition->Collapse(ec, TF_ANCHOR_START);
 		}
 		/* set selection */
 		TF_SELECTION tfSelection;
@@ -151,8 +151,13 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		tfSelection.style.fInterimChar = FALSE;
 		hr = _pContext->SetSelection(ec, 1, &tfSelection);
 	}
+
+	com_ptr<ITfProperty> pProperty;
+	_pContext->GetProperty(GUID_PROP_COMPOSING, &pProperty);
+	VARIANT var;
+	pProperty->GetValue(ec, pRangeComposition, &var);
 #ifdef TEST
-	LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. hr = {:#x}", (unsigned)hr);
+	LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. hr = {:#x}, property = {:s}", (unsigned)hr, (bool)var.boolVal);
 #endif // TEST
 
 	return hr;
@@ -199,15 +204,18 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 		// note: selection.range is always an empty range
 		hr = _pContext->GetEnd(ec, &pRangeComposition);
 	}
+	com_ptr<ITfProperty> pProperty;
+	_pContext->GetProperty(GUID_PROP_COMPOSING, &pProperty);
+	VARIANT var;
+	pProperty->GetValue(ec, pRangeComposition, &var);
 
 	hr = _pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped);
 #ifdef TEST
-	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {}", rc.left, rc.top, (unsigned)hr, fClipped);
+	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {:s}, property = {:s}", 
+		rc.left, rc.top, (unsigned)hr, (bool)fClipped, (bool)var.boolVal);
 #endif // TEST
 	if (hr == 0x80040057)
 	{
-		_pTextService->SetBit(WeaselFlag::AUTOCAD);
-		_pTextService->SetBit(WeaselFlag::NON_DYNAMIC_INPUT);
 		_pTextService->_AbortComposition();
 		return hr;
 	}
@@ -216,27 +224,27 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	{
 		_pTextService->SetRect(rc);
 
-		if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT))
+		if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT))				// 仅嵌入式候选框记录首码坐标
 		{
 			static RECT rcFirst{};
-			if (_pTextService->GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))
+			if (_pTextService->GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))	// 记录首码坐标
 			{
 				rcFirst = rc;
 			}
-			else if (_pTextService->GetBit(WeaselFlag::FOCUS_CHANGED))
+			else if (_pTextService->GetBit(WeaselFlag::FOCUS_CHANGED))		// 焦点变化时记录坐标
 			{
 				rcFirst = rc;
 				_pTextService->ResetBit(WeaselFlag::FOCUS_CHANGED);
 			}
-			else if (5 < abs(rcFirst.top - rc.top))
+			else if (5 < abs(rcFirst.top - rc.top))							// 个别应用获取坐标时文交替出现Y轴坐标相差±5，需要过滤掉
 			{
 				rcFirst = rc;
 			}
-			else if (rc.left < rcFirst.left)
+			else if (rc.left < rcFirst.left)								// 换行时更新坐标
 			{
 				rcFirst = rc;
 			}
-			else
+			else															// 非首码时用首码坐标替换
 			{
 				rc = rcFirst;
 			}
@@ -246,7 +254,7 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 		LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}", rc.left, rc.top);
 #endif // TEST
 	}
-	else if (_pTextService->GetRect().left != 0)
+	else if (_pTextService->GetRect().left != 0)							// 个别应用连续输入法时，偶尔会获取到原点坐标，此时用最后一次合成的末码坐标替换
 	{
 		_pTextService->_SetCompositionPosition(_pTextService->GetRect());
 	}
@@ -268,8 +276,6 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 #endif // TEST
 	if (FAILED(hr))
 	{
-		_pTextService->SetBit(WeaselFlag::AUTOCAD);
-		_pTextService->SetBit(WeaselFlag::NON_DYNAMIC_INPUT);
 		_pTextService->_AbortComposition();
 		return hr;
 	}

@@ -60,9 +60,8 @@ export
 		void EndUI();
 		void SetCaretFollowing(bool following);
 
-		// Event for ITfThreadFocusSink
-		virtual HRESULT OnSetThreadFocus();
-		virtual HRESULT OnKillThreadFocus();
+		void SetThreadFocus();
+		void KillThreadFocus();
 
 		com_ptr<ITfContext> GetContextDocument();
 		bool GetIsReposition();

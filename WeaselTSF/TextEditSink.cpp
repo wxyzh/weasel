@@ -1,6 +1,6 @@
 module;
 #include "stdafx.h"
-// #include "test.h"
+#include "test.h"
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
@@ -26,7 +26,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 
 	/* did the selection change? */
 	BOOL fSelectionChanged;
-	if (pEditRecord->GetSelectionStatus(&fSelectionChanged) == S_OK && fSelectionChanged)
+	if (SUCCEEDED(pEditRecord->GetSelectionStatus(&fSelectionChanged)) && fSelectionChanged)
 	{
 		if (_IsComposing())
 		{
@@ -41,6 +41,9 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 				{
 					if (!IsRangeCovered(ecReadOnly, tfSelection.range, pRangeComposition))
 					{
+#ifdef TEST
+						LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. The caret moves out of composition range.");
+#endif // TEST
 						_EndComposition(pContext, true);
 					}
 				}
@@ -67,7 +70,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 			static int count{};
 			if (GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))
 			{
-				if (++count == 2)
+				if (++count == 2)		// AutoCAD文本控件坐标更新
 				{
 					count = 0;
 					_UpdateCompositionWindow(pContext);
@@ -93,18 +96,9 @@ STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext, TfLayoutCode lcode, ITfCo
 	if (pContext != _pTextEditSinkContext)
 		return S_OK;
 
-	switch (lcode)
+	if (GetBit(WeaselFlag::CARET_FOLLOWING) && lcode == TF_LC_CHANGE)
 	{
-	case TF_LC_CREATE:
-		break;
-
-	case TF_LC_CHANGE:
-		if (GetBit(WeaselFlag::CARET_FOLLOWING))
-			_UpdateCompositionWindow(pContext);
-		break;
-
-	case TF_LC_DESTROY:
-		break;
+		_UpdateCompositionWindow(pContext);
 	}
 
 	return S_OK;

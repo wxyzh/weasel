@@ -43,7 +43,7 @@ WeaselTSF::WeaselTSF()
 	_cRef = 1;
 
 	_dwThreadMgrEventSinkCookie = TF_INVALID_COOKIE;
-
+	_dwThreadFocusSinkCookie = TF_INVALID_COOKIE;
 	_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 	_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
 	_activeLanguageProfileNotifySinkCookie = TF_INVALID_COOKIE;
@@ -59,19 +59,32 @@ WeaselTSF::WeaselTSF()
 	auto hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
 
 	std::wstring name;
-	name.reserve(MAX_PATH);
-	DWORD len{ MAX_PATH };
+	DWORD len{ 1024 };
+	name.reserve(len);	
 
-	// GetProcessImageFileName(hProcess, name.data(), name.capacity());
 	auto ret = QueryFullProcessImageName(hProcess, 0, name.data(), &len);
 	CloseHandle(hProcess);
 	name = name.data();
 
-	for (const auto& item : _gameNames)
+	if (fs::path(name).filename().wstring() == L"acad.exe")
 	{
-		if (fs::path(name).filename().wstring() == item)
+		SetBit(WeaselFlag::AUTOCAD);
+	}
+
+	if (fs::path(name).filename().wstring() == L"wezterm-gui.exe")
+	{
+		SetBit(WeaselFlag::WEZTERM_FIRST_KEY);
+	}
+
+	for (size_t i{}; i < _gameNames.size(); ++i)
+	{
+		if (fs::path(name).filename().wstring() == _gameNames[i])
 		{
 			SetBit(WeaselFlag::GAME_MODE);
+			if (i == 0)
+			{
+				SetBit(WeaselFlag::GAME_WAR3);
+			}
 		}
 	}
 
@@ -153,6 +166,7 @@ STDAPI WeaselTSF::Deactivate()
 
 	_UninitActiveLanguageProfileNotifySink();
 
+	_UninitThreadFocusSink();
 	_UninitThreadMgrEventSink();
 
 	_UninitKeyEventSink();
@@ -175,7 +189,7 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	_activateFlags = dwFlags;
 	
 	_pThreadMgr = pThreadMgr;
-	_tfClientId = tfClientId;
+	_tfClientId = tfClientId;	
 
 #ifdef TEST
 	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitThreadMgrEventSink. flag = 0x{:X}", (unsigned)dwFlags);
@@ -187,6 +201,9 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	{
 		_InitTextEditSink(pDocMgrFocus);
 	}
+
+	if (!_InitThreadFocusSink())
+		goto ExitError;
 
 	if (!_InitKeyEventSink())
 		goto ExitError;
@@ -220,7 +237,7 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	_EnsureServerConnected();
 
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitCompartment");
+	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitCompartment. supportDiaplayAttribute = {:s}", GetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE));
 #endif // TEST
 
 	if (!_InitCompartment())

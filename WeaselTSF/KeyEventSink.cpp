@@ -52,14 +52,15 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 			}
 			break;
 		}
-		if (!(*pfEaten) && !_fTestKeyDownPending && !(lParam >> 31) && (isdigit(ke.keycode) || ispunct(ke.keycode)))
+		if (!(*pfEaten) && !(lParam >> 31) && (isdigit(ke.keycode) || ispunct(ke.keycode)) && !(ke.mask & (ibus::CONTROL_MASK | ibus::ALT_MASK)))
 		{
 			SetBit(WeaselFlag::EATEN);
-			_inputKey = ke.keycode;
+			_keycode = ke.keycode;
 			*pfEaten = true;
 		}
 #ifdef TEST
-		LOG(INFO) << std::format("From WeaselTSF::_ProcessKeyEvent. ke = 0x{:X}, Caps_Lock = {}", (unsigned)ke, GetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK));
+		LOG(INFO) << std::format("From WeaselTSF::_ProcessKeyEvent. ke = 0x{:X}, Caps_Lock = {}, eaten = {:s}, _inputKey = 0x{:X}", 
+			(unsigned)ke, GetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK), (bool)*pfEaten, _keycode);
 #endif // TEST
 	}
 }
@@ -102,9 +103,9 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 		*pfEaten = TRUE;
 		return S_OK;
 	}
-	if (GetBit(WeaselFlag::GAME_MODE))
+	if (GetBit(WeaselFlag::GAME_WAR3))
 	{
-		if (wParam == 0x0C)
+		if (wParam == VK_CLEAR)
 		{
 			*pfEaten = true;
 			_fTestKeyDownPending = true;
@@ -117,6 +118,11 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 	if (*pfEaten)
 	{
 		_fTestKeyDownPending = true;
+		if (GetBit(WeaselFlag::WEZTERM_FIRST_KEY))
+		{
+			ResetBit(WeaselFlag::WEZTERM_FIRST_KEY);
+			_UpdateComposition(pContext);
+		}
 	}
 	return S_OK;
 }
@@ -126,6 +132,7 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 #ifdef TEST
 	LOG(INFO) << std::format("From OnKeyDown. _fTestKeyDownPending = {}, wParam = {:#x}, lParam = {:#x}, pContext = {:#x}", _fTestKeyDownPending, wParam, lParam, (size_t)pContext);
 #endif // TEST
+	_lastKey = static_cast<unsigned short>(wParam);
 	_fTestKeyUpPending = false;
 	if (_fTestKeyDownPending)
 	{
@@ -139,7 +146,13 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 		LOG(INFO) << std::format("From OnKeyDown. *pfEaten = {}", *pfEaten);
 #endif // TEST
 	}
+	if (lParam == 0x4000'0000)
+	{
+		SetBit(WeaselFlag::RETRY_INPUT);
+		OnCompositionTerminated(_dwTextEditSinkCookie, _pComposition);
+	}
 	_UpdateComposition(pContext);
+
 	return S_OK;
 }
 

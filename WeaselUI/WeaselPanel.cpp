@@ -7,6 +7,8 @@
 #include "HorizontalLayout.h"
 #include "FullScreenLayout.h"
 #include "VHorizontalLayout.h"
+#include <xkeycheck.h>
+#define throw()
 // for IDI_ZH, IDI_EN
 #include <resource.h>
 #include "test.h"
@@ -773,15 +775,19 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 				g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 				Gdiplus::Color mark_color = Gdiplus::Color::MakeARGB(alpha, r, g, b);
 				Gdiplus::SolidBrush mk_brush(mark_color);
+				int height = min(rect.Height() - m_style.hilite_padding_y * 2, rect.Height() - m_style.round_corner * 2);
+				int width = min(rect.Width() - m_style.hilite_padding_x * 2, rect.Width() - m_style.round_corner * 2);
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 				{
-					CRect mkrc{ rect.left + m_style.round_corner, rect.top, rect.right - m_style.round_corner, rect.top + m_layout->MARK_HEIGHT / 2 };
+					int x = (rect.left + rect.Width() - width) / 2;
+					CRect mkrc{ x, rect.top, x + width, rect.top + m_layout->MARK_HEIGHT / 2 };
 					GraphicsRoundRectPath mk_path(mkrc, 2);
 					g_back.FillPath(&mk_brush, &mk_path);
 				}
 				else
 				{
-					CRect mkrc{ rect.left, rect.top + m_style.round_corner, rect.left + m_layout->MARK_WIDTH / 2, rect.bottom - m_style.round_corner };
+					int y = rect.top + (rect.Height() - height) / 2;
+					CRect mkrc{ rect.left, y, rect.left + m_layout->MARK_WIDTH / 2, y + height };
 					GraphicsRoundRectPath mk_path(mkrc, 2);
 					g_back.FillPath(&mk_brush, &mk_path);
 				}
@@ -794,7 +800,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 	{
 		// begin draw candidate texts
 		int label_text_color, candidate_text_color, comment_text_color;
-		for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+		for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i)
+		{
 			if (i == m_ctx.cinfo.highlighted)
 			{
 				label_text_color = m_style.hilited_label_text_color;
@@ -806,23 +813,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 				label_text_color = m_style.label_text_color;
 				candidate_text_color = m_style.candidate_text_color;
 				comment_text_color = m_style.comment_text_color;
-			}
-			// draw highlight mark
-			if (!m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_style.hilited_mark_color))
-			{
-				CRect rc = m_layout->GetHighlightRect();
-				if (m_istorepos) rc.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
-				rc.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
-				int vgap = m_layout->MARK_HEIGHT ? (rc.Height() - m_layout->MARK_HEIGHT) / 2 : 0;
-				int hgap = m_layout->MARK_WIDTH ? (rc.Width() - m_layout->MARK_WIDTH) / 2 : 0;
-				CRect hlRc;
-				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					hlRc = CRect(rc.left + hgap, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1,
-						rc.left + hgap + m_layout->MARK_WIDTH, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1 + m_layout->MARK_HEIGHT);
-				else
-					hlRc = CRect(rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap,
-						rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
-				_TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), m_style.hilited_mark_color, m_pDWR->pTextFormat.Get());
 			}
 			// Draw label
 			std::wstring label = m_layout->GetLabelText(labels, (int)i, m_style.label_text_format.c_str());
@@ -850,6 +840,23 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 			}
 			drawn = true;
 		}
+		// draw highlight mark
+		if (!m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_style.hilited_mark_color))
+		{
+			CRect rc = m_layout->GetHighlightRect();
+			if (m_istorepos) rc.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
+			rc.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
+			int vgap = m_layout->MARK_HEIGHT ? (rc.Height() - m_layout->MARK_HEIGHT) / 2 : 0;
+			int hgap = m_layout->MARK_WIDTH ? (rc.Width() - m_layout->MARK_WIDTH) / 2 : 0;
+			CRect hlRc;
+			if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+				hlRc = CRect(rc.left + hgap, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1,
+					rc.left + hgap + m_layout->MARK_WIDTH, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1 + m_layout->MARK_HEIGHT);
+			else
+				hlRc = CRect(rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap,
+					rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
+			_TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), m_style.hilited_mark_color, m_pDWR->pTextFormat.Get());
+		}
 	}
 	return drawn;
 }
@@ -858,10 +865,10 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
 	// turn off WS_EX_TRANSPARENT, for better resp performance
-	auto ret = ModifyStyleEx(WS_EX_TRANSPARENT, WS_EX_LAYERED);
+	bool ret = ModifyStyleEx(WS_EX_TRANSPARENT, WS_EX_LAYERED);
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::DoPaint. m_inputPos.left = {}, m_inputPos.top = {}, hide_candidates = {}, m_ctx.empty() = {}, m_status.composing = {}, inline_preedit = {}, ret = {}, m_candidateCount = {}",
-		m_inputPos.left, m_inputPos.top, hide_candidates, m_ctx.empty(), m_status.composing, m_style.inline_preedit, ret, m_candidateCount);
+	LOG(INFO) << std::format("From WeaselPanel::DoPaint. m_inputPos.left = {}, m_inputPos.top = {}, hide_candidates = {}, m_ctx.empty() = {}, m_status.composing = {}, inline_preedit = {}, m_candidateCount = {}, ret = {:s}",
+		m_inputPos.left, m_inputPos.top, hide_candidates, m_ctx.empty(), m_status.composing, m_style.inline_preedit, m_candidateCount, ret);
 #endif // TEST
 
 	GetClientRect(&rcw);
@@ -1007,6 +1014,7 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+	m_sticky = false;
 	delete m_layout;
 	m_layout = nullptr;
 	return 0;
@@ -1113,8 +1121,9 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	}
 	saved_bottom = rcWorkArea.bottom;
 
-	if (rcWorkArea.bottom < y)
+	if (rcWorkArea.bottom < y || m_sticky)
 	{
+		m_sticky = true;
 		y = m_inputPos.top - height;					// over workarea bottom
 		reversed = true;
 
@@ -1122,16 +1131,16 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		if (m_style.shadow_radius > 0)
 			y += (m_style.shadow_offset_y < 0 || COLORTRANSPARENT(m_style.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
 	}
-
+	
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. Second: x = {}, y = {}, adj = {}", x, y, adj);
+	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. Second: x = {}, y = {}, adj = {}, hwnd = 0x{:X}, hwndParent = 0x{:X}, reverse = {:s}", x, y, adj, (size_t)m_hWnd, (size_t)parentWindow.m_hWnd, (bool)m_style.vertical_auto_reverse);
 #endif // TEST
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
-	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREDRAW);
+	SetWindowPos(nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOREDRAW);
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. Third: x = {}, y = {}", x, y);
+	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. Third: x = {}, y = {}, isWindow = {:s}", x, y, (bool)::IsWindow(m_hWnd));
 #endif // TEST
 }
 

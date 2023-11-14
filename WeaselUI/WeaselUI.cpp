@@ -9,6 +9,9 @@
 #include "logging.h"
 #endif // TEST
 
+// #define WS_IIME			WS_POPUP | WS_CLIPSIBLINGS | WS_DISABLED
+// #define WS_EX_IIME		WS_EX_TOOLWINDOW | WS_EX_TOPMOST
+
 using namespace weasel;
 
 struct UI::Data
@@ -79,6 +82,9 @@ void UI::UIImpl::Show()
 #endif // TEST
 	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_SHOWNA);
+#ifdef TEST
+	LOG(INFO) << std::format("From UIImpl::Show. timer = {}", timer);
+#endif // TEST
 	m_ui.m_data->shown = true;
 	if (timer)
 	{
@@ -152,8 +158,14 @@ bool UI::Create(HWND parent)
 	{
 		pimpl_ = std::make_unique<UIImpl>(*this);
 	}
-
+#ifdef TEST
+	LOG(INFO) << std::format("From UI::Create. make_unique<UIImpl>(*this)");
+#endif // TEST
 	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT, 0U, 0);
+	// pimpl_->panel.Create(parent, 0, 0, WS_IIME, WS_EX_IIME, 0U, 0);
+#ifdef TEST
+	LOG(INFO) << std::format("From UI::Create. done.");
+#endif // TEST
 	return true;
 }
 

@@ -1,6 +1,6 @@
 module;
 #include "stdafx.h"
-// #include "test.h"
+#include "test.h"
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
@@ -12,6 +12,9 @@ import WeaselUtility;
 
 void WeaselTSF::_StartComposition(ITfContext* pContext, bool not_inline_preedit)
 {
+#ifdef TEST
+	LOG(INFO) << std::format("From _StartComposition.");
+#endif // TEST
 	com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
 	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, not_inline_preedit));
 	_cand->StartUI();
@@ -149,29 +152,33 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 	// Silly M$.
 #ifdef TEST
 	LOG(INFO) << std::format("From OnCompositionTerminated. _AbortComposition. _AutoCADTest = {}", GetBit(WeaselFlag::AUTOCAD));
-#endif // TEST
+#endif // TEST	
 	_AbortComposition();
+
+	if (GetBit(WeaselFlag::AUTOCAD))
+	{
+		if (GetBit(WeaselFlag::RETRY_INPUT))
+		{
+			ResetBit(WeaselFlag::RETRY_INPUT);
+			RetryKey();
+		}
+		
+	}
+	else if (!GetBit(WeaselFlag::FOCUS_CHANGED))
+	{
+		if (GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))
+		{
+			SetBit(WeaselFlag::RETRY_COMPOSITION);
+			RetryKey();
+		}
+	}
 
 	return S_OK;
 }
 
 void WeaselTSF::_AbortComposition(bool clear)
 {
-	if (GetBit(WeaselFlag::AUTOCAD))
-	{
-		ResetBit(WeaselFlag::AUTOCAD);
-		if (/*GetBit(WeaselFlag::DYNAMIC_INPUT) || */GetBit(WeaselFlag::NON_DYNAMIC_INPUT))
-		{			
-			// ResetBit(WeaselFlag::DYNAMIC_INPUT);
-			ResetBit(WeaselFlag::NON_DYNAMIC_INPUT);
-			BOOL eaten;
-			_ProcessKeyEvent(0x8, 0xE001, &eaten);
-		}
-	}
-	else
-	{
-		m_client.ClearComposition();
-	}
+	m_client.ClearComposition();
 
 	if (_IsComposing()) {
 		_EndComposition(_pEditSessionContext, clear);
@@ -192,4 +199,17 @@ void WeaselTSF::_SetComposition(ITfComposition* pComposition)
 BOOL WeaselTSF::_IsComposing()
 {
 	return _pComposition != NULL;
+}
+
+bool WeaselTSF::RetryKey()
+{
+	unsigned send{};
+	std::array<INPUT, 1> inputs;
+
+	inputs[0].type = INPUT_KEYBOARD;
+	inputs[0].ki = { _lastKey, _lastKey, 0, 0, 0 };
+
+	send = SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
+
+	return send == 1;
 }
