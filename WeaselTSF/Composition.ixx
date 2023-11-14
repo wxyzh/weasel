@@ -151,13 +151,8 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		tfSelection.style.fInterimChar = FALSE;
 		hr = _pContext->SetSelection(ec, 1, &tfSelection);
 	}
-
-	com_ptr<ITfProperty> pProperty;
-	_pContext->GetProperty(GUID_PROP_COMPOSING, &pProperty);
-	VARIANT var;
-	pProperty->GetValue(ec, pRangeComposition, &var);
 #ifdef TEST
-	LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. hr = {:#x}, property = {:s}", (unsigned)hr, (bool)var.boolVal);
+	LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. hr = {:#x}", (unsigned)hr);
 #endif // TEST
 
 	return hr;
@@ -204,15 +199,11 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 		// note: selection.range is always an empty range
 		hr = _pContext->GetEnd(ec, &pRangeComposition);
 	}
-	com_ptr<ITfProperty> pProperty;
-	_pContext->GetProperty(GUID_PROP_COMPOSING, &pProperty);
-	VARIANT var;
-	pProperty->GetValue(ec, pRangeComposition, &var);
 
 	hr = _pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped);
 #ifdef TEST
-	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {:s}, property = {:s}", 
-		rc.left, rc.top, (unsigned)hr, (bool)fClipped, (bool)var.boolVal);
+	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {:s}", 
+		rc.left, rc.top, (unsigned)hr, (bool)fClipped);
 #endif // TEST
 	if (hr == 0x80040057)
 	{

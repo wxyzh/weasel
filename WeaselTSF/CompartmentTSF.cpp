@@ -165,13 +165,10 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 #endif // TEST
 	}
 	else if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION))
-	{
-		/*weasel::ResponseParser parser(nullptr, nullptr, &_status, nullptr, &_cand->style());
-		bool ok = m_client.GetResponseData(std::ref(parser));
-		_UpdateLanguageBar(_status);*/
+	{		
+#ifdef TEST
 		DWORD flag;
 		_pCompartmentConversion->_GetCompartmentDWORD(flag);
-#ifdef TEST
 		LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION, flag = 0x{:X}", (unsigned)flag);
 #endif // TEST
 	}

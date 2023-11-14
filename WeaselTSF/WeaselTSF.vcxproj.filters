@@ -118,9 +118,6 @@
     <ClCompile Include="WeaselTSF.ixx">
       <Filter>Module Files</Filter>
     </ClCompile>
-    <ClCompile Include="ThreadFocusSink.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="StatusSink.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

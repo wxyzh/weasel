@@ -22,7 +22,6 @@ export
 		public ITfTextLayoutSink,
 		public ITfKeyEventSink,
 		public ITfCompositionSink,
-		public ITfThreadFocusSink,
 		public ITfActiveLanguageProfileNotifySink,
 		public ITfEditSession,
 		public ITfDisplayAttributeProvider,
@@ -64,10 +63,6 @@ export
 		STDMETHODIMP OnTestKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten);
 		STDMETHODIMP OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten);
 		STDMETHODIMP OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEaten);
-
-		// ITfThreadFocusSink
-		STDMETHODIMP OnSetThreadFocus();
-		STDMETHODIMP OnKillThreadFocus();
 
 		/* ITfCompositionSink */
 		STDMETHODIMP OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* pComposition);
@@ -182,9 +177,6 @@ export
 		void _UninitCompartment();
 		HRESULT _HandleCompartment(REFGUID guidCompartment);
 
-		BOOL _InitThreadFocusSink();
-		void _UninitThreadFocusSink();
-
 		BOOL _InitStatusSink();
 		void _UninitStatusSink();
 
@@ -195,7 +187,6 @@ export
 		com_ptr<ITfThreadMgr> _pThreadMgr;
 		TfClientId _tfClientId;
 		DWORD _dwThreadMgrEventSinkCookie;
-		DWORD _dwThreadFocusSinkCookie;
 
 		com_ptr<ITfContext> _pTextEditSinkContext;
 		DWORD _dwTextEditSinkCookie, _dwTextLayoutSinkCookie;

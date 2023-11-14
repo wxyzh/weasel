@@ -43,7 +43,6 @@ WeaselTSF::WeaselTSF()
 	_cRef = 1;
 
 	_dwThreadMgrEventSinkCookie = TF_INVALID_COOKIE;
-	_dwThreadFocusSinkCookie = TF_INVALID_COOKIE;
 	_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 	_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
 	_activeLanguageProfileNotifySinkCookie = TF_INVALID_COOKIE;
@@ -123,8 +122,6 @@ STDAPI WeaselTSF::QueryInterface(REFIID riid, void **ppvObject)
 		*ppvObject = (ITfCompositionSink*)this;
 	else if (IsEqualIID(riid, IID_ITfEditSession))
 		*ppvObject = (ITfEditSession*)this;
-	else if (IsEqualIID(riid, IID_ITfThreadFocusSink))
-		*ppvObject = (ITfThreadFocusSink*)this;
 	else if (IsEqualIID(riid, IID_ITfDisplayAttributeProvider))
 		*ppvObject = (ITfDisplayAttributeProvider*)this;
 
@@ -166,7 +163,6 @@ STDAPI WeaselTSF::Deactivate()
 
 	_UninitActiveLanguageProfileNotifySink();
 
-	_UninitThreadFocusSink();
 	_UninitThreadMgrEventSink();
 
 	_UninitKeyEventSink();
@@ -201,9 +197,6 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	{
 		_InitTextEditSink(pDocMgrFocus);
 	}
-
-	if (!_InitThreadFocusSink())
-		goto ExitError;
 
 	if (!_InitKeyEventSink())
 		goto ExitError;
