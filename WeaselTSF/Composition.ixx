@@ -152,7 +152,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		hr = _pContext->SetSelection(ec, 1, &tfSelection);
 	}
 #ifdef TEST
-	LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. hr = {:#x}", (unsigned)hr);
+	LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. hr = 0x{:X}", (unsigned)hr);
 #endif // TEST
 
 	return hr;
@@ -176,7 +176,7 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 
 	auto hr = _pComposition->EndComposition(ec);
 #ifdef TEST
-	LOG(INFO) << std::format("From CEndCompositionEditSession::DoEditSession. hr = {:#x}", (unsigned)hr);
+	LOG(INFO) << std::format("From CEndCompositionEditSession::DoEditSession. hr = 0x{:X}", (unsigned)hr);
 #endif // TEST
 	_pTextService->_FinalizeComposition();
 	return hr;
@@ -189,11 +189,7 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	BOOL fClipped;
 	HRESULT hr;
 
-	if (_pComposition != nullptr && SUCCEEDED(_pComposition->GetRange(&pRangeComposition)))
-	{
-
-	}
-	else
+	if (_pComposition == nullptr || FAILED(_pComposition->GetRange(&pRangeComposition)))
 	{
 		// composition end
 		// note: selection.range is always an empty range

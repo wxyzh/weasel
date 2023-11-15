@@ -2,6 +2,8 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/string.hpp>
 
+// #include <boost/serialization/vector.hpp>
+
 #define WEASEL_IME_NAME		L"小狼毫"
 #define WEASEL_REG_KEY		L"Software\\Rime\\Weasel"
 #define RIME_REG_KEY		L"Software\\Rime"

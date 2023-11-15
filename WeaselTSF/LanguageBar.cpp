@@ -309,14 +309,10 @@ void CLangBarItemButton::RightClick(POINT& pt)
 		CheckMenuItem(hSubMenu, ID_STYLE_CARET_FOLLOWING, 
 			MF_BYCOMMAND | (_textService.GetBit(WeaselFlag::CARET_FOLLOWING) ? MF_CHECKED : MF_UNCHECKED));
 		
-		VARIANT var{};
-		if (SUCCEEDED(_textService._GetGlobalCompartmentDaemon()->GetValue(&var)))
-		{
-			if (var.vt == VT_I4)
-			{
-				_textService.SetBit(WeaselFlag::DAEMON_ENABLE, var.bVal);
-			}
-		}
+		_textService.UpdateGlobalCompartment(false);
+		CheckMenuItem(hSubMenu, ID_STYLE_PRESERVED_KEY_SWITCH,
+			MF_BYCOMMAND | (_textService.GetBit(WeaselFlag::PRESERVED_KEY_SWITCH) ? MF_CHECKED : MF_UNCHECKED));
+
 		CheckMenuItem(popupMenu, ID_WEASELTRAY_DAEMON_ENABLE, 
 			MF_BYCOMMAND | (_textService.GetBit(WeaselFlag::DAEMON_ENABLE) ? MF_CHECKED : MF_UNCHECKED));
 		UINT wID = TrackPopupMenuEx(popupMenu, TPM_CENTERALIGN | TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x, pt.y - 32, hwnd, NULL);

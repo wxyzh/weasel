@@ -24,8 +24,7 @@ export
 		public ITfCompositionSink,
 		public ITfActiveLanguageProfileNotifySink,
 		public ITfEditSession,
-		public ITfDisplayAttributeProvider,
-		public ITfStatusSink
+		public ITfDisplayAttributeProvider
 	{
 	public:
 		WeaselTSF();
@@ -76,9 +75,6 @@ export
 		// ITfDisplayAttributeProvider
 		STDMETHODIMP EnumDisplayAttributeInfo(__RPC__deref_out_opt IEnumTfDisplayAttributeInfo** ppEnum);
 		STDMETHODIMP GetDisplayAttributeInfo(__RPC__in REFGUID guidInfo, __RPC__deref_out_opt ITfDisplayAttributeInfo** ppInfo);
-
-		// ITfStatusSink
-		STDMETHODIMP OnStatusChange(__in ITfContext* pContext, __in DWORD dwFlags);
 
 		/* ITfCompartmentEventSink */
 		// STDMETHODIMP OnChange(_In_ REFGUID guid);
@@ -132,15 +128,19 @@ export
 		void SetBit(WeaselFlag flag, bool value) { _bitset.set(static_cast<int>(flag), value); }
 		void ResetBit(WeaselFlag flag) { _bitset.reset(static_cast<int>(flag)); }
 		bool GetBit(WeaselFlag flag) const { return _bitset[static_cast<int>(flag)]; }
+		void Flip(WeaselFlag flag) { _bitset.flip(static_cast<size_t>(flag)); }
 
 		bool execute(std::wstring_view cmd, std::wstring_view args = L"");
 		bool explore(std::wstring_view path);
-		com_ptr<ITfCompartment> _GetGlobalCompartmentDaemon() { return _pGlobalCompartmentDaemon; }
+		// com_ptr<ITfCompartment> _GetGlobalCompartmentDaemon() { return _pGlobalCompartment; }
 		void SetRect(const RECT& rc) { m_rcFallback = rc; }
 		RECT GetRect() const { return m_rcFallback; }
 		WCHAR GetInput() const { return static_cast<WCHAR>(_keycode); }
 
 		bool RetryKey();
+
+		// write in if true, read out if false
+		void UpdateGlobalCompartment(bool in = true);
 
 	private:
 		// ui callback functions
@@ -155,7 +155,7 @@ export
 
 		BOOL _InitKeyEventSink();
 		void _UninitKeyEventSink();
-		void _ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten);
+		void _ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten, bool isTest = false);
 
 		BOOL _InitActiveLanguageProfileNotifySink();
 		void _UninitActiveLanguageProfileNotifySink();
@@ -177,9 +177,6 @@ export
 		void _UninitCompartment();
 		HRESULT _HandleCompartment(REFGUID guidCompartment);
 
-		BOOL _InitStatusSink();
-		void _UninitStatusSink();
-
 		bool isImmersive() const {
 			return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;
 		}
@@ -196,7 +193,7 @@ export
 		std::wstring _editSessionText;
 
 		std::unique_ptr<CCompartment> _pCompartmentConversion;
-		com_ptr<ITfCompartment> _pGlobalCompartmentDaemon;
+		com_ptr<ITfCompartment> _pGlobalCompartment;
 		com_ptr<CCompartmentEventSink> _pKeyboardCompartmentSink;
 		com_ptr<CCompartmentEventSink> _pConversionCompartmentSink;
 
@@ -230,9 +227,6 @@ export
 
 		// The cookie of ActiveLanguageProfileNotifySink
 		DWORD _activeLanguageProfileNotifySinkCookie;
-
-		// The cookie of StatusSink
-		DWORD _dwStatusSinkCookie;
 
 		RECT m_rcFallback{};
 
@@ -276,6 +270,7 @@ export
 		GAME_WAR3,
 		CLEAR_CAND_LIST,
 		CLEAR_DOWN,
-		CLEAR_FLAG
+		CLEAR_FLAG,
+		PRESERVED_KEY_SWITCH
 	};
 }

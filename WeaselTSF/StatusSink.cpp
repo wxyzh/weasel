@@ -21,11 +21,19 @@ BOOL WeaselTSF::_InitStatusSink()
 
 	if (FAILED(_pThreadMgr->QueryInterface(&pSource)))
 	{
+#ifdef TEST
+		LOG(INFO) << std::format("WeaselTSF::_InitStatusSink. First.");
+#endif // TEST
 		return FALSE;
 	}
-
-	if (FAILED(pSource->AdviseSink(IID_ITfStatusSink, (ITfStatusSink*)this, &_dwStatusSinkCookie)))
+	E_INVALIDARG;
+	CONNECT_E_CANNOTCONNECT;
+	auto hr = pSource->AdviseSink(IID_ITfStatusSink, (ITfStatusSink*)this, &_dwStatusSinkCookie);
+	if (FAILED(hr))
 	{
+#ifdef TEST
+		LOG(INFO) << std::format("WeaselTSF::_InitStatusSink. Second. hr = 0x{:X}", (unsigned)hr);
+#endif // TEST
 		return FALSE;
 	}
 

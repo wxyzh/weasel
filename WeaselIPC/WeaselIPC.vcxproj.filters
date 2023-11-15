@@ -93,9 +93,6 @@
     <ClCompile Include="Styler.ixx">
       <Filter>Module Files\Deserializer</Filter>
     </ClCompile>
-    <ClCompile Include="WeaselSchemas.ixx">
-      <Filter>Module Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

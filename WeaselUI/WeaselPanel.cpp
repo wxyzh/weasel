@@ -779,7 +779,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 				int width = min(rect.Width() - m_style.hilite_padding_x * 2, rect.Width() - m_style.round_corner * 2);
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 				{
-					int x = (rect.left + rect.Width() - width) / 2;
+					int x = rect.left + (rect.Width() - width) / 2;
 					CRect mkrc{ x, rect.top, x + width, rect.top + m_layout->MARK_HEIGHT / 2 };
 					GraphicsRoundRectPath mk_path(mkrc, 2);
 					g_back.FillPath(&mk_brush, &mk_path);
@@ -1123,7 +1123,8 @@ void WeaselPanel::_RepositionWindow(bool adj)
 
 	if (rcWorkArea.bottom < y || m_sticky)
 	{
-		m_sticky = true;
+		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+			m_sticky = true;
 		y = m_inputPos.top - height;					// over workarea bottom
 		reversed = true;
 

@@ -276,7 +276,6 @@
     <ClCompile Include="Committer.cpp" />
     <ClCompile Include="ContextUpdater.cpp" />
     <ClCompile Include="WeaselClientImpl.ixx" />
-    <ClCompile Include="WeaselSchemas.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />

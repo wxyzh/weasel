@@ -1,6 +1,8 @@
+module;
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/string.hpp>
 export module WeaselSchemas;
-import <boost/serialization/vector.hpp>;
-import <boost/serialization/string.hpp>;
+
 
 export
 {

@@ -215,9 +215,6 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 		ResetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);
 	}
 
-	if (!_InitPreservedKey())
-		goto ExitError;	
-
 	if (!_InitLanguageBar())
 		goto ExitError;
 
@@ -235,6 +232,9 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 
 	if (!_InitCompartment())
 		goto ExitError;	
+
+	if (GetBit(WeaselFlag::PRESERVED_KEY_SWITCH))
+		_InitPreservedKey();
 
 	return S_OK;
 
@@ -277,14 +277,7 @@ void WeaselTSF::_EnsureServerConnected()
 		}
 		if (!m_client.Echo())
 		{
-			VARIANT var{};
-			if (SUCCEEDED(_GetGlobalCompartmentDaemon()->GetValue(&var)))
-			{
-				if (var.vt == VT_I4)
-				{
-					SetBit(WeaselFlag::DAEMON_ENABLE, var.bVal);
-				}
-			}
+			UpdateGlobalCompartment();
 			if (GetBit(WeaselFlag::DAEMON_ENABLE))
 			{
 				execute(std::format(LR"({}\WeaselServer.exe)", WeaselRootPath()));

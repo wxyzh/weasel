@@ -235,12 +235,12 @@ HRESULT WeaselTSF::_InitGlobalCompartment()
 
 	if (SUCCEEDED(ret))
 	{
-		ret = pDaemonCompartment->GetCompartment(WEASEL_COMPARTMENT_GLOAL_DEAMON, &_pGlobalCompartmentDaemon);
+		ret = pDaemonCompartment->GetCompartment(WEASEL_COMPARTMENT_GLOAL_DEAMON, &_pGlobalCompartment);
 
 		if (SUCCEEDED(ret))
 		{
 			VARIANT var{};
-			ret = _pGlobalCompartmentDaemon->GetValue(&var);
+			ret = _pGlobalCompartment->GetValue(&var);
 
 			if (SUCCEEDED(ret))
 			{
@@ -248,20 +248,54 @@ HRESULT WeaselTSF::_InitGlobalCompartment()
 				{
 					if ((var.lVal & 0xFF00) != 0xFC00)
 					{
-						var.lVal = 0xFC01;
-						ret = _pGlobalCompartmentDaemon->SetValue(_tfClientId, &var);
+						var.lVal = 0xFC03;
+						ret = _pGlobalCompartment->SetValue(_tfClientId, &var);
+						SetBit(WeaselFlag::DAEMON_ENABLE);
+						SetBit(WeaselFlag::PRESERVED_KEY_SWITCH);
 
+					}
+					else
+					{
+						byte value = var.bVal;
+						SetBit(WeaselFlag::DAEMON_ENABLE, static_cast<bool>(value & 0x1));
+						SetBit(WeaselFlag::PRESERVED_KEY_SWITCH, static_cast<bool>(value & 0x2));
 					}
 				}
 				else
 				{
 					var.vt = VT_I4;
-					var.lVal = 0xFC01;
-					ret = _pGlobalCompartmentDaemon->SetValue(_tfClientId, &var);
+					var.lVal = 0xFC03;
+					ret = _pGlobalCompartment->SetValue(_tfClientId, &var);
+					SetBit(WeaselFlag::DAEMON_ENABLE);
+					SetBit(WeaselFlag::PRESERVED_KEY_SWITCH);
 				}
 			}
 
 		}
 	}
 	return ret;
+}
+
+void WeaselTSF::UpdateGlobalCompartment(bool in)
+{
+	VARIANT var{};
+
+	if (in)
+	{
+		var.vt = VT_I4;
+		byte v1 = GetBit(WeaselFlag::DAEMON_ENABLE) ? 1 : 0;
+		byte v2 = GetBit(WeaselFlag::PRESERVED_KEY_SWITCH) ? 2 : 0;
+		var.lVal = 0xFC00 | v1 | v2;
+
+		_pGlobalCompartment->SetValue(_tfClientId, &var);
+	}
+	else if (SUCCEEDED(_pGlobalCompartment->GetValue(&var)))
+	{
+		if (var.vt == VT_I4)
+		{
+			byte value = var.bVal;
+			SetBit(WeaselFlag::DAEMON_ENABLE, value & 0x1);
+			SetBit(WeaselFlag::PRESERVED_KEY_SWITCH, value & 0x2);
+		}
+	}
 }

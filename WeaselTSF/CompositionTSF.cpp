@@ -155,7 +155,7 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 #endif // TEST	
 	_AbortComposition();
 
-	if (GetBit(WeaselFlag::AUTOCAD))
+	if (GetBit(WeaselFlag::AUTOCAD))					// 无焦点输入时，AutoCAD会终止首码的合成
 	{
 		if (GetBit(WeaselFlag::RETRY_INPUT))
 		{
@@ -164,9 +164,9 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 		}
 		
 	}
-	else if (!GetBit(WeaselFlag::FOCUS_CHANGED))
+	else if (!GetBit(WeaselFlag::FOCUS_CHANGED))		// 排除失去焦点
 	{
-		if (GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))
+		if (GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))	// 重发意外终止的首码事件
 		{
 			SetBit(WeaselFlag::RETRY_COMPOSITION);
 			RetryKey();

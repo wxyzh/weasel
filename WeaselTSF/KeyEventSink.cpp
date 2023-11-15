@@ -11,7 +11,7 @@ import WeaselIPC;
 import KeyEvent;
 import CandidateList;
 
-void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
+void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten, bool isTest)
 {
 	if (!_IsKeyboardOpen())
 		return;
@@ -52,7 +52,7 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 			}
 			break;
 		}
-		if (!(*pfEaten) && !(lParam >> 31) && (isdigit(ke.keycode) || ispunct(ke.keycode)) && !(ke.mask & (ibus::CONTROL_MASK | ibus::ALT_MASK)))
+		if (!isTest && !(*pfEaten) && !(lParam >> 31) && (isdigit(ke.keycode) || ispunct(ke.keycode)) && !(ke.mask & (ibus::CONTROL_MASK | ibus::ALT_MASK)))
 		{
 			SetBit(WeaselFlag::EATEN);
 			_keycode = ke.keycode;
@@ -114,7 +114,7 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 			return S_OK;
 		}
 	}
-	_ProcessKeyEvent(wParam, lParam, pfEaten);
+	_ProcessKeyEvent(wParam, lParam, pfEaten, true);
 	if (*pfEaten)
 	{
 		_fTestKeyDownPending = true;
@@ -146,7 +146,7 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 		LOG(INFO) << std::format("From OnKeyDown. *pfEaten = {}", *pfEaten);
 #endif // TEST
 	}
-	if (lParam == 0x4000'0000)
+	if (lParam == 0x4000'0000 || lParam == 0x4000'0001)
 	{
 		SetBit(WeaselFlag::RETRY_INPUT);
 		OnCompositionTerminated(_dwTextEditSinkCookie, _pComposition);
@@ -173,7 +173,7 @@ STDAPI WeaselTSF::OnTestKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam
 		_UpdateComposition(pContext);
 		return S_OK;
 	}
-	_ProcessKeyEvent(wParam, lParam, pfEaten);
+	_ProcessKeyEvent(wParam, lParam, pfEaten, true);
 	_UpdateComposition(pContext);
 	if (*pfEaten)
 	{
@@ -221,7 +221,7 @@ STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEa
 	else if (IsEqualGUID(rguid, WEASEL_DAEMON_PRESERVED_KEY))
 	{
 		_bitset.flip(static_cast<int>(WeaselFlag::DAEMON_ENABLE));
-		if (_pGlobalCompartmentDaemon)
+		if (_pGlobalCompartment)
 		{
 			VARIANT var{};
 			var.vt = VT_I4;
@@ -233,7 +233,7 @@ STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEa
 			{
 				var.lVal = 0xFC00;
 			}
-			_pGlobalCompartmentDaemon->SetValue(_tfClientId, &var);
+			_pGlobalCompartment->SetValue(_tfClientId, &var);
 		}
 	}
 	return S_OK;

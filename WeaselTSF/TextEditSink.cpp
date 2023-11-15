@@ -88,7 +88,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext, TfLayoutCode lcode, ITfContextView* pContextView)
 {
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnLayoutChange. lcode = {:#x}", (unsigned)lcode);
+	LOG(INFO) << std::format("From WeaselTSF::OnLayoutChange. pContext = 0x{:X}, _pTextEditSinkContext = 0x{:X}", (size_t)pContext, (size_t)_pTextEditSinkContext.p);
 #endif // TEST
 	if (!_IsComposing())
 		return S_OK;
@@ -96,7 +96,7 @@ STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext, TfLayoutCode lcode, ITfCo
 	if (pContext != _pTextEditSinkContext)
 		return S_OK;
 
-	if (GetBit(WeaselFlag::CARET_FOLLOWING) && lcode == TF_LC_CHANGE)
+	if (GetBit(WeaselFlag::CARET_FOLLOWING))
 	{
 		_UpdateCompositionWindow(pContext);
 	}

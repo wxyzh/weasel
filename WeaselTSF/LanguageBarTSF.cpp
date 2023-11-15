@@ -57,21 +57,8 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 
 	case ID_WEASELTRAY_DAEMON_ENABLE:
 	{
-		HRESULT hr;
-		if (_pGlobalCompartmentDaemon)
-		{
-			VARIANT var{};
-			var.vt = VT_I4;
-			if (GetBit(WeaselFlag::DAEMON_ENABLE))
-			{
-				var.lVal = 0xFC00;
-			}
-			else
-			{
-				var.lVal = 0xFC01;
-			}
-			hr = _pGlobalCompartmentDaemon->SetValue(_tfClientId, &var);
-		}
+		Flip(WeaselFlag::DAEMON_ENABLE);
+		UpdateGlobalCompartment();
 #ifdef TEST
 		LOG(INFO) << std::format("From WeaselTSF::_HandleLangBarMenuSelect. hr = {:#x}", (size_t)hr);
 #endif // TEST
@@ -89,6 +76,15 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 	case ID_STYLE_CARET_FOLLOWING:
 		_bitset.flip(static_cast<int>(WeaselFlag::CARET_FOLLOWING));
 		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
+		break;
+
+	case ID_STYLE_PRESERVED_KEY_SWITCH:
+		Flip(WeaselFlag::PRESERVED_KEY_SWITCH);
+		UpdateGlobalCompartment();
+		if (GetBit(WeaselFlag::PRESERVED_KEY_SWITCH))
+			_InitPreservedKey();
+		else
+			_UninitPreservedKey();
 		break;
 
 DEFAULT:
