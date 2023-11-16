@@ -1134,7 +1134,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	}
 	
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. Second: x = {}, y = {}, adj = {}, hwnd = 0x{:X}, hwndParent = 0x{:X}, reverse = {:s}", x, y, adj, (size_t)m_hWnd, (size_t)parentWindow.m_hWnd, (bool)m_style.vertical_auto_reverse);
+	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. Second: x = {}, y = {}, adj = {}, hwnd = 0x{:X}, reverse = {:s}", x, y, adj, (size_t)m_hWnd, (bool)m_style.vertical_auto_reverse);
 #endif // TEST
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)
