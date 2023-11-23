@@ -124,6 +124,8 @@ STDAPI WeaselTSF::QueryInterface(REFIID riid, void **ppvObject)
 		*ppvObject = (ITfEditSession*)this;
 	else if (IsEqualIID(riid, IID_ITfDisplayAttributeProvider))
 		*ppvObject = (ITfDisplayAttributeProvider*)this;
+	else if (IsEqualIID(riid, IID_ITfCleanupContextDurationSink))
+		*ppvObject = (ITfCleanupContextDurationSink*)this;
 
 	if (*ppvObject)
 	{
@@ -162,6 +164,7 @@ STDAPI WeaselTSF::Deactivate()
 	_InitTextEditSink();
 
 	_UninitActiveLanguageProfileNotifySink();
+	_UninitCleanupContextDurationSink();
 
 	_UninitThreadMgrEventSink();
 
@@ -197,6 +200,9 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	{
 		_InitTextEditSink(pDocMgrFocus);
 	}
+
+	if (!_InitCleanupContextDurationSink())
+		goto ExitError;
 
 	if (!_InitKeyEventSink())
 		goto ExitError;

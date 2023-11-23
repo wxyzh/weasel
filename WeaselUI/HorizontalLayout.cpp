@@ -95,7 +95,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 
 			/* Text */
 			w += _style.hilite_spacing;
-			const std::wstring& text = candidates.at(i).str;
+			std::wstring_view text = candidates.at(i).str;
 			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
 			_candidateTextRects[i].SetRect(w, height, w + size.cx * textFontValid, height + size.cy);
 			w += size.cx * textFontValid;
@@ -104,7 +104,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 			/* Comment */
 			if (!comments.at(i).str.empty() && cmtFontValid )
 			{
-				const std::wstring& comment = comments.at(i).str;
+				std::wstring_view comment = comments.at(i).str;
 				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
 				w += _style.hilite_spacing;
 				_candidateCommentRects[i].SetRect(w, height, w + size.cx * cmtFontValid, height + size.cy);

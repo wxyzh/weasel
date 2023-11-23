@@ -167,7 +167,7 @@ STDAPI WeaselTSF::OnTestKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam
 		*pfEaten = TRUE;
 		return S_OK;
 	}
-	if (GetBit(WeaselFlag::GAME_MODE) && wParam == 0x0C)
+	if (GetBit(WeaselFlag::GAME_WAR3) && wParam == VK_CLEAR)
 	{
 		ResetBit(WeaselFlag::CLEAR_DOWN);
 		_UpdateComposition(pContext);
@@ -211,29 +211,29 @@ STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEa
 	*pfEaten = FALSE;
 	if (IsEqualGUID(rguid, WEASEL_UILESS_MODE_PRESERVED_KEY))
 	{
-		_bitset.flip(static_cast<int>(WeaselFlag::GAME_MODE));
+		if (GetBit(WeaselFlag::GAME_MODE))
+		{
+			SetBit(WeaselFlag::GAME_MODE_SELF_REDRAW);
+			ResetBit(WeaselFlag::CARET_FOLLOWING);
+			_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
+		}
+		else
+		{
+			ResetBit(WeaselFlag::GAME_MODE_SELF_REDRAW);
+		}
+		Flip(WeaselFlag::GAME_MODE);
 	}
 	else if (IsEqualGUID(rguid, WEASEL_CARET_FOLLOWING_PRESERVED_KEY))
 	{
-		_bitset.flip(static_cast<int>(WeaselFlag::CARET_FOLLOWING));
+		Flip(WeaselFlag::CARET_FOLLOWING);
 		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
 	}
 	else if (IsEqualGUID(rguid, WEASEL_DAEMON_PRESERVED_KEY))
 	{
-		_bitset.flip(static_cast<int>(WeaselFlag::DAEMON_ENABLE));
+		Flip(WeaselFlag::DAEMON_ENABLE);
 		if (_pGlobalCompartment)
 		{
-			VARIANT var{};
-			var.vt = VT_I4;
-			if (GetBit(WeaselFlag::DAEMON_ENABLE))
-			{
-				var.lVal = 0xFC01;
-			}
-			else
-			{
-				var.lVal = 0xFC00;
-			}
-			_pGlobalCompartment->SetValue(_tfClientId, &var);
+			UpdateGlobalCompartment(true);
 		}
 	}
 	return S_OK;

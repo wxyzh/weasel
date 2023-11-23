@@ -24,7 +24,8 @@ export
 		public ITfCompositionSink,
 		public ITfActiveLanguageProfileNotifySink,
 		public ITfEditSession,
-		public ITfDisplayAttributeProvider
+		public ITfDisplayAttributeProvider,
+		public ITfCleanupContextDurationSink
 	{
 	public:
 		WeaselTSF();
@@ -84,6 +85,10 @@ export
 		BOOL _IsKeyboardOpen();
 		HRESULT _SetKeyboardOpen(BOOL fOpen);
 
+		/* ITfCleanupContextDurationSink */		
+		STDMETHODIMP OnStartCleanupContext();
+		STDMETHODIMP OnEndCleanupContext();
+
 		/* Composition */
 		void _StartComposition(ITfContext* pContext, bool not_inline_preedit);
 		void _EndComposition(ITfContext* pContext, BOOL clear);
@@ -138,9 +143,12 @@ export
 		WCHAR GetInput() const { return static_cast<WCHAR>(_keycode); }
 
 		bool RetryKey();
+		void RetryFailedEvent();
+		SIZE GetScreenResolution();
 
 		// write in if true, read out if false
 		void UpdateGlobalCompartment(bool in = true);
+		void SetHWND(HWND hwnd) { m_hwnd = hwnd; }
 
 	private:
 		// ui callback functions
@@ -176,6 +184,9 @@ export
 		BOOL _InitCompartment();
 		void _UninitCompartment();
 		HRESULT _HandleCompartment(REFGUID guidCompartment);
+
+		BOOL _InitCleanupContextDurationSink();
+		void _UninitCleanupContextDurationSink();
 
 		bool isImmersive() const {
 			return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;
@@ -229,6 +240,7 @@ export
 		DWORD _activeLanguageProfileNotifySinkCookie;
 
 		RECT m_rcFallback{};
+		HWND m_hwnd{};
 
 		std::bitset<32> _bitset{};
 
@@ -271,6 +283,7 @@ export
 		CLEAR_CAND_LIST,
 		CLEAR_DOWN,
 		CLEAR_FLAG,
-		PRESERVED_KEY_SWITCH
+		PRESERVED_KEY_SWITCH,
+		GAME_MODE_SELF_REDRAW
 	};
 }

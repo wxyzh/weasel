@@ -44,7 +44,7 @@ namespace weasel
 		ComPtr<ID2D1SolidColorBrush> m_pBrush;
 
 	private:
-		void _ParseFontFace(const std::wstring& fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle);
+		void _ParseFontFace(std::wstring_view fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle);
 		void _SetFontFallback(ComPtr<IDWriteTextFormat1> pTextFormat, std::span<std::wstring> fontVec);
 
 	private:

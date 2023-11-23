@@ -162,7 +162,6 @@ bool UI::Create(HWND parent)
 	LOG(INFO) << std::format("From UI::Create. make_unique<UIImpl>(*this)");
 #endif // TEST
 	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT, 0U, 0);
-	// pimpl_->panel.Create(parent, 0, 0, WS_IIME, WS_EX_IIME, 0U, 0);
 #ifdef TEST
 	LOG(INFO) << std::format("From UI::Create. done.");
 #endif // TEST

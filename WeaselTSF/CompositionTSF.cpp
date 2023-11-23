@@ -24,8 +24,16 @@ void WeaselTSF::_StartComposition(ITfContext* pContext, bool not_inline_preedit)
 		auto ret = pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 		SetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
 #ifdef TEST
-			LOG(INFO) << std::format("From _StartComposition. hr = {:#x}, ret = {:#x}", (unsigned)hr, (unsigned)ret);
+		LOG(INFO) << std::format("From _StartComposition. hr = {:#x}, ret = {:#x}", (unsigned)hr, (unsigned)ret);
 #endif // TEST
+		
+		if (SUCCEEDED(ret) && FAILED(hr))
+		{
+			m_client.ClearComposition();
+			_cand->Destroy();
+			_FinalizeComposition();
+			RetryFailedEvent();
+		}
 	}
 }
 
@@ -212,4 +220,74 @@ bool WeaselTSF::RetryKey()
 	send = SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
 
 	return send == 1;
+}
+
+//获取程序当前所在显示器的分辨率大小，可以动态的获取程序所在显示器的分辨率
+SIZE WeaselTSF::GetScreenResolution() {
+	SIZE size{};
+	if (!m_hwnd)
+		return size;
+
+	//MONITOR_DEFAULTTONEAREST 返回值是最接近该点的屏幕句柄
+	//MONITOR_DEFAULTTOPRIMARY 返回值是主屏幕的句柄
+	//如果其中一个屏幕包含该点，则返回值是该屏幕的HMONITOR句柄。如果没有一个屏幕包含该点，则返回值取决于dwFlags的值
+	HMONITOR hMonitor = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTONEAREST);
+	MONITORINFOEX miex;
+	miex.cbSize = sizeof(miex);
+	if (!GetMonitorInfo(hMonitor, &miex))
+		return size;
+
+	DEVMODE dm;
+	dm.dmSize = sizeof(dm);
+	dm.dmDriverExtra = 0;
+
+	//ENUM_CURRENT_SETTINGS 检索显示设备的当前设置
+	//ENUM_REGISTRY_SETTINGS 检索当前存储在注册表中的显示设备的设置
+	if (!EnumDisplaySettings(miex.szDevice, ENUM_CURRENT_SETTINGS, &dm))
+		return size;
+
+	size.cx = dm.dmPelsWidth;
+	size.cy = dm.dmPelsHeight;
+	return size;
+}
+
+
+void WeaselTSF::RetryFailedEvent()
+{
+	SIZE size = GetScreenResolution();
+	if (size.cx == 0 && size.cy == 0)
+		return;
+
+	std::array<INPUT, 5> inputs;
+	POINT ptCursor{};
+	GetCursorPos(&ptCursor);	
+
+	inputs[0].type = INPUT_MOUSE;
+	inputs[0].mi.dx = m_rcFallback.left / static_cast<double>(size.cx) * 65535;
+	inputs[0].mi.dy = m_rcFallback.top / static_cast<double>(size.cy) * 65535;
+	inputs[0].mi.mouseData = 0;
+	inputs[0].mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
+	inputs[0].mi.time = 0;
+
+	inputs[1].type = INPUT_MOUSE;
+	inputs[1].mi.mouseData = 0;
+	inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+	inputs[1].mi.time = 0;
+
+	inputs[2].type = INPUT_MOUSE;
+	inputs[2].mi.mouseData = 0;
+	inputs[2].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+	inputs[2].mi.time = 0;
+
+	inputs[3].type = INPUT_MOUSE;
+	inputs[3].mi.dx = ptCursor.x / static_cast<double>(size.cx) * 65535;
+	inputs[3].mi.dy = ptCursor.y / static_cast<double>(size.cy) * 65535;
+	inputs[3].mi.mouseData = 0;
+	inputs[3].mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
+	inputs[3].mi.time = 0;
+
+	inputs[4].type = INPUT_KEYBOARD;
+	inputs[4].ki = { _lastKey, _lastKey, 0, 0, 0 };
+
+	SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
 }

@@ -400,6 +400,7 @@
     <ClCompile Include="CandidateList.cpp" />
     <ClCompile Include="CandidateList.ixx" />
     <ClCompile Include="CandidateListTSF.cpp" />
+    <ClCompile Include="CleanupContextDurationSink.cpp" />
     <ClCompile Include="Compartment.cpp" />
     <ClCompile Include="Compartment.ixx" />
     <ClCompile Include="CompartmentTSF.cpp" />

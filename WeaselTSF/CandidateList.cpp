@@ -388,10 +388,13 @@ void CCandidateList::StartUI()
 	{
 		_ui->ctx().cinfo.candies.push_back(std::wstring(L" "));
 		pUIElementMgr->UpdateUIElement(uiid);
-	}	
+		_ui->ctx().cinfo.candies.clear();
+	}
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::StartUI. _pbShow = {}, hr = 0x{:X}, id = 0x{:X}", _pbShow, (unsigned)hr, (unsigned)uiid);
 #endif // TEST
+	if (_tsf.GetBit(WeaselFlag::GAME_MODE_SELF_REDRAW))
+		_pbShow = true;
 	if (_pbShow)
 	{
 		if (_tsf.GetBit(WeaselFlag::GAME_MODE))
@@ -422,7 +425,8 @@ void CCandidateList::EndUI()
 			return;
 		if (emgr != NULL)
 		{
-			if (SUCCEEDED(emgr->EndUIElement(uiid)))
+			emgr->EndUIElement(uiid);
+			if (_tsf.GetBit(WeaselFlag::GAME_WAR3))
 				_tsf.SetBit(WeaselFlag::CLEAR_CAND_LIST);
 		}
 #ifdef TEST

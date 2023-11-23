@@ -15,6 +15,8 @@ import ResponseParser;
 import CandidateList;
 import WeaselUtility;
 
+// #pragma comment(lib, "Oleacc.lib")
+
 export
 {
 	/* Start Composition */
@@ -63,6 +65,8 @@ export
 
 		/* ITfEditSession */
 		STDMETHODIMP DoEditSession(TfEditCookie ec);
+		// RECT GetOleAccLocation(HWND hwnd);
+		void CalculatePosition(_Inout_opt_ RECT& rc);
 
 	private:
 		com_ptr<ITfContextView> _pContextView;
@@ -109,10 +113,20 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 	HRESULT hr = E_FAIL;
 	com_ptr<ITfInsertAtSelection> pInsertAtSelection;
 	com_ptr<ITfRange> pRangeComposition;
-	if (FAILED(_pContext->QueryInterface(&pInsertAtSelection)))
+	if (FAILED(hr = _pContext->QueryInterface(&pInsertAtSelection)))
+	{
+#ifdef TEST
+		LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. QueryInterface: hr = 0x{:X}", (unsigned)hr);
+#endif // TEST
 		return hr;
-	if (FAILED(pInsertAtSelection->InsertTextAtSelection(ec, TF_IAS_QUERYONLY, NULL, 0, &pRangeComposition)))
+	}
+	if (FAILED(hr = pInsertAtSelection->InsertTextAtSelection(ec, TF_IAS_QUERYONLY, NULL, 0, &pRangeComposition)))
+	{
+#ifdef TEST
+		LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. InsertTextAtSelection: hr = 0x{:X}", (unsigned)hr);
+#endif // TEST
 		return hr;
+	}
 
 	com_ptr<ITfContextComposition> pContextComposition;
 	com_ptr<ITfComposition> pComposition;
@@ -196,10 +210,19 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 		hr = _pContext->GetEnd(ec, &pRangeComposition);
 	}
 
+	HWND hwnd;
+	_pContextView->GetWnd(&hwnd);
+	_pTextService->SetHWND(hwnd);
+
+	std::wstring name{};
+	name.reserve(512);
+	GetClassName(hwnd, name.data(), name.capacity());
+	name = name.data();
+
 	hr = _pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped);
 #ifdef TEST
-	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {:s}", 
-		rc.left, rc.top, (unsigned)hr, (bool)fClipped);
+	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {:s}, className = {}", 
+		rc.left, rc.top, (unsigned)hr, (bool)fClipped, to_string(name, CP_UTF8));
 #endif // TEST
 	if (hr == 0x80040057)
 	{
@@ -209,33 +232,7 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 
 	if (SUCCEEDED(hr) && (rc.left != 0 && rc.top != 0))
 	{
-		_pTextService->SetRect(rc);
-
-		if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT))				// 仅嵌入式候选框记录首码坐标
-		{
-			static RECT rcFirst{};
-			if (_pTextService->GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))	// 记录首码坐标
-			{
-				rcFirst = rc;
-			}
-			else if (_pTextService->GetBit(WeaselFlag::FOCUS_CHANGED))		// 焦点变化时记录坐标
-			{
-				rcFirst = rc;
-				_pTextService->ResetBit(WeaselFlag::FOCUS_CHANGED);
-			}
-			else if (5 < abs(rcFirst.top - rc.top))							// 个别应用获取坐标时文交替出现Y轴坐标相差±5，需要过滤掉
-			{
-				rcFirst = rc;
-			}
-			else if (rc.left < rcFirst.left)								// 换行时更新坐标
-			{
-				rcFirst = rc;
-			}
-			else															// 非首码时用首码坐标替换
-			{
-				rc = rcFirst;
-			}
-		}
+		CalculatePosition(rc);
 		_pTextService->_SetCompositionPosition(rc);
 #ifdef TEST
 		LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}", rc.left, rc.top);
@@ -248,6 +245,54 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 
 	return hr;
 }
+
+void CGetTextExtentEditSession::CalculatePosition(RECT& rc)
+{
+	// 保存实时坐标，作为下一次坐标的备用方案
+	_pTextService->SetRect(rc);
+
+	if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT))				// 仅嵌入式候选框记录首码坐标
+	{
+		static RECT rcFirst{};
+		if (_pTextService->GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))	// 记录首码坐标
+		{
+			rcFirst = rc;
+		}
+		else if (_pTextService->GetBit(WeaselFlag::FOCUS_CHANGED))		// 焦点变化时记录坐标
+		{
+			rcFirst = rc;
+			_pTextService->ResetBit(WeaselFlag::FOCUS_CHANGED);
+		}
+		else if (5 < abs(rcFirst.top - rc.top))							// 个别应用获取坐标时文交替出现Y轴坐标相差±5，需要过滤掉
+		{
+			rcFirst = rc;
+		}
+		else if (rc.left < rcFirst.left)								// 换行时更新坐标
+		{
+			rcFirst = rc;
+		}
+		else															// 非首码时用首码坐标替换
+		{
+			rc = rcFirst;
+		}
+	}
+}
+
+//RECT CGetTextExtentEditSession::GetOleAccLocation(HWND hwnd)
+//{
+//	RECT rc{};
+//	com_ptr<IAccessible> pAccessible;
+//	if (SUCCEEDED(AccessibleObjectFromWindow(hwnd, OBJID_CARET, IID_IAccessible, (VOID**)&pAccessible)) && pAccessible)
+//	{
+//		LONG x, y, cx, cy;
+//		VARIANT var{};
+//		if (SUCCEEDED(pAccessible->accLocation(&x, &y, &cx, &cy, var)))
+//		{
+//			SetRect(&rc, x, y, x + cx, y + cy);
+//		}
+//	}
+//	return rc;
+//}
 
 STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 {

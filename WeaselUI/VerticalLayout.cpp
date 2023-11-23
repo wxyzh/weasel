@@ -76,7 +76,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 		candidate_width += (size.cx + space) * labelFontValid;
 
 		/* Text */
-		const std::wstring& text = candidates.at(i).str;
+		std::wstring_view text = candidates.at(i).str;
 		GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx * textFontValid, height + size.cy);
 		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
@@ -91,7 +91,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 			w += space;
 			comment_shift_width = max(comment_shift_width, w);
 
-			const std::wstring& comment = comments.at(i).str;
+			std::wstring_view comment = comments.at(i).str;
 			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
 			_candidateCommentRects[i].SetRect(0, height, size.cx * cmtFontValid, height + size.cy);
 			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);

@@ -25,6 +25,7 @@ enum class BackType
 class WeaselPanel :
 	public CWindowImpl<WeaselPanel, CWindow, CWeaselPanelTraits>,
 	public CDoubleBufferImpl<WeaselPanel>
+	// public CBufferedPaintImpl<WeaselPanel>
 {
 public:
 	BEGIN_MSG_MAP(WeaselPanel)
@@ -39,6 +40,7 @@ public:
 		MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
 		MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
 		CHAIN_MSG_MAP(CDoubleBufferImpl<WeaselPanel>)
+		// CHAIN_MSG_MAP(CBufferedPaintImpl<WeaselPanel>)
 	END_MSG_MAP()
 
 	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -58,6 +60,7 @@ public:
 	void MoveTo(RECT const& rc);
 	void Refresh();
 	void DoPaint(CDCHandle dc);
+	// void DoPaint(CDCHandle /*dc*//*, RECT&*/ /*rect*/);
 	bool GetIsReposition() { return m_istorepos; }
 	void SetCaretFollowing(const bool following) { m_following = following; }
 

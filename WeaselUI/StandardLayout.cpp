@@ -84,7 +84,7 @@ void weasel::StandardLayout::GetTextSizeDW(std::wstring_view text, size_t nCount
 
 CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, ComPtr<IDWriteTextFormat1> pTextFormat, PDWR pDWR) const
 {
-	const std::wstring& preedit = text.str;
+	const std::wstring preedit = text.str;
 	const std::vector<weasel::TextAttribute> &attrs = text.attributes;
 	CSize size(0, 0);
 	if (!preedit.empty())

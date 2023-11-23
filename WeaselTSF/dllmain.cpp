@@ -7,6 +7,8 @@
 #include "logging.h"
 #endif // TEST
 
+#pragma comment(lib, "glog.lib")
+
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID pvReserved)
 {
 	switch (dwReason)

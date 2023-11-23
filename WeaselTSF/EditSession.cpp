@@ -73,7 +73,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 				_EndComposition(_pEditSessionContext, false);
 				
 				// Ïû³ýWar3´ò×ÖÉÏÆÁºó²ÐÁôµÄ¿Õ°×¿ò
-				if (GetBit(WeaselFlag::GAME_WAR3) && GetBit(WeaselFlag::CLEAR_CAND_LIST) && context->cinfo.candies.empty())
+				if (GetBit(WeaselFlag::CLEAR_CAND_LIST) && context->cinfo.candies.empty())
 				{
 					ResetBit(WeaselFlag::CLEAR_CAND_LIST);
 					unsigned send{};

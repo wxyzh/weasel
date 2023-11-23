@@ -106,7 +106,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring_view label_font_face, i
 	// text font text format set up
 	fontFaceStrVector = ws_split(font_face.data(), L",");
 	// set main font a invalid font name, to make every font range customizable
-	std::wstring_view _mainFontFace = L"_InvalidFontName_";
+	const std::wstring _mainFontFace = L"_InvalidFontName_";
 	DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
 	// setup font weight and font style by the first unit of font_face setting string
@@ -290,7 +290,7 @@ static std::wstring _MatchWordsOutLowerCaseTrim1st(const std::wstring& str, cons
 	return res;
 }
 
-void DirectWriteResources::_ParseFontFace(const std::wstring& fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle)
+void DirectWriteResources::_ParseFontFace(std::wstring_view fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle)
 {
 	const std::wstring patWeight(L"(:thin|:extra_light|:ultra_light|:light|:semi_light|:medium|:demi_bold|:semi_bold|:bold|:extra_bold|:ultra_bold|:black|:heavy|:extra_black|:ultra_black)");
 	const std::map<std::wstring, DWRITE_FONT_WEIGHT> _mapWeight = {
@@ -311,7 +311,7 @@ void DirectWriteResources::_ParseFontFace(const std::wstring& fontFaceStr, DWRIT
 		{L"normal",			DWRITE_FONT_WEIGHT_NORMAL},
 		{L"ultra_black",	DWRITE_FONT_WEIGHT_ULTRA_BLACK}
 	};
-	std::wstring weight = _MatchWordsOutLowerCaseTrim1st(fontFaceStr, patWeight);
+	std::wstring weight = _MatchWordsOutLowerCaseTrim1st(fontFaceStr.data(), patWeight);
 	auto it = _mapWeight.find(weight);
 	fontWeight = (it != _mapWeight.end()) ? it->second : DWRITE_FONT_WEIGHT_NORMAL;
 
@@ -321,7 +321,7 @@ void DirectWriteResources::_ParseFontFace(const std::wstring& fontFaceStr, DWRIT
 		{L"oblique",	DWRITE_FONT_STYLE_OBLIQUE},
 		{L"normal",		DWRITE_FONT_STYLE_NORMAL},
 	};
-	std::wstring style = _MatchWordsOutLowerCaseTrim1st(fontFaceStr, patStyle);
+	std::wstring style = _MatchWordsOutLowerCaseTrim1st(fontFaceStr.data(), patStyle);
 	auto it2 = _mapStyle.find(style);
 	fontStyle = (it2 != _mapStyle.end()) ? it2->second : DWRITE_FONT_STYLE_NORMAL;
 }
