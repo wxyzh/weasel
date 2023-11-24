@@ -363,8 +363,21 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT WeaselPanel::OnLeftReleased(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (!m_following)
+	if (!m_following && m_holder)
 	{
+		RECT rcWindow;
+		GetWindowRect(&rcWindow);
+		if (m_reversed)
+		{
+			rcWindow.top = rcWindow.bottom;
+		}
+		else
+		{
+			rcWindow.bottom = rcWindow.top;
+		}
+		rcWindow.right = rcWindow.left;
+		_SetRectCallback(rcWindow);
+
 		m_holder = false;
 		ReleaseCapture();
 	}
@@ -432,16 +445,13 @@ LRESULT WeaselPanel::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 		{
 			CPoint ptTemp{ point - ptPreview };
 			CRect rc{};
+
 			GetWindowRect(&rc);
-			CPoint pt{ 0, -rc.Height() };
 			rc.OffsetRect(ptTemp);
 			MoveWindow(&rc);
-			rc.OffsetRect(pt);
-			_SetRectCallback(rc);
-//#ifdef TEST
-//			LOG(INFO) << std::format("Form WeaselPanel::OnMoveMouse. m_move = {}, rect.bottom = {}, pt = ({}, {}), point.y = {}", m_movePixels, rect.bottom, rc.left, rc.top, point.y);
-//#endif // TEST
-
+#ifdef TEST
+			LOG(INFO) << std::format("Form WeaselPanel::OnMoveMouse. pt = ({}, {}), point.y = {},", rc.left, rc.top, point.y);
+#endif // TEST
 			return 0;
 		}
 		ptPreview = point;
@@ -1089,7 +1099,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	rcWorkArea.right -= width;
 	rcWorkArea.bottom -= height;
 	static int saved_bottom{ rcWorkArea.bottom };
-	static bool reversed{ false };
+	m_reversed = false;
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
 	if (m_style.shadow_radius > 0)
@@ -1117,10 +1127,10 @@ void WeaselPanel::_RepositionWindow(bool adj)
 #ifdef TEST
 	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. First: x = {}, y = {}, height = {}, rcWorkArea.bottom = {}, saved_bottom = {}, adj = {}", x, y, height, rcWorkArea.bottom, saved_bottom, adj);
 #endif // TEST
-	if (reversed)
+	if (m_reversed)
 	{
 		y -= saved_bottom - rcWorkArea.bottom;
-		reversed = false;
+		m_reversed = false;
 	}
 	saved_bottom = rcWorkArea.bottom;
 
@@ -1129,7 +1139,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 			m_sticky = true;
 		y = m_inputPos.top - height;					// over workarea bottom
-		reversed = true;
+		m_reversed = true;
 
 		m_istorepos = (m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL);
 		if (m_style.shadow_radius > 0)
