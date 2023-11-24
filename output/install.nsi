@@ -212,7 +212,7 @@ program_files:
   SetOutPath $INSTDIR\data
   File "data\*.yaml"
   File /nonfatal "data\*.txt"
-  File /nonfatal "data\*.gram"
+  ; File /nonfatal "data\*.gram"
   ; opencc data files
   SetOutPath $INSTDIR\data\opencc
   File "data\opencc\*.json"
