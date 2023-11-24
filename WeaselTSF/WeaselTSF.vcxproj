@@ -406,6 +406,7 @@
     <ClCompile Include="CompartmentTSF.cpp" />
     <ClCompile Include="Composition.ixx" />
     <ClCompile Include="CompositionTSF.cpp" />
+    <ClCompile Include="Configuration.cpp" />
     <ClCompile Include="DisplayAttribute.cpp" />
     <ClCompile Include="DisplayAttributeInfo.cpp" />
     <ClCompile Include="DisplayAttributeInfo.ixx" />

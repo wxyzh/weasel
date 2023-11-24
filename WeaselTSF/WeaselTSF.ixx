@@ -150,6 +150,9 @@ export
 		void UpdateGlobalCompartment(bool in = true);
 		void SetHWND(HWND hwnd) { m_hwnd = hwnd; }
 
+		bool ReadConfiguration();
+		bool WriteConfiguration();
+
 	private:
 		// ui callback functions
 		void _SelectCandidateOnCurrentPage(const int index);
@@ -247,6 +250,9 @@ export
 		std::wstring _schema_id{};
 		unsigned _keycode{};
 		unsigned short _lastKey{};
+
+		DWORD m_globalCompartment{ 0xFC00'0003 };
+
 		TF_PRESERVEDKEY _preservedKeyGameMode;			// Ctrl+Shift+G
 		TF_PRESERVEDKEY _preservedKeyCaretFollowing;	// Ctrl+Shift+F
 		TF_PRESERVEDKEY _preservedKeyDaemon;			// Ctrl+Shift+D

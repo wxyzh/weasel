@@ -240,35 +240,39 @@ HRESULT WeaselTSF::_InitGlobalCompartment()
 		if (SUCCEEDED(ret))
 		{
 			VARIANT var{};
+			var.vt = VT_I4;
 			ret = _pGlobalCompartment->GetValue(&var);
 
-			if (SUCCEEDED(ret))
+			if (unsigned char value{}; SUCCEEDED(ret))
 			{
 				if (var.vt == VT_I4)
 				{
-					if ((var.lVal & 0xFF00) != 0xFC00)
+					if ((var.ulVal & 0xFF00'0000) != 0xFC00'0000)
 					{
-						var.lVal = 0xFC03;
+						if (!ReadConfiguration())
+							WriteConfiguration();
+						var.ulVal = m_globalCompartment;
 						ret = _pGlobalCompartment->SetValue(_tfClientId, &var);
-						SetBit(WeaselFlag::DAEMON_ENABLE);
-						SetBit(WeaselFlag::PRESERVED_KEY_SWITCH);
-
+						value = static_cast<unsigned char>(m_globalCompartment);
 					}
 					else
 					{
-						byte value = var.bVal;
-						SetBit(WeaselFlag::DAEMON_ENABLE, static_cast<bool>(value & 0x1));
-						SetBit(WeaselFlag::PRESERVED_KEY_SWITCH, static_cast<bool>(value & 0x2));
-					}
+						m_globalCompartment = var.ulVal;
+						value = var.bVal;												
+					}					
 				}
 				else
 				{
 					var.vt = VT_I4;
-					var.lVal = 0xFC03;
+					if (!ReadConfiguration())
+						WriteConfiguration();
+					var.ulVal = m_globalCompartment;
 					ret = _pGlobalCompartment->SetValue(_tfClientId, &var);
-					SetBit(WeaselFlag::DAEMON_ENABLE);
-					SetBit(WeaselFlag::PRESERVED_KEY_SWITCH);
+					value = static_cast<unsigned char>(m_globalCompartment);
 				}
+
+				SetBit(WeaselFlag::DAEMON_ENABLE, static_cast<bool>(value & 0x1));
+				SetBit(WeaselFlag::PRESERVED_KEY_SWITCH, static_cast<bool>(value & 0x2));
 			}
 
 		}
@@ -285,9 +289,12 @@ void WeaselTSF::UpdateGlobalCompartment(bool in)
 		var.vt = VT_I4;
 		byte v1 = GetBit(WeaselFlag::DAEMON_ENABLE) ? 1 : 0;
 		byte v2 = GetBit(WeaselFlag::PRESERVED_KEY_SWITCH) ? 2 : 0;
-		var.lVal = 0xFC00 | v1 | v2;
+		var.ulVal = 0xFC00'0000;
+		var.ulVal |= v1 | v2;
+		m_globalCompartment = var.ulVal;
 
 		_pGlobalCompartment->SetValue(_tfClientId, &var);
+		WriteConfiguration();
 	}
 	else if (SUCCEEDED(_pGlobalCompartment->GetValue(&var)))
 	{
