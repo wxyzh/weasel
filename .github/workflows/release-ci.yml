@@ -1,4 +1,4 @@
-name: Release Sign CI
+name: Release CI
 
 on:
   workflow_dispatch:
@@ -148,34 +148,34 @@ jobs:
           .\build.bat hant
           .\build.bat installer
           
-      - name: Sgin Bin
-        shell: pwsh
-        env:
-          env_certificate: ${{ secrets.CERTIFICATE }}
-          env_certpassword: ${{ secrets.PASSWORD }}
-          env_catert: '${{ secrets.CACERT }}'
-        run: |
-          $tempCertFile = New-TemporaryFile
-          $tempCAFile = New-TemporaryFile        
-          # Retrieve environment variables for cert/password.
-          $certText = $env:env_certificate
-          $CertPass = ($env:env_certpassword).ToString()
-          $CACertText = $env:env_catert
-          $SecPass =ConvertTo-SecureString -String $CertPass -AsPlainText -force
-          # Create a Cert object by converting the cert string to bytes.
-          $certBytes = [Convert]::FromBase64String($certText)
-          $CAcertBytes = [Convert]::FromBase64String($CACertText)
-          Set-Content -Path $tempCertFile -Value $certBytes -AsByteStream
-          Set-Content -Path $tempCAFile -Value $CAcertBytes -AsByteStream
-          #Import-Certificate -FilePath $tempCAFile  -CertStoreLocation Cert:\CurrentUser\Root\ -Confirm:$false
-          certutil.exe -addstore root $tempCAFile.FullName
-          $cert=Get-PfxCertificate -FilePath $tempCertFile -Password $SecPass
-          # Go through the artifacts directory and sign the 'windows' artifacts.
-          $output = ".\output"
-          $Extension = @(".exe",".dll",".ime")
-          Get-ChildItem -Path $output |  where {$Extension -contains $_.Extension} | Set-AuthenticodeSignature -Certificate $Cert -TimestampServer http://timestamp.digicert.com
-          Remove-Item $tempCAFile -Force
-          Remove-Item $tempCertFile -Force
+#      - name: Sgin Bin
+#        shell: pwsh
+#        env:
+#          env_certificate: ${{ secrets.CERTIFICATE }}
+#          env_certpassword: ${{ secrets.PASSWORD }}
+#          env_catert: '${{ secrets.CACERT }}'
+#        run: |
+#          $tempCertFile = New-TemporaryFile
+#          $tempCAFile = New-TemporaryFile        
+#          # Retrieve environment variables for cert/password.
+#          $certText = $env:env_certificate
+#          $CertPass = ($env:env_certpassword).ToString()
+#          $CACertText = $env:env_catert
+#          $SecPass =ConvertTo-SecureString -String $CertPass -AsPlainText -force
+#          # Create a Cert object by converting the cert string to bytes.
+#          $certBytes = [Convert]::FromBase64String($certText)
+#          $CAcertBytes = [Convert]::FromBase64String($CACertText)
+#          Set-Content -Path $tempCertFile -Value $certBytes -AsByteStream
+#          Set-Content -Path $tempCAFile -Value $CAcertBytes -AsByteStream
+#          #Import-Certificate -FilePath $tempCAFile  -CertStoreLocation Cert:\CurrentUser\Root\ -Confirm:$false
+#          certutil.exe -addstore root $tempCAFile.FullName
+#          $cert=Get-PfxCertificate -FilePath $tempCertFile -Password $SecPass
+#          # Go through the artifacts directory and sign the 'windows' artifacts.
+#          $output = ".\output"
+#          $Extension = @(".exe",".dll",".ime")
+#          Get-ChildItem -Path $output |  where {$Extension -contains $_.Extension} | Set-AuthenticodeSignature -Certificate $Cert -TimestampServer http://timestamp.digicert.com
+#          Remove-Item $tempCAFile -Force
+#          Remove-Item $tempCertFile -Force
           
         
       - name: Compress Debug Symbols
