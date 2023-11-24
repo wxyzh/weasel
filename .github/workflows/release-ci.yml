@@ -1,4 +1,4 @@
-name: Release CI
+name: Release Sign CI
 
 on:
   workflow_dispatch:
@@ -36,14 +36,13 @@ jobs:
           $bulidrime = "1"
           echo "bulidrime=$bulidrime" |  Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           #exit 1
-
   librime:
     if: always() && (needs.checklibrime.outputs.buildlibrime == '1')
     needs: checklibrime
-    uses: wxyzh/weasel/.github/workflows/librime-build.yml@librime
+    uses: rime/librime/.github/workflows/windows-build.yml@master
     with:
       repository: rime/librime
-      rime_plugins: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
+      rime_plugins:   hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
       
   build-and-release:
     permissions:
@@ -54,7 +53,7 @@ jobs:
     env:
       boost_version: 1.83.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
-      RIME_PLUGINS: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
+      RIME_PLUGINS:  hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
       commitsha: ${{ needs.checklibrime.outputs.librimesha }}
     steps:
 
@@ -88,7 +87,6 @@ jobs:
           $lines = Get-Content -Path $file
           $lines = $lines | Where-Object { $_ -notlike "*set ARCH=Win32*" }
           Set-Content -Path $file -Value $lines
-
       - name: Cache Boost
         id: cache-boost
         uses: actions/cache@v3
@@ -101,8 +99,10 @@ jobs:
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: .\install_boost.bat
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.3.1
+      - name: Configure MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
         
 #      - name: setup python
 #        uses: actions/setup-python@v4
@@ -114,7 +114,7 @@ jobs:
         continue-on-error: true
       #  run: .\github.install.bat
         run: |
-          $msvc = Get-ChildItem -Filter "*msvc-64.7z" -Path .\artifact\
+          $msvc = Get-ChildItem -Filter "*Windows-clang.7z" -Path .\artifact\
           $msvc | foreach {7z x $_.FullName -olibrime -y}
           # 复制 rime 头文件到 include 文件夹
           Copy-Item -Path "librime\dist\include\rime_*.h" -Destination "include\" -Force
@@ -128,7 +128,18 @@ jobs:
           }
           # 复制 opencc 文件到 output\data\opencc 文件夹
           Copy-Item -Path "librime\share\opencc\*.*" -Destination "output\data\opencc\" -Force
-
+          
+          # 设置源文件路径
+          $sourceFilePath = "include\rime_api.h"
+          # 读取源文件内容
+          $fileContent = Get-Content $sourceFilePath
+          # 执行替换操作
+          $newContent = $fileContent -replace 'typedef uintptr_t RimeSessionId;', 'using RimeSessionId = uint64_t;'
+          # 在指定行后添加新行
+          $newContent = $newContent -replace 'Bool is_ascii_punct;', ('Bool is_ascii_punct;' + "`r`n  Bool is_s2t;")
+          # 将新内容写回源文件
+          Set-Content -Path $sourceFilePath -Value $newContent
+          Write-Host "替换完成。"
       - name: Build Weasel
         id: build_weasel
         continue-on-error: true
@@ -146,30 +157,21 @@ jobs:
         run: |
           $tempCertFile = New-TemporaryFile
           $tempCAFile = New-TemporaryFile        
-
           # Retrieve environment variables for cert/password.
           $certText = $env:env_certificate
           $CertPass = ($env:env_certpassword).ToString()
           $CACertText = $env:env_catert
-
           $SecPass =ConvertTo-SecureString -String $CertPass -AsPlainText -force
-
           # Create a Cert object by converting the cert string to bytes.
-
           $certBytes = [Convert]::FromBase64String($certText)
           $CAcertBytes = [Convert]::FromBase64String($CACertText)
-
           Set-Content -Path $tempCertFile -Value $certBytes -AsByteStream
           Set-Content -Path $tempCAFile -Value $CAcertBytes -AsByteStream
-
           #Import-Certificate -FilePath $tempCAFile  -CertStoreLocation Cert:\CurrentUser\Root\ -Confirm:$false
           certutil.exe -addstore root $tempCAFile.FullName
-
           $cert=Get-PfxCertificate -FilePath $tempCertFile -Password $SecPass
-
           # Go through the artifacts directory and sign the 'windows' artifacts.
           $output = ".\output"
-
           $Extension = @(".exe",".dll",".ime")
           Get-ChildItem -Path $output |  where {$Extension -contains $_.Extension} | Set-AuthenticodeSignature -Certificate $Cert -TimestampServer http://timestamp.digicert.com
           Remove-Item $tempCAFile -Force
@@ -197,7 +199,7 @@ jobs:
         run: |
           #.\build.bat data
           #.\build.bat hant
-          .\build.bat installer
+          #.\build.bat installer
           
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
