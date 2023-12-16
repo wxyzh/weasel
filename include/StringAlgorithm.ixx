@@ -67,4 +67,12 @@ export
 		std::setlocale(LC_ALL, "");
 		std::transform(wstr.begin(), wstr.end(), wstr.begin(), std::towlower);
 	}
+
+	inline std::string to_lower(std::string_view str)
+	{
+		std::string temp;
+		std::setlocale(LC_ALL, "");
+		std::transform(str.begin(), str.end(), temp.begin(), std::tolower);
+		return temp;
+	}
 }

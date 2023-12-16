@@ -23,6 +23,7 @@ protected:
 		COMMAND_ID_HANDLER(IDC_REMOVE, OnRemove)
 		COMMAND_ID_HANDLER(IDC_RADIO_DEFAULT_DIR, OnUseDefaultDir)
 		COMMAND_ID_HANDLER(IDC_RADIO_CUSTOM_DIR, OnUseCustomDir)
+		COMMAND_ID_HANDLER(IDC_BROWSER, OnBrowser)
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&);
@@ -31,6 +32,7 @@ protected:
 	LRESULT OnRemove(WORD, WORD code, HWND, BOOL&);
 	LRESULT OnUseDefaultDir(WORD, WORD code, HWND, BOOL&);
 	LRESULT OnUseCustomDir(WORD, WORD code, HWND, BOOL&);
+	LRESULT OnBrowser(WORD, WORD code, HWND, BOOL&);
 
 	void UpdateWidgets();
 	void Modify();

@@ -5,8 +5,8 @@ module;
 #include "resource.h"
 #include <winsparkle.h>
 
-//#define WEASEL_ENABLE_LOGGING
-//#include "logging.h"
+// #define WEASEL_ENABLE_LOGGING
+// #include "logging.h"
 module WeaselServerApp;
 
 WeaselServerApp::WeaselServerApp()

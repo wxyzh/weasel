@@ -44,9 +44,11 @@ void WeaselTSF::_DeleteCandidateList()
 
 void WeaselTSF::_SelectCandidateOnCurrentPage(const int index)
 {
-	m_client.SelectCandidateOnCurrentPage(index);
+	// m_client.SelectCandidateOnCurrentPage(index);
 	// fake a empty presskey to get data back and DoEditSession
-	m_client.ProcessKeyEvent(0);
+	BOOL eaten{};
+	_ProcessKeyEvent(0x31 + index, 0x1, &eaten);
+	// m_client.ProcessKeyEvent(0);
 	_UpdateComposition(_pEditSessionContext);
 }
 

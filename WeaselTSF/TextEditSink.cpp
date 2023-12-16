@@ -65,21 +65,9 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 		}
 		pEnumTextChanges.Release();
 
-		if (GetBit(WeaselFlag::CARET_FOLLOWING))
+		if (GetBit(WeaselFlag::CARET_FOLLOWING) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))
 		{
-			static int count{};
-			if (GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))
-			{
-				if (++count == 2)		// AutoCAD文本控件坐标更新
-				{
-					count = 0;
-					_UpdateCompositionWindow(pContext);
-				}
-			}
-			else
-			{
-				count = 0;
-			}
+			_UpdateCompositionWindow(pContext);
 		}
 	}
 	return S_OK;
@@ -88,7 +76,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext, TfLayoutCode lcode, ITfContextView* pContextView)
 {
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnLayoutChange. pContext = 0x{:X}, _pTextEditSinkContext = 0x{:X}", (size_t)pContext, (size_t)_pTextEditSinkContext.p);
+	LOG(INFO) << std::format("From WeaselTSF::OnLayoutChange. pContext = 0x{:X}, _pTextEditSinkContext = 0x{:X}, pContextView = 0x{:X}", (size_t)pContext, (size_t)_pTextEditSinkContext.p, (size_t)pContextView);
 #endif // TEST
 	if (!_IsComposing())
 		return S_OK;

@@ -10,7 +10,8 @@ export
 {
 	class CCandidateList :
 		public ITfIntegratableCandidateListUIElement,
-		public ITfCandidateListUIElementBehavior
+		public ITfReadingInformationUIElement,
+		public ITfCandidateListUIElementBehavior		
 	{
 	public:
 		// com_ptr智能指针作为参数传送会触发COM引用计数，测试时日志里会因为这个COM引用计数不会递减至0
@@ -24,20 +25,20 @@ export
 		STDMETHODIMP_(ULONG) Release(void);
 
 		// ITfUIElement
-		STDMETHODIMP GetDescription(BSTR* pbstr);
+		STDMETHODIMP GetDescription(BSTR* pbstr) override;
 		STDMETHODIMP GetGUID(GUID* pguid);
-		STDMETHODIMP Show(BOOL showCandidateWindow);
-		STDMETHODIMP IsShown(BOOL* pIsShow);
+		STDMETHODIMP Show(BOOL showCandidateWindow) override;
+		STDMETHODIMP IsShown(BOOL* pIsShow) override;
 
 		// ITfCandidateListUIElement
-		STDMETHODIMP GetUpdatedFlags(DWORD* pdwFlags);
-		STDMETHODIMP GetDocumentMgr(ITfDocumentMgr** ppdim);
-		STDMETHODIMP GetCount(UINT* pCandidateCount);
-		STDMETHODIMP GetSelection(UINT* pSelectedCandidateIndex);
-		STDMETHODIMP GetString(UINT uIndex, BSTR* pbstr);
-		STDMETHODIMP GetPageIndex(UINT* pIndex, UINT uSize, UINT* puPageCnt);
-		STDMETHODIMP SetPageIndex(UINT* pIndex, UINT uPageCnt);
-		STDMETHODIMP GetCurrentPage(UINT* puPage);
+		STDMETHODIMP GetUpdatedFlags(DWORD* pdwFlags) override;
+		STDMETHODIMP GetDocumentMgr(ITfDocumentMgr** ppdim) override;
+		STDMETHODIMP GetCount(UINT* pCandidateCount) override;
+		STDMETHODIMP GetSelection(UINT* pSelectedCandidateIndex) override;
+		STDMETHODIMP GetString(UINT uIndex, BSTR* pbstr) override;
+		STDMETHODIMP GetPageIndex(UINT* pIndex, UINT uSize, UINT* puPageCnt) override;
+		STDMETHODIMP SetPageIndex(UINT* pIndex, UINT uPageCnt) override;
+		STDMETHODIMP GetCurrentPage(UINT* puPage) override;
 
 		// ITfCandidateListUIElementBehavior methods
 		STDMETHODIMP SetSelection(UINT nIndex);
@@ -50,6 +51,14 @@ export
 		STDMETHODIMP OnKeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam, _Out_ BOOL* pIsEaten);
 		STDMETHODIMP ShowCandidateNumbers(_Out_ BOOL* pIsShow);
 		STDMETHODIMP FinalizeExactCompositionString();
+
+		// ITfReadingInformationUIElement
+		STDMETHODIMP GetContext(_Out_ ITfContext** ppic) override;
+		STDMETHODIMP GetErrorIndex(_Out_ UINT* pErrorIndex) override;
+		STDMETHODIMP GetMaxReadingStringLength(_Out_ UINT* pcchMax) override;
+		STDMETHODIMP GetString(_Out_ BSTR*  pstr) override;
+		// STDMETHODIMP ITfReadingInformationUIElement::GetUpdatedFlags(_Out_ DWORD* pdwFlags) override;
+		STDMETHODIMP IsVerticalOrderPreferred(_Out_ BOOL* pfVertical) override;
 
 		/* Update */
 		void UpdateUI(const weasel::Context& ctx, const weasel::Status& status);
@@ -90,5 +99,8 @@ export
 		weasel::UIStyle _style;
 
 		com_ptr<ITfContext> _pContextDocument;
+		DWORD _flags{};
+
+		std::wstring _preedit{};
 	};
 }

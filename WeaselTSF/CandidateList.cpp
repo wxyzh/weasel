@@ -34,11 +34,31 @@ STDMETHODIMP CCandidateList::QueryInterface(REFIID riid, void** ppvObj)
 
 	*ppvObj = nullptr;
 
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::QueryInterface. guid = {:X}-{:X}-{:X}-{:X}{:X}{:X}{:X}{:X}{:X}{:X}{:X}", riid.Data1, riid.Data2, riid.Data3, riid.Data4[0],
+		riid.Data4[1], riid.Data4[2], riid.Data4[3], riid.Data4[4], riid.Data4[5], riid.Data4[6], riid.Data4[7]);
+#endif // TEST
+
 	if (IsEqualIID(riid, IID_ITfUIElement) ||
 		IsEqualIID(riid, IID_ITfCandidateListUIElement) ||
 		IsEqualIID(riid, IID_ITfCandidateListUIElementBehavior))
 	{
 		*ppvObj = (ITfCandidateListUIElementBehavior*)this;
+#ifdef TEST
+		if (IsEqualIID(riid, IID_ITfUIElement))
+			LOG(INFO) << std::format("From CCandidateList::QueryInterface. ITfUIElement.");
+		if (IsEqualIID(riid, IID_ITfCandidateListUIElement))
+			LOG(INFO) << std::format("From CCandidateList::QueryInterface. ITfCandidateListUIElement.");
+		if (IsEqualIID(riid, IID_ITfCandidateListUIElementBehavior))
+			LOG(INFO) << std::format("From CCandidateList::QueryInterface. ITfCandidateListUIElementBehavior.");
+#endif // TEST
+	}
+	else if (IsEqualIID(riid, IID_ITfReadingInformationUIElement))
+	{
+		*ppvObj = (ITfReadingInformationUIElement*)this;
+#ifdef TEST
+		LOG(INFO) << std::format("From CCandidateList::QueryInterface. ITfReadingInformationUIElement.");
+#endif // TEST
 	}
 	else if (IsEqualIID(riid, IID_IUnknown) ||
 		IsEqualIID(riid, __uuidof(ITfIntegratableCandidateListUIElement)))
@@ -121,10 +141,11 @@ STDMETHODIMP CCandidateList::GetUpdatedFlags(DWORD* pdwFlags)
 	if (!pdwFlags)
 		return E_INVALIDARG;
 
-	*pdwFlags = TF_CLUIE_DOCUMENTMGR | TF_CLUIE_COUNT | TF_CLUIE_SELECTION | TF_CLUIE_STRING | TF_CLUIE_CURRENTPAGE;
+	*pdwFlags = _flags;
 #ifdef TEST
-	LOG(INFO) << std::format("From CCandidateList::GetUpdateFlags.");
+	LOG(INFO) << std::format("From CCandidateList::GetUpdateFlags. _flags = 0x{:X}", (unsigned)_flags);
 #endif // TEST
+	_flags = 0;	
 
 	return S_OK;
 }
@@ -170,7 +191,7 @@ STDMETHODIMP CCandidateList::GetString(UINT uIndex, BSTR* pbstr)
 		return E_INVALIDARG;
 
 	auto& str = cinfo.candies[uIndex].str;
-	*pbstr = SysAllocStringLen(str.c_str(), str.size() + 1);
+	*pbstr = SysAllocStringLen(str.c_str(), str.size());
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::GetString. index = {}, str = {}", uIndex, to_string(_ui->ctx().cinfo.candies[uIndex].str, CP_UTF8));
 #endif // TEST
@@ -190,7 +211,7 @@ STDMETHODIMP CCandidateList::GetPageIndex(UINT* pIndex, UINT uSize, UINT* puPage
 		*pIndex = 0;
 	}
 #ifdef TEST
-	LOG(INFO) << std::format("From CCandidateList::GetPageIndex. size = {}", uSize);
+	LOG(INFO) << std::format("From CCandidateList::GetPageIndex. size = {}, pIndex == nullptr ? {:s}", uSize, pIndex == nullptr);
 #endif // TEST
 	return S_OK;
 }
@@ -210,6 +231,9 @@ STDMETHODIMP CCandidateList::GetCurrentPage(UINT* puPage)
 
 STDMETHODIMP CCandidateList::SetSelection(UINT nIndex)
 {
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::SetSelection.");
+#endif // TEST
 	return S_OK;
 }
 
@@ -232,7 +256,10 @@ STDMETHODIMP CCandidateList::SetIntegrationStyle(GUID guidIntegrationStyle)
 
 STDMETHODIMP CCandidateList::GetSelectionStyle(TfIntegratableCandidateListSelectionStyle* ptfSelectionStyle)
 {
-	*ptfSelectionStyle = _selectionStyle;
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::GetSelectionStyle.");
+#endif // TEST
+	* ptfSelectionStyle = _selectionStyle;
 	return S_OK;
 }
 
@@ -244,14 +271,75 @@ STDMETHODIMP CCandidateList::OnKeyDown(WPARAM wParam, LPARAM lParam, BOOL* pIsEa
 
 STDMETHODIMP CCandidateList::ShowCandidateNumbers(BOOL* pIsShow)
 {
-	*pIsShow = TRUE;
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::ShowCandidateNumbers.");
+#endif // TEST
+	* pIsShow = TRUE;
 	return S_OK;
 }
 
 STDMETHODIMP CCandidateList::FinalizeExactCompositionString()
 {
 	_tsf._AbortComposition(false);
+	return S_OK;
+}
+
+STDMETHODIMP CCandidateList::GetContext(ITfContext** ppic)
+{
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::GetContext.");
+#endif // TEST
 	return E_NOTIMPL;
+}
+
+STDMETHODIMP CCandidateList::GetErrorIndex(UINT* pErrorIndex)
+{
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::GetErrorIndex.");
+#endif // TEST
+	return E_NOTIMPL;
+}
+
+STDMETHODIMP CCandidateList::GetMaxReadingStringLength(UINT* pcchMax)
+{
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::GetMaxReadingStringLength.");
+#endif // TEST
+	if (!pcchMax)
+		return E_INVALIDARG;
+
+	*pcchMax = _preedit.size();
+
+	return S_OK;
+}
+
+STDMETHODIMP CCandidateList::GetString(BSTR* pstr)
+{
+	*pstr = nullptr;
+
+	if (!_preedit.empty())
+	{
+		*pstr = SysAllocStringLen(_preedit.data(), _preedit.size());
+	}
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::GetString. str = {}, *pstr == nullptr ? {:s}", to_string(_preedit, CP_UTF8), *pstr == NULL);
+#endif // TEST
+
+	return S_OK;
+}
+
+STDMETHODIMP CCandidateList::IsVerticalOrderPreferred(BOOL* pfVertical)
+{
+#ifdef TEST
+	LOG(INFO) << std::format("From CCandidateList::IsVerticalOrderPreferred.");
+#endif // TEST
+	if (pfVertical)
+	{
+		*pfVertical = false;
+		return S_OK;
+	}
+
+	return E_INVALIDARG;
 }
 
 void CCandidateList::UpdateUI(const Context& ctx, const Status& status)
@@ -271,10 +359,17 @@ void CCandidateList::UpdateUI(const Context& ctx, const Status& status)
 	// In UWP, candidate window will only be shown
 	// if it is owned by active view window
 	//_UpdateOwner();
+	if (!ctx.preedit.empty())
+		_preedit = ctx.preedit.str;
+
 	_ui->Update(ctx, status);
 	if (_pbShow == FALSE && status.composing)
 	{
+		_flags = TF_CLUIE_DOCUMENTMGR | TF_CLUIE_COUNT | TF_CLUIE_SELECTION | TF_CLUIE_STRING | TF_CLUIE_CURRENTPAGE;
+		// _flags = TF_RIUIE_CONTEXT | TF_RIUIE_STRING | TF_RIUIE_MAXREADINGSTRINGLENGTH | TF_RIUIE_VERTICALORDER;
+		// _flags = TF_RIUIE_STRING | TF_RIUIE_VERTICALORDER;
 		_UpdateUIElement();
+		PostMessage(_GetActiveWnd(), WM_IME_NOTIFY, IMN_CHANGECANDIDATE, 0x1);
 	}
 
 #ifdef TEST
@@ -382,14 +477,7 @@ void CCandidateList::StartUI()
 	}
 
 	// ToDo: send select candidate info back to rime
-
-	hr = pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
-	if (_tsf.GetBit(WeaselFlag::CLEAR_DOWN))
-	{
-		_ui->ctx().cinfo.candies.push_back(std::wstring(L" "));
-		pUIElementMgr->UpdateUIElement(uiid);
-		_ui->ctx().cinfo.candies.clear();
-	}
+	hr = pUIElementMgr->BeginUIElement(dynamic_cast<ITfReadingInformationUIElement*>(this), &_pbShow, &uiid);
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::StartUI. _pbShow = {}, hr = 0x{:X}, id = 0x{:X}", _pbShow, (unsigned)hr, (unsigned)uiid);
 #endif // TEST
@@ -425,9 +513,13 @@ void CCandidateList::EndUI()
 			return;
 		if (emgr != NULL)
 		{
+			_flags = 0;
+			_preedit.clear();
 			emgr->EndUIElement(uiid);
 			if (_tsf.GetBit(WeaselFlag::GAME_WAR3))
-				_tsf.SetBit(WeaselFlag::CLEAR_CAND_LIST);
+			{
+				PostMessage(_GetActiveWnd(), WM_IME_NOTIFY, IMN_CLOSECANDIDATE, 0);
+			}
 		}
 #ifdef TEST
 		LOG(INFO) << std::format("From CCandidateList::EndUI. id = 0x{:X}", (unsigned)uiid);

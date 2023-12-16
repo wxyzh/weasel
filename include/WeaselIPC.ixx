@@ -89,6 +89,7 @@ export
 			virtual void StartMaintenance() = 0;
 			virtual void EndMaintenance() = 0;
 			virtual void SetOption(RimeSessionId session_id, const std::string& opt, bool val) = 0;
+			virtual void UpdateColorTheme(bool darkMode) = 0;
 		};
 
 		// 处理server端回应之物件

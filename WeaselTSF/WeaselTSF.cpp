@@ -3,7 +3,6 @@
 #include <WeaselCommon.h>
 #include "Globals.h"
 #include <resource.h>
-// #include <psapi.h>
 #include <filesystem>
 #include "test.h"
 #ifdef TEST
@@ -11,7 +10,6 @@
 #include "logging.h"
 #endif // TEST
 
-// #pragma comment(lib, "psapi.lib")
 namespace fs = std::filesystem;
 
 //#pragma data_seg("Shared")
@@ -50,7 +48,7 @@ WeaselTSF::WeaselTSF()
 	_cand.Attach(new CCandidateList(*this));
 	SetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);
 	SetBit(WeaselFlag::CARET_FOLLOWING);
-	
+
 	DllAddRef();
 	// CatchUnhandledException();
 
@@ -59,7 +57,7 @@ WeaselTSF::WeaselTSF()
 
 	std::wstring name;
 	DWORD len{ 1024 };
-	name.reserve(len);	
+	name.reserve(len);
 
 	auto ret = QueryFullProcessImageName(hProcess, 0, name.data(), &len);
 	CloseHandle(hProcess);
@@ -186,12 +184,12 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 {
 	com_ptr<ITfDocumentMgr> pDocMgrFocus;
 	_activateFlags = dwFlags;
-	
+
 	_pThreadMgr = pThreadMgr;
-	_tfClientId = tfClientId;	
+	_tfClientId = tfClientId;
 
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitThreadMgrEventSink. flag = 0x{:X}", (unsigned)dwFlags);
+	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitThreadMgrEventSink.");
 #endif // TEST
 	if (!_InitThreadMgrEventSink())
 		goto ExitError;

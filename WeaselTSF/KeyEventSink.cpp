@@ -103,17 +103,6 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 		*pfEaten = TRUE;
 		return S_OK;
 	}
-	if (GetBit(WeaselFlag::GAME_WAR3))
-	{
-		if (wParam == VK_CLEAR)
-		{
-			*pfEaten = true;
-			_fTestKeyDownPending = true;
-			SetBit(WeaselFlag::CLEAR_DOWN);
-			SetBit(WeaselFlag::CLEAR_FLAG);
-			return S_OK;
-		}
-	}
 	_ProcessKeyEvent(wParam, lParam, pfEaten, true);
 	if (*pfEaten)
 	{
@@ -148,7 +137,8 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 	}
 	if (lParam == 0x4000'0000 || lParam == 0x4000'0001)
 	{
-		SetBit(WeaselFlag::RETRY_INPUT);
+		SetBit(WeaselFlag::RETRY_COMPOSITION);
+		ResetBit(WeaselFlag::FOCUS_CHANGED);
 		OnCompositionTerminated(_dwTextEditSinkCookie, _pComposition);
 	}
 	_UpdateComposition(pContext);
@@ -165,12 +155,6 @@ STDAPI WeaselTSF::OnTestKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam
 	if (_fTestKeyUpPending)
 	{
 		*pfEaten = TRUE;
-		return S_OK;
-	}
-	if (GetBit(WeaselFlag::GAME_WAR3) && wParam == VK_CLEAR)
-	{
-		ResetBit(WeaselFlag::CLEAR_DOWN);
-		_UpdateComposition(pContext);
 		return S_OK;
 	}
 	_ProcessKeyEvent(wParam, lParam, pfEaten, true);

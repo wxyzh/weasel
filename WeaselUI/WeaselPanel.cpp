@@ -1030,6 +1030,7 @@ LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	m_sticky = false;
 	delete m_layout;
 	m_layout = nullptr;
+	m_reversed = false;
 	return 0;
 }
 
@@ -1095,13 +1096,17 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	GetWindowRect(&rcWindow);
 	int width = (rcWindow.right - rcWindow.left);
 	int height = (rcWindow.bottom - rcWindow.top);
+#ifdef TEST
+	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. rcWindow.bottom = {}, rcWindow.top = {}, height = {}, rcWorkArea.bottom = {}, inline_preedit = {:s}", 
+		rcWindow.bottom, rcWindow.top, height, rcWorkArea.bottom, m_style.inline_preedit);
+#endif // TEST
 	// keep panel visible
 	rcWorkArea.right -= width;
 	rcWorkArea.bottom -= height;
 	static int saved_bottom{ rcWorkArea.bottom };
-	m_reversed = false;
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
+	// m_reversed = false;
 	if (m_style.shadow_radius > 0)
 	{
 		x -= (m_style.shadow_offset_x >= 0 || COLORTRANSPARENT(m_style.shadow_color)) ? m_layout->offsetX : (m_layout->offsetX / 2);
@@ -1125,12 +1130,11 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	if (x < rcWorkArea.left) x = rcWorkArea.left;		// over workarea left
 	// show panel above the input focus if we're around the bottom
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. First: x = {}, y = {}, height = {}, rcWorkArea.bottom = {}, saved_bottom = {}, adj = {}", x, y, height, rcWorkArea.bottom, saved_bottom, adj);
+	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. First: x = {}, y = {}, height = {}, rcWorkArea.bottom = {}, adj = {}", x, y, height, rcWorkArea.bottom, adj);
 #endif // TEST
 	if (m_reversed)
 	{
 		y -= saved_bottom - rcWorkArea.bottom;
-		m_reversed = false;
 	}
 	saved_bottom = rcWorkArea.bottom;
 
@@ -1141,11 +1145,14 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		y = m_inputPos.top - height;					// over workarea bottom
 		m_reversed = true;
 
+		if (m_style.shadow_radius && m_style.shadow_offset_y > 0)
+			y -= m_style.shadow_offset_y;
+
 		m_istorepos = (m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL);
 		if (m_style.shadow_radius > 0)
 			y += (m_style.shadow_offset_y < 0 || COLORTRANSPARENT(m_style.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
 	}
-	
+
 #ifdef TEST
 	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. Second: x = {}, y = {}, adj = {}, hwnd = 0x{:X}, reverse = {:s}", x, y, adj, (size_t)m_hWnd, (bool)m_style.vertical_auto_reverse);
 #endif // TEST

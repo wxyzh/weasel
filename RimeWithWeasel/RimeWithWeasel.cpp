@@ -39,10 +39,20 @@ int expand_ibus_modifier(int m)
 	return (m & 0xff) | ((m & 0xff00) << 16);
 }
 
+#define SHOWN_ASCII (1<<0)
+#define SHOWN_SHAPE (1<<1)
+#define SHOWN_ASCII_PUNCT (1<<2)
+#define SHOWN_SIMPLIFICATION (1<<3)
+#define SHOWN_SCHEMA (1<<4)
+#define SHOWN_ALWAYS    (SHOWN_ASCII|SHOWN_SHAPE|SHOWN_ASCII_PUNCT|SHOWN_SCHEMA|SHOWN_SIMPLIFICATION)
+#define SHOWN_NEVER  0x00
+
 RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI* ui)
 	: m_ui(ui)
 	, m_active_session(0)
 	, m_disabled(true)
+	, m_current_dark_mode{ false }
+	, m_show_notifications_when{ SHOWN_ALWAYS }
 	, _UpdateUICallback(nullptr)
 {
 	_Setup();
@@ -52,6 +62,7 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 {
 }
 
+void _UpdateShowNotificationsWhen(RimeConfig* config, UINT* show_notifications_when);
 void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
 bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, std::string color = "");
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
@@ -115,6 +126,17 @@ void RimeWithWeaselHandler::Initialize()
 		if (m_ui)
 		{
 			_UpdateUIStyle(&config, m_ui, true);
+			_UpdateShowNotificationsWhen(&config, &m_show_notifications_when);
+			m_current_dark_mode = IsUserDarkMode();
+			if (m_current_dark_mode)
+			{
+				std::string color_name(MAX_PATH, 0);
+				if (RimeConfigGetString(&config, "style/color_scheme_dark", color_name.data(), color_name.capacity()))
+				{
+					color_name = color_name.data();
+					_UpdateUIStyleColor(&config, m_ui->style(), color_name);
+				}
+			}
 			m_base_style = m_ui->style();
 		}
 		_LoadAppOptions(&config, m_app_options);
@@ -168,6 +190,7 @@ RimeSessionId RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	}
 	_UpdateUI(session_id);
 	m_active_session = session_id;
+	m_color_sync[session_id] = false;
 	return session_id;
 }
 
@@ -178,6 +201,7 @@ RimeSessionId RimeWithWeaselHandler::RemoveSession(RimeSessionId session_id)
 	DLOG(INFO) << "Remove session: session_id = " << session_id;
 	// TODO: force committing? otherwise current composition would be lost
 	RimeDestroySession(session_id);
+	m_color_sync.erase(session_id);
 	m_active_session = 0;
 	return 0;
 }
@@ -187,6 +211,9 @@ namespace ibus
 	enum Keycode
 	{
 		Escape = 0xFF1B,
+		XK_bracketleft = 0x005B,	// U+005B LEFT SQUARE BRACKET
+		XK_c = 0x0063,				// U+0063 LATIN SMALL LETTER C
+		XK_C = 0x0043				// U+0043 LATIN CAPITAL LETTER
 	};
 }
 
@@ -196,6 +223,19 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, RimeSessi
 		<< ", session_id = " << session_id;
 	if (m_disabled) return FALSE;
 	Bool handled = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
+	if (!handled)
+	{
+		bool isVimBackInCommandMode = (keyEvent.keycode == ibus::Keycode::Escape) ||
+			((keyEvent.mask & (1 << 2)) && (keyEvent.keycode == ibus::Keycode::XK_c ||
+				keyEvent.keycode == ibus::Keycode::XK_c ||
+				keyEvent.keycode == ibus::Keycode::XK_bracketleft));
+		if (isVimBackInCommandMode &&
+			RimeGetOption(session_id, "vim_mode") &&
+			!RimeGetOption(session_id, "ascii_mode"))
+		{
+			RimeSetOption(session_id, "ascii_mode", True);
+		}
+	}
 	_Respond(session_id, eat);
 	_UpdateUI(session_id);
 	m_active_session = session_id;
@@ -273,6 +313,18 @@ void RimeWithWeaselHandler::OnNotify(void* context_object,
 	m_message_value = message_value;
 }
 
+std::string _SearchInMapCaseInsensitive(const AppOptionsByAppName& app_options, const std::string& app_name)
+{
+	for (const auto& it : app_options)
+	{
+		if (to_lower(it.first) == app_name)
+		{
+			return it.first;
+		}
+	}
+	return std::string{ "" };
+}
+
 void RimeWithWeaselHandler::_ReadClientInfo(RimeSessionId session_id, LPWSTR buffer)
 {
 	std::string app_name;
@@ -306,9 +358,10 @@ void RimeWithWeaselHandler::_ReadClientInfo(RimeSessionId session_id, LPWSTR buf
 	{
 		RimeSetProperty(session_id, "client_app", app_name.c_str());
 
-		if (m_app_options.find(app_name) != m_app_options.end())
+		auto find_app = _SearchInMapCaseInsensitive(m_app_options, app_name);
+		if (find_app.empty())
 		{
-			AppOptions& options(m_app_options[app_name]);
+			AppOptions& options(m_app_options[find_app]);
 			std::for_each(options.begin(), options.end(), [session_id](std::pair<const std::string, bool>& pair)
 				{
 					DLOG(INFO) << "set app option: " << pair.first << " = " << pair.second;
@@ -376,6 +429,47 @@ void RimeWithWeaselHandler::SetOption(RimeSessionId session_id, const std::strin
 	RimeSetOption(session_id, opt.c_str(), val);
 }
 
+void RimeWithWeaselHandler::UpdateColorTheme(bool darkMode)
+{
+	RimeConfig config{ nullptr };
+	if (RimeConfigOpen("weasel", &config))
+	{
+		if (m_ui)
+		{
+			_UpdateUIStyle(&config, m_ui, true);
+			m_current_dark_mode = darkMode;
+			if (darkMode)
+			{
+				std::string color_name(MAX_PATH, 0);
+				if (RimeConfigGetString(&config, "style/color_scheme_dark", color_name.data(), color_name.capacity()))
+				{
+					color_name = color_name.data();
+					_UpdateUIStyleColor(&config, m_ui->style(), color_name);
+				}
+			}
+			m_base_style = m_ui->style();
+		}
+		_LoadAppOptions(&config, m_app_options);
+		RIME_STRUCT(RimeStatus, status);
+		if (RimeGetStatus(m_active_session, &status))
+		{
+			_LoadSchemaSpecificSettings(std::string(status.schema_id));
+			_LoadAppInlinePreeditSet(m_active_session, true);
+			_UpdateInlinePreeditStatus(m_active_session);
+			RimeFreeStatus(&status);
+		}
+		RimeConfigClose(&config);
+	}
+
+	RimeSetOption(m_active_session, "__synced", false);
+	_LoadAppInlinePreeditSet(m_active_session);
+	_UpdateInlinePreeditStatus(m_active_session);
+	for (auto& pair : m_color_sync)
+	{
+		pair.second = false;
+	}
+}
+
 void RimeWithWeaselHandler::OnUpdateUI(std::function<void()> const& cb)
 {
 	_UpdateUICallback = cb;
@@ -418,7 +512,11 @@ void RimeWithWeaselHandler::_UpdateUI(RimeSessionId session_id)
 	if (weasel_status.composing)
 	{
 		 m_ui->Update(weasel_context, weasel_status);
-		 // if (!is_tsf) m_ui->Show();
+		/* if (!is_tsf)
+		 {
+			 m_ui->Show();
+			 LOG(INFO) << std::format("From RimeWithWeaselHandler::_UpdateUI. is_tsf = {:s}", is_tsf);
+		 }*/
 	}
 	else if (!_ShowMessage(weasel_context, weasel_status))
 	{
@@ -477,10 +575,28 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 
 	// load schema color style config
 	memset(buffer, '\0', sizeof(buffer));
-	if (RimeConfigGetString(&config, "style/color_scheme", buffer, BUF_SIZE))
+	if (!m_current_dark_mode && RimeConfigGetString(&config, "style/color_scheme", buffer, BUF_SIZE))
 	{
 		std::string color_name{ buffer };
 		RimeConfigIterator preset{ 0 };
+		if (RimeConfigBeginMap(&preset, &config, std::format("preset_color_schemes/{}", color_name).data()))
+		{
+			_UpdateUIStyleColor(&config, m_ui->style(), color_name);
+		}
+		else
+		{
+			RimeConfig weaselconfig;
+			if (RimeConfigOpen("weasel", &weaselconfig))
+			{
+				_UpdateUIStyleColor(&weaselconfig, m_ui->style(), std::string(buffer));
+				RimeConfigClose(&weaselconfig);
+			}
+		}
+	}
+	else if (m_current_dark_mode && RimeConfigGetString(&config, "style/color_scheme_dark", buffer, BUF_SIZE))
+	{
+		std::string color_name{ buffer };
+		RimeConfigIterator preset{};
 		if (RimeConfigBeginMap(&preset, &config, std::format("preset_color_schemes/{}", color_name).data()))
 		{
 			_UpdateUIStyleColor(&config, m_ui->style(), color_name);
@@ -517,20 +633,25 @@ void RimeWithWeaselHandler::_LoadAppInlinePreeditSet(RimeSessionId session_id, b
 	if (!ignore_app_name && m_last_app_name == app_name)
 		return;
 	m_last_app_name = app_name;
+	bool inline_preedit = m_ui->style().inline_preedit;
 	if (!app_name.empty())
 	{
-		if (m_app_options.find(app_name) != m_app_options.end())
+		auto find_app = _SearchInMapCaseInsensitive(m_app_options, app_name);
+		if (!find_app.empty())
 		{
-			AppOptions& options(m_app_options[app_name]);
+			AppOptions& options(m_app_options[find_app]);
 			auto pfind = std::make_shared<bool>(false);
-			std::for_each(options.begin(), options.end(), [session_id, app_name, pfind, this](std::pair<const std::string, bool>& pair)
+			std::for_each(options.begin(), options.end(), [session_id, pfind, inline_preedit, this](std::pair<const std::string, bool>& pair)
 				{
 					if (pair.first == "inline_preedit")
 					{
 						*pfind = true;
 						RimeSetOption(session_id, pair.first.c_str(), Bool(pair.second));
 						m_ui->style().inline_preedit = Bool(pair.second);
-						_UpdateInlinePreeditStatus(session_id);
+						if (m_ui->style().inline_preedit != inline_preedit)
+						{
+							_UpdateInlinePreeditStatus(session_id);
+						}
 					}
 				});
 			if (!(*pfind))
@@ -552,7 +673,10 @@ void RimeWithWeaselHandler::_LoadAppInlinePreeditSet(RimeSessionId session_id, b
 					m_ui->style().inline_preedit = !!inline_preedit;
 				RimeConfigClose(&config);
 				RimeFreeStatus(&status);
-				_UpdateInlinePreeditStatus(session_id);
+				if (m_ui->style().inline_preedit != inline_preedit)
+				{
+					_UpdateInlinePreeditStatus(session_id);
+				}
 			}
 		}
 	}
@@ -724,14 +848,16 @@ bool RimeWithWeaselHandler::_Respond(RimeSessionId session_id, EatLine eat)
 
 	// style
 	bool has_synced = RimeGetOption(session_id, "__synced");
-	if (!has_synced) {
+	if (!has_synced || !m_color_sync[session_id]) {
 		std::wstringstream ss;
 		boost::archive::text_woarchive oa(ss);
 		oa << m_ui->style();
 
 		actions.insert("style");
 		messages.emplace_back(std::format("style={}\n", to_string(ss.str(), CP_UTF8)));
-		RimeSetOption(session_id, "__synced", true);
+		if (!has_synced)
+			RimeSetOption(session_id, "__synced", true);
+		m_color_sync[session_id] = true;
 	}
 
 	// summarize
@@ -922,6 +1048,38 @@ static void _RimeGetStringWithFunc(RimeConfig* config, const char* key, std::wst
 	}
 }
 
+void _UpdateShowNotificationsWhen(RimeConfig* config, UINT* show_notifications_when)
+{
+	std::string buffer(MAX_PATH, 0);
+	// if not wet, shown always as default
+	if (!RimeConfigGetString(config, "show_notifications_when", buffer.data(), buffer.capacity()))
+	{
+		*show_notifications_when = SHOWN_ALWAYS;
+	}
+	else
+	{
+		buffer = buffer.data();
+		if (std::regex_match(buffer, std::regex(".*.always.*")) || buffer.empty())
+		{
+			*show_notifications_when = SHOWN_ALWAYS;
+		}
+		else if (buffer == "never")
+		{
+			*show_notifications_when = SHOWN_NEVER;
+			if (std::regex_match(buffer, std::regex(".*ascii_punct.*")))
+				*show_notifications_when |= SHOWN_ASCII_PUNCT;
+			if (std::regex_match(buffer, std::regex(".*ascii_mode.*")))
+				*show_notifications_when |= SHOWN_ASCII;
+			if (std::regex_match(buffer, std::regex(".*shape.*")))
+				*show_notifications_when |= SHOWN_SHAPE;
+			if (std::regex_match(buffer, std::regex(".*scgena.*")))
+				*show_notifications_when |= SHOWN_SCHEMA;
+			if (std::regex_match(buffer, std::regex(".*simplification.*")))
+				*show_notifications_when |= SHOWN_SIMPLIFICATION;
+		}
+	}
+}
+
 // update ui's style parameters, ui has been check before referenced
 static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 {
@@ -987,6 +1145,19 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	_RimeGetBool(config, "style/vertical_text", false, style.layout_type, UIStyle::LAYOUT_VERTICAL_TEXT, style.layout_type);
 	_RimeGetBool(config, "style/vertical_text_left_to_right", false, style.vertical_text_left_to_right, true, false);
 	_RimeGetBool(config, "style/vertical_text_with_wrap", false, style.vertical_text_with_wrap, true, false);
+
+	const std::map<std::string, bool> _text_orientation
+	{
+		{ std::string{ "horizontal" }, false },
+		{ std::string{ "vertical" }, true}
+	};
+	bool _text_orientation_bool{ false };
+	_RimeParseStringOpt(config, "style/text_orientation", _text_orientation_bool, _text_orientation);
+	if (_text_orientation_bool)
+	{
+		style.layout_type = UIStyle::LAYOUT_VERTICAL_TEXT;
+	}
+
 	_RimeGetStringWithFunc(config, "style/label_format", style.label_text_format);
 	_RimeGetStringWithFunc(config, "style/mark_text", style.mark_text);
 	_RimeGetIntWithFallback(config, "style/layout/min_width", &style.min_width, NULL, _abs);

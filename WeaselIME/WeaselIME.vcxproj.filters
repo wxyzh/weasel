@@ -59,10 +59,10 @@
     <ClInclude Include="WeaselIME.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\WeaselIPC.h">
+    <ClInclude Include="..\include\WeaselUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\WeaselUI.h">
+    <ClInclude Include="test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

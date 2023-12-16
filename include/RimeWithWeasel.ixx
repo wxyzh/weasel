@@ -13,8 +13,21 @@ import WeaselIPC;
 
 export
 {
+	struct CaseInsensitiveCompare
+	{
+		bool operator()(std::string_view lhs, std::string_view rhs) const
+		{
+			std::string str1, str2;
+			std::transform(lhs.begin(), lhs.end(), std::back_inserter(str1),
+				[](char c) { return std::tolower(c); });
+			std::transform(rhs.begin(), rhs.end(), std::back_inserter(str2),
+				[](char c) { return std::tolower(c); });
+			return str1 < str2;
+		}
+	};
+
 	typedef std::map<std::string, bool> AppOptions;
-	typedef std::map<std::string, AppOptions> AppOptionsByAppName;
+	typedef std::map<std::string, AppOptions, CaseInsensitiveCompare> AppOptionsByAppName;
 	class RimeWithWeaselHandler :
 		public weasel::RequestHandler
 	{
@@ -36,6 +49,7 @@ export
 		virtual void StartMaintenance() override;
 		virtual void EndMaintenance() override;
 		virtual void SetOption(RimeSessionId session_id, const std::string& opt, bool val) override;
+		virtual void UpdateColorTheme(bool darkMode) override;
 
 		void OnUpdateUI(std::function<void()> const& cb);
 
@@ -64,6 +78,7 @@ export
 		std::string m_last_schema_id;
 		std::string m_last_app_name;
 		weasel::UIStyle m_base_style;
+		UINT m_show_notifications_when;
 
 		std::function<void()> _UpdateUICallback;
 
@@ -73,5 +88,7 @@ export
 			const char* message_value);
 		static std::string m_message_type;
 		static std::string m_message_value;
+		std::map<RimeSessionId, bool> m_color_sync;
+		bool m_current_dark_mode;
 	};
 }

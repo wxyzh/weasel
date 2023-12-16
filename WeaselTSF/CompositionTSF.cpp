@@ -26,7 +26,7 @@ void WeaselTSF::_StartComposition(ITfContext* pContext, bool not_inline_preedit)
 #ifdef TEST
 		LOG(INFO) << std::format("From _StartComposition. hr = {:#x}, ret = {:#x}", (unsigned)hr, (unsigned)ret);
 #endif // TEST
-		
+
 		if (SUCCEEDED(ret) && FAILED(hr))
 		{
 			m_client.ClearComposition();
@@ -62,7 +62,7 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 
 	hr = pContext->GetActiveView(&pContextView);
 #ifdef TEST
-	LOG(INFO) << std::format("From _UpdateCompositionWindow. hr = {:#x}", (unsigned)hr);
+	LOG(INFO) << std::format("From _UpdateCompositionWindow. hr = {:#x}, pContextView = 0x{:X}", (unsigned)hr, (size_t)pContextView.p);
 #endif // TEST
 	if (FAILED(hr))
 		return FALSE;
@@ -72,7 +72,7 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 	{
 		return FALSE;
 	}
-	
+
 	auto ret = pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READ, &hr);
 #ifdef TEST
 	LOG(INFO) << std::format("From _UpdateCompositionWindow. hr = {:#x}, ret = {:#x}", (unsigned)hr, (unsigned)ret);
@@ -83,7 +83,7 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 void WeaselTSF::_SetCompositionPosition(const RECT& rc)
 {
 	/* Test if rect is valid.
-	 * If it is invalid during CUAS test, we need to apply CUAS workaround */	
+	 * If it is invalid during CUAS test, we need to apply CUAS workaround */
 	if (!_fCUASWorkaroundTested)
 	{
 		RECT rect{};
@@ -104,7 +104,7 @@ void WeaselTSF::_SetCompositionPosition(const RECT& rc)
 #endif // TEST
 
 	m_client.UpdateInputPosition(rc);
-	_cand->UpdateInputPosition(rc);	
+	_cand->UpdateInputPosition(rc);
 }
 
 BOOL WeaselTSF::_ShowInlinePreedit(ITfContext* pContext, const std::shared_ptr<weasel::Context> context)
@@ -159,22 +159,23 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 	// Even if it is closed normally.
 	// Silly M$.
 #ifdef TEST
-	LOG(INFO) << std::format("From OnCompositionTerminated. _AbortComposition. _AutoCADTest = {}", GetBit(WeaselFlag::AUTOCAD));
-#endif // TEST	
+	LOG(INFO) << std::format("From OnCompositionTerminated. _AbortComposition. _AutoCADTest = {}, retry = {:s}, focusChanged = {:s}",
+		GetBit(WeaselFlag::AUTOCAD), GetBit(WeaselFlag::RETRY_COMPOSITION), GetBit(WeaselFlag::FOCUS_CHANGED));
+#endif // TEST
 	_AbortComposition();
 
-	if (GetBit(WeaselFlag::AUTOCAD))					// 无焦点输入时，AutoCAD会终止首码的合成
+	if (!GetBit(WeaselFlag::FOCUS_CHANGED))
 	{
-		if (GetBit(WeaselFlag::RETRY_INPUT))
+		if (GetBit(WeaselFlag::AUTOCAD))					// 无焦点输入时，AutoCAD会终止首码的合成
 		{
-			ResetBit(WeaselFlag::RETRY_INPUT);
-			RetryKey();
+			if (GetBit(WeaselFlag::RETRY_COMPOSITION))
+			{
+				ResetBit(WeaselFlag::RETRY_COMPOSITION);
+				RetryKey();
+			}
+
 		}
-		
-	}
-	else if (!GetBit(WeaselFlag::FOCUS_CHANGED))		// 排除失去焦点
-	{
-		if (GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))	// 重发意外终止的首码事件
+		else if (GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))	// 重发意外终止的首码事件
 		{
 			SetBit(WeaselFlag::RETRY_COMPOSITION);
 			RetryKey();
@@ -260,7 +261,7 @@ void WeaselTSF::RetryFailedEvent()
 
 	std::array<INPUT, 5> inputs;
 	POINT ptCursor{};
-	GetCursorPos(&ptCursor);	
+	GetCursorPos(&ptCursor);
 
 	inputs[0].type = INPUT_MOUSE;
 	inputs[0].mi.dx = m_rcFallback.left / static_cast<double>(size.cx) * 65535;
@@ -288,6 +289,19 @@ void WeaselTSF::RetryFailedEvent()
 
 	inputs[4].type = INPUT_KEYBOARD;
 	inputs[4].ki = { _lastKey, _lastKey, 0, 0, 0 };
+
+	SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
+}
+
+void WeaselTSF::SimulatingKeyboardEvents(unsigned short code)
+{
+	std::array<INPUT, 2> inputs;
+
+	inputs[0].type = INPUT_KEYBOARD;
+	inputs[0].ki = { code, code, 0, 0, 0 };
+
+	inputs[1].type = INPUT_KEYBOARD;
+	inputs[1].ki = { code, code, KEYEVENTF_KEYUP, 0, 0 };
 
 	SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
 }

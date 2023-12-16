@@ -55,6 +55,22 @@ export
 		return res;
 	}
 
+	inline bool IsUserDarkMode()
+	{
+		constexpr const LPCWSTR key{ LR"(Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)" };
+		constexpr const LPCWSTR value{ L"AppsUseLightTheme" };
+
+		DWORD type;
+		DWORD data;
+		DWORD size{ sizeof(DWORD) };
+		auto st = RegGetValue(HKEY_CURRENT_USER, key, value, RRF_RT_REG_DWORD, &type, &data, &size);
+
+		if (st == ERROR_SUCCESS && type == REG_DWORD)
+			return data == 0;
+
+		return false;
+	}
+
 	// data directories
 	inline std::wstring WeaselUserDataPath()
 	{

@@ -3,11 +3,22 @@
 
 #include "stdafx.h"
 #include <strsafe.h>
-#include <StringAlgorithm.hpp>
+// #include <StringAlgorithm.hpp>
 #include <WeaselCommon.h>
-#include <ResponseParser.h>
+// #include <ResponseParser.h>
 #include "WeaselIME.h"
 #include <algorithm>
+// #include "test.h"
+#ifdef TEST
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+// #include <format>
+#endif // TEST
+
+#pragma comment(lib, "glog.lib")
+
+import StringAlgorithm;
+import ResponseParser;
 
 // logging disabled
 #define EZDBGONLYLOGGERVAR(...)
@@ -105,6 +116,17 @@ WeaselIME::WeaselIME(HIMC hIMC)
 	_wsplitpath_s(path, NULL, 0, NULL, 0, fname, _countof(fname), ext, _countof(ext));
 	if (iequals(L"chrome", fname) && iequals(L"exe", ext))
 		m_preferCandidatePos = true;
+
+#ifdef TEST
+	google::InitGoogleLogging("IME.log");
+#endif // TEST
+}
+
+WeaselIME::~WeaselIME()
+{
+#ifdef TEST
+	google::ShutdownGoogleLogging();
+#endif // TEST
 }
 
 HINSTANCE WeaselIME::GetModuleInstance()
@@ -399,6 +421,10 @@ void WeaselIME::_SetCompositionWindow(LPINPUTCONTEXT lpIMC)
 
 BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeyState)
 {
+#ifdef TEST
+	LOG(INFO) << std::format("WeaselIME::_AddIMEMessage. vKey = 0x{:X}", (unsigned)vKey);
+#endif // TEST
+
 	EZDBGONLYLOGGERPRINT("Process key event: vKey = 0x%x, kinfo = 0x%x, HIMC = 0x%x", vKey, UINT32(kinfo), m_hIMC);
 
 	if (!ImmGetOpenStatus(m_hIMC))  // gvim command mode
@@ -541,6 +567,9 @@ HRESULT WeaselIME::_EndComposition(LPCWSTR composition)
 
 HRESULT WeaselIME::_AddIMEMessage(UINT msg, WPARAM wp, LPARAM lp)
 {
+#ifdef TEST
+	LOG(INFO) << std::format("WeaselIME::_AddIMEMessage. wp = 0x{:X}", (unsigned)wp);
+#endif // TEST
 	if(!m_hIMC)
 		return S_FALSE;
 

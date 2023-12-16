@@ -6,6 +6,7 @@
 #pragma once
 
 #include "targetver.h"
+#include "test.h"
 
 #define NOIME
 
@@ -19,3 +20,4 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <format>

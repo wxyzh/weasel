@@ -1,5 +1,6 @@
 #pragma once
-#include <WeaselIPC.h>
+// #include <WeaselIPC.h>
+import WeaselIPC;
 
 struct KeyInfo
 {

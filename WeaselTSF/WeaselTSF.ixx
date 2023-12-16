@@ -49,6 +49,9 @@ export
 		STDMETHODIMP OnSetFocus(ITfDocumentMgr* pDocMgrFocus, ITfDocumentMgr* pDocMgrPrevFocus);
 		STDMETHODIMP OnPushContext(ITfContext* pContext);
 		STDMETHODIMP OnPopContext(ITfContext* pContext);
+		HRESULT SwitchContext(ITfContext* pContext);
+		HRESULT SwitchToActiveContext();
+		HRESULT SwitchToActiveContextForDocumentManager(ITfDocumentMgr* pDocumentMgr);
 
 		/* ITfTextEditSink */
 		STDMETHODIMP OnEndEdit(ITfContext* pic, TfEditCookie ecReadOnly, ITfEditRecord* pEditRecord);
@@ -145,6 +148,7 @@ export
 		bool RetryKey();
 		void RetryFailedEvent();
 		SIZE GetScreenResolution();
+		void SimulatingKeyboardEvents(unsigned short code);
 
 		// write in if true, read out if false
 		void UpdateGlobalCompartment(bool in = true);
@@ -152,6 +156,8 @@ export
 
 		bool ReadConfiguration();
 		bool WriteConfiguration();
+
+		TfClientId GetClientId() const { return _tfClientId; }
 
 	private:
 		// ui callback functions
@@ -245,6 +251,8 @@ export
 		RECT m_rcFallback{};
 		HWND m_hwnd{};
 
+		bool _threadMgrEventSinkInitialized{};
+
 		std::bitset<32> _bitset{};
 
 		std::wstring _schema_id{};
@@ -275,7 +283,6 @@ export
 		FOCUS_CHANGED,
 		SUPPORT_DISPLAY_ATTRIBUTE,
 		AUTOCAD,
-		RETRY_INPUT,
 		WEZTERM_FIRST_KEY,
 		SIMPLIFIED_TO_TRADITIONAL,
 		FIRST_KEY_COMPOSITION,
@@ -286,9 +293,6 @@ export
 		EATEN,
 		GAME_MODE,
 		GAME_WAR3,
-		CLEAR_CAND_LIST,
-		CLEAR_DOWN,
-		CLEAR_FLAG,
 		PRESERVED_KEY_SWITCH,
 		GAME_MODE_SELF_REDRAW
 	};

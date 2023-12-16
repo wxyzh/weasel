@@ -24,22 +24,10 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	auto state = _UpdateLanguageBar(_status);
 
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, ok = {}", state, ok);
+	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, ok = {}, isComposing = {}", state, ok, _IsComposing());
 #endif // TEST
 
-	if (GetBit(WeaselFlag::CLEAR_FLAG))			// 消除游戏模式下合成后残留的空白框
-	{
-		if (GetBit(WeaselFlag::CLEAR_DOWN))
-		{
-			_StartComposition(_pEditSessionContext, !config.inline_preedit);
-		}
-		else
-		{
-			ResetBit(WeaselFlag::CLEAR_FLAG);
-			_EndComposition(_pEditSessionContext, true);
-		}
-	}
-	else if (GetBit(WeaselFlag::EATEN))			// Word 2021进入异步编辑时，遇到标点符号输入时，必须进入合成，否则句点输入就失去了数字后的智能判断
+	if (GetBit(WeaselFlag::EATEN))			// Word 2021进入异步编辑时，遇到标点符号输入时，必须进入合成，否则句点输入就失去了数字后的智能判断
 	{
 		_StartComposition(_pEditSessionContext, !config.inline_preedit);		
 		_EndComposition(_pEditSessionContext, false);
@@ -71,23 +59,6 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 				}
 				_InsertText(_pEditSessionContext, commit);
 				_EndComposition(_pEditSessionContext, false);
-				
-				// 消除War3打字上屏后残留的空白框
-				if (GetBit(WeaselFlag::CLEAR_CAND_LIST) && context->cinfo.candies.empty())
-				{
-					ResetBit(WeaselFlag::CLEAR_CAND_LIST);
-					unsigned send{};
-					std::array<INPUT, 2> inputs;
-
-					inputs[0].type = INPUT_KEYBOARD;
-					inputs[0].ki = { VK_CLEAR, 0x0C, 0, 0, 0 };
-
-					inputs[1].type = INPUT_KEYBOARD;
-					inputs[1].ki = { VK_CLEAR, 0x0C, KEYEVENTF_KEYUP, 0, 0 };
-
-					// 模拟clear键down/up
-					send = SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
-				}
 			}
 			if (_status.composing && !_IsComposing())
 			{

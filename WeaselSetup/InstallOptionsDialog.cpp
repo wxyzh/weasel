@@ -43,6 +43,8 @@ LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	tw_.EnableWindow(!installed);
 	remove_.EnableWindow(installed);
 	dir_.EnableWindow(user_dir.empty() ? FALSE : TRUE);
+	
+	GetDlgItem(IDC_BROWSER).EnableWindow(((CButton)GetDlgItem(IDC_RADIO_DEFAULT_DIR)).GetCheck() ? FALSE : TRUE);
 
 	GetDlgItem(IDOK).SetWindowTextW(installed ? L"更改" : L"安装");
 
@@ -58,13 +60,13 @@ LRESULT InstallOptionsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
 LRESULT InstallOptionsDialog::OnOK(WORD, WORD code, HWND, BOOL&)
 {
 	hant = (IsDlgButtonChecked(IDC_RADIO_TW) == BST_CHECKED);
-	if (IsDlgButtonChecked(IDC_RADIO_CUSTOM_DIR) == BST_CHECKED) 
+	if (IsDlgButtonChecked(IDC_RADIO_CUSTOM_DIR) == BST_CHECKED)
 	{
 		CStringW text;
 		dir_.GetWindowTextW(text);
 		user_dir = text;
 	}
-	else 
+	else
 	{
 		user_dir.clear();
 	}
@@ -85,11 +87,35 @@ LRESULT InstallOptionsDialog::OnRemove(WORD, WORD code, HWND, BOOL&) {
 
 LRESULT InstallOptionsDialog::OnUseDefaultDir(WORD, WORD code, HWND, BOOL&) {
 	dir_.EnableWindow(FALSE);
+	GetDlgItem(IDC_BROWSER).EnableWindow(false);
 	return 0;
 }
 
 LRESULT InstallOptionsDialog::OnUseCustomDir(WORD, WORD code, HWND, BOOL&) {
 	dir_.EnableWindow(TRUE);
 	dir_.SetFocus();
+	GetDlgItem(IDC_BROWSER).EnableWindow(true);
+	return 0;
+}
+
+LRESULT InstallOptionsDialog::OnBrowser(WORD, WORD code, HWND, BOOL&)
+{
+	std::wstring cur_dir(MAX_PATH, 0);
+	dir_.GetWindowText(cur_dir.data(), cur_dir.capacity());
+	cur_dir = cur_dir.data();
+	CComPtr<IShellItem> shellItem;
+	HRESULT hr = SHCreateItemFromParsingName(cur_dir.data(), nullptr, IID_PPV_ARGS(&shellItem));
+	CShellFileOpenDialog shellFileOpenDialog{ nullptr, FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST | FOS_PICKFOLDERS};
+	if (SUCCEEDED(hr))
+		shellFileOpenDialog.GetPtr()->SetFolder(shellItem);
+	shellFileOpenDialog.GetPtr()->SetTitle(L"自定义小狼毫用户词库目录");
+	shellFileOpenDialog.DoModal(m_hWnd);
+
+	hr = shellFileOpenDialog.GetFilePath(cur_dir.data(), cur_dir.capacity());
+	cur_dir = cur_dir.data();
+
+	if (SUCCEEDED(hr))
+		dir_.SetWindowTextW(cur_dir.data());
+
 	return 0;
 }

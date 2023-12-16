@@ -8,20 +8,20 @@ module;
 module WeaselTSF;
 import CandidateList;
 
-STDAPI WeaselTSF::OnInitDocumentMgr(ITfDocumentMgr *pDocMgr)
+STDAPI WeaselTSF::OnInitDocumentMgr(ITfDocumentMgr* pDocMgr)
 {
 #ifdef TEST
 	LOG(INFO) << std::format("From WeaselTSF::OnInitDocumentMgr. pDocMgr = {:#x}", (size_t)pDocMgr);
 #endif // TEST
-	return S_OK;
+	return SwitchToActiveContext();
 }
 
-STDAPI WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr)
+STDAPI WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr* pDocMgr)
 {
-	return S_OK;
+	return SwitchToActiveContext();
 }
 
-STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus)
+STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr* pDocMgrFocus, ITfDocumentMgr* pDocMgrPrevFocus)
 {
 	_InitTextEditSink(pDocMgrFocus);
 
@@ -33,7 +33,7 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocM
 	{
 		SetBit(WeaselFlag::FOCUS_CHANGED);
 	}
-	else if(GetBit(WeaselFlag::KEYBOARD_DISABLE))
+	else if (GetBit(WeaselFlag::KEYBOARD_DISABLE))
 	{
 		_SetKeyboardOpen(TRUE);
 	}
@@ -49,7 +49,7 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocM
 		else
 		{
 			_cand->SetThreadFocus();
-		}		
+		}
 	}
 
 	_pDocMgrLastFocused = pDocMgrFocus;
@@ -57,17 +57,50 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocM
 	return S_OK;
 }
 
-STDAPI WeaselTSF::OnPushContext(ITfContext *pContext)
+STDAPI WeaselTSF::OnPushContext(ITfContext* pContext)
 {
 #ifdef TEST
 	LOG(INFO) << std::format("From WeaselTSF::OnPushContext. pContext = {:#x}", (size_t)pContext);
 #endif // TEST
+	return SwitchToActiveContext();
+}
+
+STDAPI WeaselTSF::OnPopContext(ITfContext* pContext)
+{
+	return SwitchToActiveContext();
+}
+
+HRESULT WeaselTSF::SwitchContext(ITfContext* pContext)
+{
+	if (_pTextEditSinkContext == pContext && _threadMgrEventSinkInitialized)
+		return S_OK;
+
+	_pTextEditSinkContext = pContext;
 	return S_OK;
 }
 
-STDAPI WeaselTSF::OnPopContext(ITfContext *pContext)
+HRESULT WeaselTSF::SwitchToActiveContext()
 {
-	return S_OK;
+	com_ptr<ITfDocumentMgr> pDocumentMgr;
+	if (FAILED(_pThreadMgr->GetFocus(&pDocumentMgr)))
+	{
+		return SwitchContext(nullptr);
+	}
+	return SwitchToActiveContextForDocumentManager(pDocumentMgr);
+}
+
+HRESULT WeaselTSF::SwitchToActiveContextForDocumentManager(ITfDocumentMgr* pDocumentMgr)
+{
+	if (!pDocumentMgr)
+		return SwitchContext(nullptr);
+
+	com_ptr<ITfContext> pContext;
+	if (FAILED(pDocumentMgr->GetTop(&pContext)) || !pContext)
+	{
+		return SwitchContext(nullptr);
+	}
+
+	return SwitchContext(pContext);
 }
 
 BOOL WeaselTSF::_InitThreadMgrEventSink()
@@ -75,11 +108,12 @@ BOOL WeaselTSF::_InitThreadMgrEventSink()
 	com_ptr<ITfSource> pSource;
 	if (_pThreadMgr->QueryInterface(&pSource) != S_OK)
 		return FALSE;
-	if (pSource->AdviseSink(IID_ITfThreadMgrEventSink, (ITfThreadMgrEventSink *) this, &_dwThreadMgrEventSinkCookie) != S_OK)
+	if (pSource->AdviseSink(IID_ITfThreadMgrEventSink, (ITfThreadMgrEventSink*)this, &_dwThreadMgrEventSinkCookie) != S_OK)
 	{
 		_dwThreadMgrEventSinkCookie = TF_INVALID_COOKIE;
 		return FALSE;
 	}
+	_threadMgrEventSinkInitialized = true;
 	return TRUE;
 }
 
@@ -93,4 +127,5 @@ void WeaselTSF::_UninitThreadMgrEventSink()
 		pSource->UnadviseSink(_dwThreadMgrEventSinkCookie);
 	}
 	_dwThreadMgrEventSinkCookie = TF_INVALID_COOKIE;
+	_threadMgrEventSinkInitialized = false;
 }
