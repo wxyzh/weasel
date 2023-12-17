@@ -224,10 +224,8 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {:s}, className = {}", 
 		rc.left, rc.top, (unsigned)hr, (bool)fClipped, to_string(name, CP_UTF8));
 #endif // TEST
-	if (hr == 0x80040057 || hr == 0x80070057)
+	if (hr == 0x80040057)
 	{
-		_pTextService->ResetBit(WeaselFlag::FOCUS_CHANGED);
-		_pTextService->SetBit(WeaselFlag::RETRY_COMPOSITION);
 		_pTextService->OnCompositionTerminated(ec, _pComposition);
 		return hr;
 	}
