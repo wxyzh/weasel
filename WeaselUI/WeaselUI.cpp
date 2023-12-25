@@ -9,9 +9,6 @@
 #include "logging.h"
 #endif // TEST
 
-// #define WS_IIME			WS_POPUP | WS_CLIPSIBLINGS | WS_DISABLED
-// #define WS_EX_IIME		WS_EX_TOOLWINDOW | WS_EX_TOPMOST
-
 using namespace weasel;
 
 struct UI::Data
@@ -47,7 +44,7 @@ public:
 		if (timer)
 		{
 			Hide();
-			KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
+			panel.KillTimer(AUTOHIDE_TIMER);
 			timer = 0;
 		}
 		panel.Refresh();
@@ -66,6 +63,7 @@ public:
 		_In_  DWORD dwTime
 	);
 
+public:
 	static const int AUTOHIDE_TIMER = 20121220;
 	static UINT_PTR timer;
 	
@@ -88,7 +86,7 @@ void UI::UIImpl::Show()
 	m_ui.m_data->shown = true;
 	if (timer)
 	{
-		KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
+		panel.KillTimer(AUTOHIDE_TIMER);
 		timer = 0;
 	}
 }
@@ -100,7 +98,7 @@ void UI::UIImpl::Hide()
 	m_ui.m_data->shown = false;
 	if (timer)
 	{
-		KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
+		panel.KillTimer(AUTOHIDE_TIMER);
 		timer = 0;
 	}
 }
@@ -111,7 +109,7 @@ void UI::UIImpl::ShowWithTimeout(DWORD millisec)
 	DLOG(INFO) << "ShowWithTimeout: " << millisec;
 	panel.ShowWindow(SW_SHOWNA);
 	m_ui.m_data->shown = true;
-	SetTimer(panel.m_hWnd, AUTOHIDE_TIMER, millisec, &UIImpl::OnTimer);
+	panel.SetTimer(AUTOHIDE_TIMER, millisec, &UIImpl::OnTimer);
 	timer = UINT_PTR(this);
 }
 bool UI::UIImpl::GetIsReposition()

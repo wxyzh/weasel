@@ -8,14 +8,12 @@
 // #include <ResponseParser.h>
 #include "WeaselIME.h"
 #include <algorithm>
-// #include "test.h"
+#include "test.h"
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-// #include <format>
+namespace fs = std::filesystem;
 #endif // TEST
-
-#pragma comment(lib, "glog.lib")
 
 import StringAlgorithm;
 import ResponseParser;
@@ -118,15 +116,24 @@ WeaselIME::WeaselIME(HIMC hIMC)
 		m_preferCandidatePos = true;
 
 #ifdef TEST
-	google::InitGoogleLogging("IME.log");
+	auto pid = GetCurrentProcessId();
+	auto hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+
+	std::wstring name;
+	DWORD len{ 1024 };
+	name.reserve(len);
+
+	auto ret = QueryFullProcessImageName(hProcess, 0, name.data(), &len);
+	CloseHandle(hProcess);
+	name = name.data();
+
+	LOG(INFO) << std::format("Process {} starting log. AppName: {}, length = {}, is successful? {:s}", pid, fs::path(name).filename().string(), name.size(), static_cast<bool>(ret)).data();
 #endif // TEST
 }
 
 WeaselIME::~WeaselIME()
 {
-#ifdef TEST
-	google::ShutdownGoogleLogging();
-#endif // TEST
+	
 }
 
 HINSTANCE WeaselIME::GetModuleInstance()
@@ -170,7 +177,7 @@ HRESULT WeaselIME::UnregisterUIClass()
 	{
 		DWORD dwErr = GetLastError();
 		return HRESULT_FROM_WIN32(dwErr);
-	}
+	}	
 	return S_OK;
 }
 
@@ -213,6 +220,7 @@ BOOL WeaselIME::IsIMEMessage(UINT uMsg)
 	case WM_IME_COMPOSITIONFULL:
 	case WM_IME_SELECT:
 	case WM_IME_CHAR:
+	case WM_HOTKEY:
 		return TRUE;
 	default:
 		return FALSE;
@@ -316,6 +324,11 @@ LRESULT WeaselIME::OnUIMessage(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp)
 		break;
 	case WM_IME_STARTCOMPOSITION:
 		{
+			if (!m_hotkey)
+			{
+				RegisterHotKey(hWnd, 0x0804, MOD_CONTROL, 0x39);
+				m_hotkey = true;
+			}
 			EZDBGONLYLOGGERPRINT("WM_IME_STARTCOMPOSITION: wp = 0x%x, lp = 0x%x, HIMC = 0x%x", wp, lp, m_hIMC);
 			if (m_preferCandidatePos)
 				_SetCandidatePos(lpIMC);
@@ -323,6 +336,17 @@ LRESULT WeaselIME::OnUIMessage(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp)
 				_SetCompositionWindow(lpIMC);
 		}
 		break;
+	case WM_HOTKEY:
+	{
+		auto hkl = GetTextServiceHandle();
+		if (hkl)
+		{
+			ActivateKeyboardLayout(hkl, KLF_SETFORPROCESS);
+			UnregisterHotKey(hWnd, 0x0804);
+			m_hotkey = false;
+		}
+	}
+	break;
 	default:
 		if (!IsIMEMessage(uMsg))
 		{
@@ -421,8 +445,9 @@ void WeaselIME::_SetCompositionWindow(LPINPUTCONTEXT lpIMC)
 
 BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeyState)
 {
+
 #ifdef TEST
-	LOG(INFO) << std::format("WeaselIME::_AddIMEMessage. vKey = 0x{:X}", (unsigned)vKey);
+	LOG(INFO) << std::format("WeaselIME::ProcessKeyEvent. vKey = 0x{:X}", (unsigned)vKey);
 #endif // TEST
 
 	EZDBGONLYLOGGERPRINT("Process key event: vKey = 0x%x, kinfo = 0x%x, HIMC = 0x%x", vKey, UINT32(kinfo), m_hIMC);
@@ -445,12 +470,18 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
 		return FALSE;
 	}
 
+#ifdef TEST
+	LOG(INFO) << std::format("WeaselIME::ProcessKeyEvent. ke = 0x{:X}", (unsigned)ke);
+#endif // TEST
+
 	bool accepted = m_client.ProcessKeyEvent(ke);
 
 	// get commit string from server
 	std::wstring commit;
+	weasel::Config config;
 	weasel::Status status;
-	weasel::ResponseParser parser(&commit, NULL, &status);
+	weasel::Context context;
+	weasel::ResponseParser parser(&commit, &context, &status, &config, &_style);
 	bool ok = m_client.GetResponseData(std::ref(parser));
 
 	if (ok)
@@ -458,14 +489,24 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
 		if (!commit.empty())
 		{
 			_EndComposition(commit.c_str());
+			m_ui.Destroy();
 		}
 		else if (status.composing != m_composing)
 		{
 			if (m_composing)
+			{
 				_EndComposition(NULL);
+				m_ui.Destroy();
+			}
 			else
+			{
+				m_ui.Create(GetFocus());
+				m_ui.Hide();
 				_StartComposition();
+			}
 		}
+		m_ui.style() = _style;
+		m_ui.Update(context, status);
 	}
 
 	return (BOOL)accepted;
@@ -612,6 +653,9 @@ HRESULT WeaselIME::_AddIMEMessage(UINT msg, WPARAM wp, LPARAM lp)
 
 void WeaselIME::_UpdateInputPosition(LPINPUTCONTEXT lpIMC, POINT pt)
 {
+#ifdef TEST
+	LOG(INFO) << std::format("WeaselIME::_UpdateInputPosition. pt = ({}, {})", pt.x, pt.y);
+#endif // TEST
 	EZDBGONLYLOGGERPRINT("_UpdateInputPosition: (%d, %d)", pt.x, pt.y);
 
 	//EZDBGONLYLOGGERPRINT("cfCompForm: ptCurrentPos = (%d, %d), rcArea = (%d, %d)",
@@ -635,6 +679,9 @@ void WeaselIME::_UpdateInputPosition(LPINPUTCONTEXT lpIMC, POINT pt)
 	}
 
 	ClientToScreen(lpIMC->hWnd, &pt);
+#ifdef TEST
+	LOG(INFO) << std::format("WeaselIME::_UpdateInputPosition. Screen: pt = ({}, {})", pt.x, pt.y);
+#endif // TEST
 	if (pt.x < -4096 || pt.x >= 4096 || pt.y < -4096 || pt.y >= 4096)
 	{
 		EZDBGONLYLOGGERPRINT("Input position out of range, possibly invalid.");
@@ -655,4 +702,33 @@ void WeaselIME::_UpdateInputPosition(LPINPUTCONTEXT lpIMC, POINT pt)
 	SetRect(&rc, pt.x, pt.y, pt.x + width, pt.y + height);
 	EZDBGONLYLOGGERPRINT("Updating input position: (%d, %d)", pt.x, pt.y);
 	m_client.UpdateInputPosition(rc);
+	m_ui.UpdateInputPosition(rc);
+	if (!m_ui.IsShown())
+	{
+		m_ui.Show();
+	}
+#ifdef TEST
+	LOG(INFO) << std::format("WeaselIME::_UpdateInputPosition. rc = ({}, {}, {}, {})", rc.left, rc.top, rc.right, rc.bottom);
+#endif // TEST
+}
+
+HKL WeaselIME::GetTextServiceHandle()
+{
+	std::wstring subKey{ LR"(Software\Rime\Weasel)" };
+	std::wstring tsfHKEY{ L"TextService" };
+
+	HKEY hKey;
+	auto ret = ::RegOpenKeyEx(HKEY_CURRENT_USER, subKey.data(), 0, KEY_READ | KEY_WOW64_64KEY, &hKey);
+
+	if (ret != ERROR_SUCCESS)
+		return 0;
+
+	DWORD dataSize = sizeof(HKL);
+	HKL hkl;
+	ret = ::RegQueryValueEx(hKey, tsfHKEY.data(), nullptr, nullptr, (LPBYTE)&hkl, &dataSize);
+	RegCloseKey(hKey);
+
+	if (ret != ERROR_SUCCESS)
+		return 0;
+	return hkl;
 }

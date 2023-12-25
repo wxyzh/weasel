@@ -4,6 +4,7 @@ module WeaselTSF;
 
 std::wstring subKey{ LR"(Software\Rime\Weasel)" };
 std::wstring valueName{ L"GlobalCompartment" };
+std::wstring tsfHKEY{ L"TextService" };
 
 bool WeaselTSF::ReadConfiguration()
 {
@@ -32,6 +33,23 @@ bool WeaselTSF::WriteConfiguration()
 		return false;
 
 	ret = ::RegSetValueEx(hKey, valueName.data(), 0, REG_DWORD, (LPBYTE)&m_globalCompartment, sizeof(DWORD));
+	RegCloseKey(hKey);
+
+	if (ret != ERROR_SUCCESS)
+		return false;
+
+	return true;
+}
+
+bool WeaselTSF::StoreTextServiceHandle(HKL hkl)
+{
+	HKEY hKey;
+	auto ret = ::RegOpenKeyEx(HKEY_CURRENT_USER, subKey.data(), 0, KEY_WRITE | KEY_WOW64_64KEY, &hKey);
+
+	if (ret != ERROR_SUCCESS)
+		return false;
+
+	ret = ::RegSetValueEx(hKey, tsfHKEY.data(), 0, REG_QWORD, (LPBYTE)&hkl, sizeof(HKL));
 	RegCloseKey(hKey);
 
 	if (ret != ERROR_SUCCESS)

@@ -1,4 +1,5 @@
 module;
+#include "stdafx.h"
 #include "Globals.h"
 #include <WeaselCommon.h>
 export module WeaselTSF;
@@ -156,6 +157,7 @@ export
 
 		bool ReadConfiguration();
 		bool WriteConfiguration();
+		bool StoreTextServiceHandle(HKL hkl);
 
 		TfClientId GetClientId() const { return _tfClientId; }
 
@@ -182,7 +184,7 @@ export
 
 		BOOL _InitLanguageBar();
 		void _UninitLanguageBar();
-		bool _UpdateLanguageBar(weasel::Status& stat);
+		bool _UpdateLanguageBar();
 		void _ShowLanguageBar(BOOL show);
 		void _EnableLanguageBar(BOOL enable);
 
@@ -258,12 +260,14 @@ export
 		std::wstring _schema_id{};
 		unsigned _keycode{};
 		unsigned short _lastKey{};
+		bool m_preedit{};
 
 		DWORD m_globalCompartment{ 0xFC00'0003 };
 
 		TF_PRESERVEDKEY _preservedKeyGameMode;			// Ctrl+Shift+G
 		TF_PRESERVEDKEY _preservedKeyCaretFollowing;	// Ctrl+Shift+F
 		TF_PRESERVEDKEY _preservedKeyDaemon;			// Ctrl+Shift+D
+		TF_PRESERVEDKEY _preservedKeyImeMode;			// Ctrl+9
 		std::array<std::wstring, 2> _gameNames
 		{
 			L"War3.exe",
@@ -294,6 +298,8 @@ export
 		GAME_MODE,
 		GAME_WAR3,
 		PRESERVED_KEY_SWITCH,
-		GAME_MODE_SELF_REDRAW
+		GAME_MODE_SELF_REDRAW,
+		PREDICTION,
+		FIREFOX
 	};
 }

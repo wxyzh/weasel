@@ -358,10 +358,9 @@ void RimeWithWeaselHandler::_ReadClientInfo(RimeSessionId session_id, LPWSTR buf
 	{
 		RimeSetProperty(session_id, "client_app", app_name.c_str());
 
-		auto find_app = _SearchInMapCaseInsensitive(m_app_options, app_name);
-		if (find_app.empty())
+		if (m_app_options.find(app_name) != m_app_options.end())
 		{
-			AppOptions& options(m_app_options[find_app]);
+			AppOptions& options(m_app_options[app_name]);
 			std::for_each(options.begin(), options.end(), [session_id](std::pair<const std::string, bool>& pair)
 				{
 					DLOG(INFO) << "set app option: " << pair.first << " = " << pair.second;
@@ -512,7 +511,7 @@ void RimeWithWeaselHandler::_UpdateUI(RimeSessionId session_id)
 	if (weasel_status.composing)
 	{
 		 m_ui->Update(weasel_context, weasel_status);
-		/* if (!is_tsf)
+		 /*if (!is_tsf)
 		 {
 			 m_ui->Show();
 			 LOG(INFO) << std::format("From RimeWithWeaselHandler::_UpdateUI. is_tsf = {:s}", is_tsf);
@@ -724,6 +723,10 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 			tips = L"简体";
 		else if (m_message_value == "s2t")
 			tips = L"繁体";
+		else if (m_message_value == "prediction")
+			tips = L"开启联想";
+		else if (m_message_value == "!prediction")
+			tips = L"关闭联想";
 	}
 	if (tips.empty() && !show_icon)
 		return m_ui->IsCountingDown();
@@ -768,9 +771,11 @@ bool RimeWithWeaselHandler::_Respond(RimeSessionId session_id, EatLine eat)
 		messages.emplace_back(std::format("status.composing={}\n", status.is_composing));
 		messages.emplace_back(std::format("status.disabled={}\n", status.is_disabled));
 		messages.emplace_back(std::format("status.full_shape={}\n", status.is_full_shape));
-		messages.emplace_back(std::format("status.ascii_punct={}\n", status.is_ascii_punct));
+		messages.emplace_back(std::format("status.ascii_punct={}\n", status.is_ascii_punct));		
 		messages.emplace_back(std::format("status.s2t={}\n", status.is_s2t));
+		messages.emplace_back(std::format("status.prediction={}\n", status.is_prediction));
 		messages.emplace_back(std::format("status.schema_id={}\n", status.schema_id));
+		// LOG(INFO) << std::format("From RimeWithWeaselHandler::_Respond. status.is_prediction = {:s}", (bool)status.is_prediction);
 		RimeFreeStatus(&status);
 	}
 
@@ -1321,6 +1326,7 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status& stat, RimeSessionId sessi
 		stat.full_shape = !!status.is_full_shape;
 		stat.ascii_punct = !!status.is_ascii_punct;
 		stat.s2t = !!status.is_s2t;
+		stat.prediction = !!status.is_prediction;
 		if (schema_id != m_last_schema_id)
 		{
 			m_last_schema_id = schema_id;

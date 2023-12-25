@@ -13,17 +13,18 @@ import WeaselUtility;
 using namespace weasel;
 
 CCandidateList::CCandidateList(WeaselTSF& textService)
-	: _ui(std::make_unique<UI>())
-	, _tsf(textService)
+	: _tsf(textService)
 	, _pbShow(TRUE)
 {
 	_cRef = 1;
-	_ui->SetSelectCallback([this](int* const sel, int* const hov, bool* const next) { _tsf.HandleUICallback(sel, hov, next); });
-	_ui->SetRectCallback([this](const RECT& rc) { _tsf.SetRect(rc); });
+	_ui.SetSelectCallback([this](int* const sel, int* const hov, bool* const next) { _tsf.HandleUICallback(sel, hov, next); });
+	_ui.SetRectCallback([this](const RECT& rc) { _tsf.SetRect(rc); });
 }
 
 CCandidateList::~CCandidateList()
-{}
+{
+
+}
 
 STDMETHODIMP CCandidateList::QueryInterface(REFIID riid, void** ppvObj)
 {
@@ -115,11 +116,11 @@ STDMETHODIMP CCandidateList::Show(BOOL showCandidateWindow)
 {
 	if (showCandidateWindow)
 	{
-		_ui->Show();
+		_ui.Show();
 	}
 	else
 	{
-		_ui->Hide();
+		_ui.Hide();
 	}
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::Show. show = {}", showCandidateWindow);
@@ -129,7 +130,7 @@ STDMETHODIMP CCandidateList::Show(BOOL showCandidateWindow)
 
 STDMETHODIMP CCandidateList::IsShown(BOOL* pbShow)
 {
-	*pbShow = _ui->IsShown();
+	*pbShow = _ui.IsShown();
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::IsShown. pbShow = {}", *pbShow);
 #endif // TEST
@@ -167,7 +168,7 @@ STDMETHODIMP CCandidateList::GetDocumentMgr(ITfDocumentMgr** ppdim)
 
 STDMETHODIMP CCandidateList::GetCount(UINT* pCandidateCount)
 {
-	*pCandidateCount = _ui->ctx().cinfo.candies.size();
+	*pCandidateCount = _ui.ctx().cinfo.candies.size();
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::GetCount. count = {}", *pCandidateCount);
 #endif // TEST
@@ -176,24 +177,24 @@ STDMETHODIMP CCandidateList::GetCount(UINT* pCandidateCount)
 
 STDMETHODIMP CCandidateList::GetSelection(UINT* pSelectedCandidateIndex)
 {
-	if (_ui->ctx().cinfo.candies.empty())
+	if (_ui.ctx().cinfo.candies.empty())
 		return S_FALSE;
 
-	*pSelectedCandidateIndex = _ui->ctx().cinfo.highlighted;
+	*pSelectedCandidateIndex = _ui.ctx().cinfo.highlighted;
 	return S_OK;
 }
 
 STDMETHODIMP CCandidateList::GetString(UINT uIndex, BSTR* pbstr)
 {
 	*pbstr = nullptr;
-	auto& cinfo = _ui->ctx().cinfo;
+	auto& cinfo = _ui.ctx().cinfo;
 	if (uIndex >= cinfo.candies.size())
 		return E_INVALIDARG;
 
 	auto& str = cinfo.candies[uIndex].str;
 	*pbstr = SysAllocStringLen(str.c_str(), str.size());
 #ifdef TEST
-	LOG(INFO) << std::format("From CCandidateList::GetString. index = {}, str = {}", uIndex, to_string(_ui->ctx().cinfo.candies[uIndex].str, CP_UTF8));
+	LOG(INFO) << std::format("From CCandidateList::GetString. index = {}, str = {}", uIndex, to_string(_ui.ctx().cinfo.candies[uIndex].str, CP_UTF8));
 #endif // TEST
 
 	return S_OK;
@@ -349,11 +350,11 @@ void CCandidateList::UpdateUI(const Context& ctx, const Status& status)
 		LOG(INFO) << std::format("From CCandidateList::UpdateUI. _pbShow = {}, status.composing = {}, cand = {}", _pbShow, status.composing, to_string(ctx.cinfo.candies[0].str, CP_UTF8));
 #endif // TEST
 
-	if (_ui->style().inline_preedit) {
-		_ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
+	if (_ui.style().inline_preedit) {
+		_ui.style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
 	}
 	else {
-		_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
+		_ui.style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
 	}
 
 	// In UWP, candidate window will only be shown
@@ -362,7 +363,7 @@ void CCandidateList::UpdateUI(const Context& ctx, const Status& status)
 	if (!ctx.preedit.empty())
 		_preedit = ctx.preedit.str;
 
-	_ui->Update(ctx, status);
+	_ui.Update(ctx, status);
 	if (_pbShow == FALSE && status.composing)
 	{
 		_flags = TF_CLUIE_DOCUMENTMGR | TF_CLUIE_COUNT | TF_CLUIE_SELECTION | TF_CLUIE_STRING | TF_CLUIE_CURRENTPAGE;
@@ -388,12 +389,12 @@ void CCandidateList::UpdateUI(const Context& ctx, const Status& status)
 
 void CCandidateList::UpdateStyle(const UIStyle& sty)
 {
-	_ui->style() = sty;
+	_ui.style() = sty;
 }
 
 void CCandidateList::UpdateInputPosition(RECT const& rc)
 {
-	_ui->UpdateInputPosition(rc);
+	_ui.UpdateInputPosition(rc);
 }
 
 void CCandidateList::Destroy()
@@ -408,7 +409,7 @@ void CCandidateList::Destroy()
 
 UIStyle& CCandidateList::style()
 {
-	//return _ui->style();
+	//return _ui.style();
 	return _style;
 }
 
@@ -491,10 +492,11 @@ void CCandidateList::StartUI()
 			return;
 		}
 		auto ret = pUIElementMgr->EndUIElement(uiid);
+		PostMessage(_GetActiveWnd(), WM_IME_STARTCOMPOSITION, 0, 0);
 #ifdef TEST
 		LOG(INFO) << std::format("From CCandidateList::StartUI. ret = 0x{:X}", _pbShow, (unsigned)ret);
 #endif // TEST
-		_ui->style() = _style;
+		_ui.style() = _style;
 		_MakeUIWindow();
 	}
 	else
@@ -530,8 +532,7 @@ void CCandidateList::EndUI()
 
 void CCandidateList::SetCaretFollowing(bool following)
 {
-	if (_ui)
-		_ui->SetCaretFollowing(_tsf.GetBit(WeaselFlag::CARET_FOLLOWING));
+	_ui.SetCaretFollowing(_tsf.GetBit(WeaselFlag::CARET_FOLLOWING));
 }
 
 void CCandidateList::SetThreadFocus()
@@ -560,31 +561,18 @@ com_ptr<ITfContext> CCandidateList::GetContextDocument()
 
 bool CCandidateList::GetIsReposition()
 {
-	if (_ui)
-		return _ui->GetIsReposition();
-
-	return false;
+	return _ui.GetIsReposition();
 }
 
 void CCandidateList::_DisposeUIWindow()
 {
-	if (_ui == nullptr)
-	{
-		return;
-	}
-
-	_ui->Destroy();
+	_ui.Destroy();
 }
 
 void CCandidateList::_DisposeUIWindowAll()
 {
-	if (_ui == nullptr)
-	{
-		return;
-	}
-
-	// call _ui->DestroyAll() to clean resources
-	_ui->Destroy(true);
+	// call _ui.DestroyAll() to clean resources
+	_ui.Destroy(true);
 }
 
 void CCandidateList::_MakeUIWindow()
@@ -593,5 +581,5 @@ void CCandidateList::_MakeUIWindow()
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::_MakeUIWindow.");
 #endif // TEST
-	_ui->Create(p);
+	_ui.Create(p);
 }

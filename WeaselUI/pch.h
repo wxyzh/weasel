@@ -16,7 +16,6 @@
 #include <wtl/atlframe.h>
 #include <wtl/atlgdi.h>
 #include <wtl/atlmisc.h>
-// #include <wtl/atltheme.h>
 
 #include <atlcomcli.h> 
 

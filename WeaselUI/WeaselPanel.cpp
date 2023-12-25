@@ -263,6 +263,9 @@ LRESULT WeaselPanel::OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+#ifdef TEST
+	LOG(INFO) << std::format("From WeaselPanel::OnLeftClicked. lParam = 0x{:X}", (unsigned)lParam);
+#endif // TEST
 	if (hide_candidates)
 	{
 		bHandled = true;
@@ -365,6 +368,9 @@ LRESULT WeaselPanel::OnLeftReleased(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 {
 	if (!m_following && m_holder)
 	{
+#ifdef TEST
+		LOG(INFO) << std::format("From WeaselPanel::OnLeftReleased. lParam = 0x{:X}", (unsigned)lParam);
+#endif // TEST
 		RECT rcWindow;
 		GetWindowRect(&rcWindow);
 		if (m_reversed)
@@ -397,7 +403,10 @@ LRESULT WeaselPanel::OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 		GetClientRect(&rc);
 		if (abs(point.y - rc.top) < 10 || abs(point.y - rc.bottom) < 10 || abs(point.x - rc.left) < 10 || abs(point.x - rc.right) < 10)
 		{
-			SetCursor(LoadCursor(nullptr, IDC_SIZEALL));
+			SetCursor(LoadCursor(nullptr, IDC_SIZEALL));			
+#ifdef TEST
+			LOG(INFO) << std::format("From WeaselPanel::OnMouseHover. lParam = 0x{:X}", (unsigned)lParam);
+#endif // TEST
 		}
 		else
 		{
@@ -932,6 +941,10 @@ void WeaselPanel::DoPaint(CDCHandle dc/*, RECT& rect*/)
 		if ((!m_ctx.empty() && !m_style.inline_preedit) || (m_style.inline_preedit && (m_candidateCount || !m_ctx.aux.empty())))
 		{
 			CRect backrc = m_layout->GetContentRect();
+			if (!m_style.border)
+			{
+				backrc.InflateRect(1, 1);
+			}
 			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, IsToRoundStruct(), m_style.border_color);
 		}
 		if (!m_ctx.aux.str.empty())
@@ -1017,11 +1030,11 @@ void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+	GetWindowRect(&m_inputPos);
+	Refresh();
 #ifdef TEST
 	LOG(INFO) << std::format("From WeaselPanel::OnCreate. m_inputPos.left = {}, m_inputPos.top = {}", m_inputPos.left, m_inputPos.top);
 #endif // TEST
-	GetWindowRect(&m_inputPos);
-	Refresh();
 	return TRUE;
 }
 

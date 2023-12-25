@@ -88,7 +88,7 @@ export
 		void _DisposeUIWindowAll();
 		void _MakeUIWindow();
 
-		std::unique_ptr<weasel::UI> _ui;
+		weasel::UI _ui;
 		// 改为引用后，成员变量的初始化顺序是依据定义时的顺序，需要调整下定义的位置
 		WeaselTSF& _tsf;
 		DWORD _cRef;

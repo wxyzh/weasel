@@ -161,7 +161,7 @@ void WeaselTSF::_UninitLanguageBar()
 	_pLangBarButton = NULL;
 }
 
-bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
+bool WeaselTSF::_UpdateLanguageBar()
 {
 	bool state{};
 	if (!_pLangBarButton) return state;
@@ -179,9 +179,10 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 		SetBit(WeaselFlag::FULL_SHAPE, _status.full_shape);
 		SetBit(WeaselFlag::ASCII_PUNCT, _status.ascii_punct);
 		SetBit(WeaselFlag::SIMPLIFIED_TO_TRADITIONAL, _status.s2t);
+		SetBit(WeaselFlag::PREDICTION, _status.prediction);
 		_schema_id = _status.schema_id;
 
-		if (stat.ascii_mode)
+		if (_status.ascii_mode)
 		{
 			flags &= (~TF_CONVERSIONMODE_NATIVE);
 		}
@@ -190,7 +191,7 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			flags |= TF_CONVERSIONMODE_NATIVE;
 		}
 
-		if (stat.full_shape)
+		if (_status.full_shape)
 		{
 			flags |= TF_CONVERSIONMODE_FULLSHAPE;
 		}
@@ -199,7 +200,7 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			flags &= (~TF_CONVERSIONMODE_FULLSHAPE);
 		}
 
-		if (stat.ascii_punct)
+		if (_status.ascii_punct)
 		{
 			flags |= TF_CONVERSIONMODE_SYMBOL;
 		}
@@ -210,10 +211,10 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 	}
 	else
 	{
-		if (GetBit(WeaselFlag::ASCII_MODE) != stat.ascii_mode)
+		if (GetBit(WeaselFlag::ASCII_MODE) != _status.ascii_mode)
 		{
-			SetBit(WeaselFlag::ASCII_MODE, stat.ascii_mode);
-			if (stat.ascii_mode)
+			SetBit(WeaselFlag::ASCII_MODE, _status.ascii_mode);
+			if (_status.ascii_mode)
 			{
 				flags &= (~TF_CONVERSIONMODE_NATIVE);
 			}
@@ -223,10 +224,10 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			}
 			state = true;
 		}
-		else if (GetBit(WeaselFlag::FULL_SHAPE) != stat.full_shape)
+		else if (GetBit(WeaselFlag::FULL_SHAPE) != _status.full_shape)
 		{
-			SetBit(WeaselFlag::FULL_SHAPE, stat.full_shape);
-			if (stat.full_shape)
+			SetBit(WeaselFlag::FULL_SHAPE, _status.full_shape);
+			if (_status.full_shape)
 			{
 				flags |= TF_CONVERSIONMODE_FULLSHAPE;
 			}
@@ -236,10 +237,10 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			}
 			state = true;
 		}
-		else if (GetBit(WeaselFlag::ASCII_PUNCT) != stat.ascii_punct)
+		else if (GetBit(WeaselFlag::ASCII_PUNCT) != _status.ascii_punct)
 		{
-			SetBit(WeaselFlag::ASCII_PUNCT, stat.ascii_punct);
-			if (stat.ascii_punct)
+			SetBit(WeaselFlag::ASCII_PUNCT, _status.ascii_punct);
+			if (_status.ascii_punct)
 			{
 				flags |= TF_CONVERSIONMODE_SYMBOL;
 			}
@@ -249,14 +250,19 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 			}
 			state = true;
 		}
-		else if (GetBit(WeaselFlag::SIMPLIFIED_TO_TRADITIONAL) != stat.s2t)
+		else if (GetBit(WeaselFlag::SIMPLIFIED_TO_TRADITIONAL) != _status.s2t)
 		{
-			SetBit(WeaselFlag::SIMPLIFIED_TO_TRADITIONAL, stat.s2t);
+			SetBit(WeaselFlag::SIMPLIFIED_TO_TRADITIONAL, _status.s2t);
 			state = true;
 		}
-		else if (_schema_id != stat.schema_id)
+		else if (GetBit(WeaselFlag::PREDICTION) != _status.prediction)
 		{
-			_schema_id = stat.schema_id;
+			SetBit(WeaselFlag::PREDICTION, _status.prediction);
+			state = true;
+		}
+		else if (_schema_id != _status.schema_id)
+		{
+			_schema_id = _status.schema_id;
 			state = true;
 		}
 	}
@@ -268,7 +274,7 @@ bool WeaselTSF::_UpdateLanguageBar(weasel::Status& stat)
 	// _SetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
 	_pCompartmentConversion->_SetCompartmentDWORD(flags);
 
-	_pLangBarButton->UpdateWeaselStatus(stat);
+	_pLangBarButton->UpdateWeaselStatus(_status);
 	return state;
 }
 

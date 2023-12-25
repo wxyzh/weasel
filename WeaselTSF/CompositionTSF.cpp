@@ -143,11 +143,11 @@ void WeaselTSF::_UpdateComposition(ITfContext* pContext)
 	HRESULT hr;
 	_pEditSessionContext = pContext;
 	ResetBit(WeaselFlag::ASYNC_EDIT);
-	_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+	auto ret = _pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 	if (hr == TF_S_ASYNC)
 		SetBit(WeaselFlag::ASYNC_EDIT);
 #ifdef TEST
-	LOG(INFO) << std::format("From _UpdateComposition. hr = {:#x}, pContext = {:#x}, _tfClientId = {:#x}", (unsigned)hr, (size_t)pContext, _tfClientId);
+	LOG(INFO) << std::format("From _UpdateComposition. hr = 0x{:X}, pContext = 0x{:X}, _tfClientId = 0x{:X}, ret = 0x{:X}", (unsigned)hr, (size_t)pContext, _tfClientId, (unsigned)ret);
 #endif // TEST
 }
 
@@ -173,9 +173,8 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 				ResetBit(WeaselFlag::RETRY_COMPOSITION);
 				RetryKey();
 			}
-
 		}
-		else if (GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))	// 重发意外终止的首码事件
+		else if (GetBit(WeaselFlag::FIREFOX) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION) && !GetBit(WeaselFlag::PREDICTION))	// 重发意外终止的首码事件
 		{
 			SetBit(WeaselFlag::RETRY_COMPOSITION);
 			RetryKey();
@@ -216,7 +215,7 @@ bool WeaselTSF::RetryKey()
 	std::array<INPUT, 1> inputs;
 
 	inputs[0].type = INPUT_KEYBOARD;
-	inputs[0].ki = { _lastKey, _lastKey, 0, 0, 0 };
+	inputs[0].ki = { _lastKey };
 
 	send = SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
 
@@ -298,10 +297,10 @@ void WeaselTSF::SimulatingKeyboardEvents(unsigned short code)
 	std::array<INPUT, 2> inputs;
 
 	inputs[0].type = INPUT_KEYBOARD;
-	inputs[0].ki = { code, code, 0, 0, 0 };
+	inputs[0].ki = { code };
 
 	inputs[1].type = INPUT_KEYBOARD;
-	inputs[1].ki = { code, code, KEYEVENTF_KEYUP, 0, 0 };
+	inputs[1].ki = { code, 0, KEYEVENTF_KEYUP };
 
 	SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
 }

@@ -40,15 +40,7 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten, bo
 			if (GetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK))
 			{
 				ResetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);
-				unsigned send{};
-				std::array<INPUT, 2> inputs;
-
-				inputs[0].type = INPUT_KEYBOARD;
-				inputs[0].ki = { VK_CAPITAL, 0x14, 0, 0, 0 };
-
-				inputs[1].type = INPUT_KEYBOARD;
-				inputs[1].ki = { VK_CAPITAL, 0x14, KEYEVENTF_KEYUP, 0, 0 };
-				send = SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
+				SimulatingKeyboardEvents(VK_CAPITAL);
 			}
 			break;
 		}
@@ -70,9 +62,6 @@ STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
 	if (fForeground)
 	{
 		m_client.FocusIn();
-#ifdef TEST
-		LOG(INFO) << std::format("From OnSetFocus. fForeground = {}", fForeground);
-#endif // TEST
 	}
 	else {
 		m_client.FocusOut();
@@ -102,7 +91,7 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 	{
 		*pfEaten = TRUE;
 		return S_OK;
-	}
+	}	
 	_ProcessKeyEvent(wParam, lParam, pfEaten, true);
 	if (*pfEaten)
 	{
@@ -206,11 +195,13 @@ STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEa
 			ResetBit(WeaselFlag::GAME_MODE_SELF_REDRAW);
 		}
 		Flip(WeaselFlag::GAME_MODE);
+		*pfEaten = TRUE;
 	}
 	else if (IsEqualGUID(rguid, WEASEL_CARET_FOLLOWING_PRESERVED_KEY))
 	{
 		Flip(WeaselFlag::CARET_FOLLOWING);
 		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
+		*pfEaten = TRUE;
 	}
 	else if (IsEqualGUID(rguid, WEASEL_DAEMON_PRESERVED_KEY))
 	{
@@ -218,6 +209,29 @@ STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEa
 		if (_pGlobalCompartment)
 		{
 			UpdateGlobalCompartment(true);
+		}
+		*pfEaten = TRUE;
+	}
+	else if (IsEqualGUID(rguid, GUID_IME_MODE_PRESERVED_KEY))
+	{
+		com_ptr<ITfInputProcessorProfileMgr> pInputProcessorProfileMgr;
+		if (SUCCEEDED(pInputProcessorProfileMgr.CoCreateInstance(CLSID_TF_InputProcessorProfiles, nullptr, CLSCTX_ALL)))
+		{
+			com_ptr<ITfInputProcessorProfileSubstituteLayout> pInputProcessorProfileSubstituteLayout;
+			if (SUCCEEDED(pInputProcessorProfileMgr->QueryInterface(&pInputProcessorProfileSubstituteLayout)))
+			{
+				HKL hKL{ nullptr }, oldHKL{};
+				HRESULT hr = pInputProcessorProfileSubstituteLayout->GetSubstituteKeyboardLayout(c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile,	&hKL);
+				if (SUCCEEDED(hr) && hKL)
+				{					
+					oldHKL = ActivateKeyboardLayout(hKL, KLF_SETFORPROCESS);
+					if (oldHKL)
+					{
+						StoreTextServiceHandle(oldHKL);
+						*pfEaten = TRUE;
+					}
+				}
+			}
 		}
 	}
 	return S_OK;
@@ -260,10 +274,14 @@ BOOL WeaselTSF::_InitPreservedKey()
 		_preservedKeyDaemon.uVKey = 0x44;			// 'D'
 		_preservedKeyDaemon.uModifiers = TF_MOD_CONTROL | TF_MOD_SHIFT;
 
+		_preservedKeyImeMode.uVKey = 0x39;
+		_preservedKeyImeMode.uModifiers = TF_MOD_CONTROL;
+
 		std::wstring uilessMode{ L"сно╥дёй╫" };
 		auto hr = pKeystrokeMgr->PreserveKey(_tfClientId, WEASEL_UILESS_MODE_PRESERVED_KEY, &_preservedKeyGameMode, uilessMode.data(), uilessMode.size());
 		hr = pKeystrokeMgr->PreserveKey(_tfClientId, WEASEL_CARET_FOLLOWING_PRESERVED_KEY, &_preservedKeyCaretFollowing, L"", 0);
 		hr = pKeystrokeMgr->PreserveKey(_tfClientId, WEASEL_DAEMON_PRESERVED_KEY, &_preservedKeyDaemon, L"", 0);
+		hr = pKeystrokeMgr->PreserveKey(_tfClientId, GUID_IME_MODE_PRESERVED_KEY, &_preservedKeyImeMode, L"", 0);
 
 		return SUCCEEDED(hr);
 	}
@@ -297,5 +315,6 @@ void WeaselTSF::_UninitPreservedKey()
 		pKeystrokeMgr->UnpreserveKey(WEASEL_UILESS_MODE_PRESERVED_KEY, &_preservedKeyGameMode);
 		pKeystrokeMgr->UnpreserveKey(WEASEL_CARET_FOLLOWING_PRESERVED_KEY, &_preservedKeyCaretFollowing);
 		pKeystrokeMgr->UnpreserveKey(WEASEL_DAEMON_PRESERVED_KEY, &_preservedKeyDaemon);
+		pKeystrokeMgr->UnpreserveKey(GUID_IME_MODE_PRESERVED_KEY, &_preservedKeyImeMode);
 	}
 }

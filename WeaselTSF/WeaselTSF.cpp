@@ -73,6 +73,11 @@ WeaselTSF::WeaselTSF()
 		SetBit(WeaselFlag::WEZTERM_FIRST_KEY);
 	}
 
+	if (fs::path(name).filename().wstring() == L"firefox.exe")
+	{
+		SetBit(WeaselFlag::FIREFOX);
+	}
+
 	for (size_t i{}; i < _gameNames.size(); ++i)
 	{
 		if (fs::path(name).filename().wstring() == _gameNames[i])
@@ -277,7 +282,7 @@ void WeaselTSF::_EnsureServerConnected()
 		weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
 		bool ok = m_client.GetResponseData(std::ref(parser));
 		if (ok) {
-			_UpdateLanguageBar(_status);			
+			_UpdateLanguageBar();			
 		}
 		if (!m_client.Echo())
 		{

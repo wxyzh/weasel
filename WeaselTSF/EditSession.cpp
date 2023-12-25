@@ -21,13 +21,13 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	weasel::ResponseParser parser(&commit, context.get(), &_status, &config, &_cand->style());
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
-	auto state = _UpdateLanguageBar(_status);
+	auto state = _UpdateLanguageBar();
 
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, ok = {}, isComposing = {}", state, ok, _IsComposing());
+	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, ok = {}, isComposing = {}, prediction = {:s}, _status.prediction = {:s}, s2t = {:s}", state, ok, _IsComposing(), GetBit(WeaselFlag::PREDICTION), _status.prediction, _status.s2t);
 #endif // TEST
 
-	if (GetBit(WeaselFlag::EATEN))			// Word 2021进入异步编辑时，遇到标点符号输入时，必须进入合成，否则句点输入就失去了数字后的智能判断
+	if (GetBit(WeaselFlag::EATEN))				// Word 2021进入异步编辑时，遇到标点符号输入时，必须进入合成，否则句点输入就失去了数字后的智能判断
 	{
 		_StartComposition(_pEditSessionContext, !config.inline_preedit);		
 		_EndComposition(_pEditSessionContext, false);
@@ -50,11 +50,13 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 		}
 		else
 		{
+			m_preedit = !context->preedit.empty();
 			if (!commit.empty())
 			{
 				// For auto-selecting, commit and preedit can both exist.
 				// Commit and close the original composition first.
-				if (!_IsComposing()) {
+				if (!_IsComposing())
+				{
 					_StartComposition(_pEditSessionContext, !config.inline_preedit);
 				}
 				_InsertText(_pEditSessionContext, commit);

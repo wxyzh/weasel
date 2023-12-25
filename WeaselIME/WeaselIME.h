@@ -1,6 +1,7 @@
 #pragma once
 // #include <WeaselIPC.h>
 #include "KeyEvent.h"
+#include <WeaselUI.h>
 import WeaselIPC;
 
 #define MAX_COMPOSITION_SIZE 256
@@ -63,6 +64,7 @@ private:
 	void _SetCandidatePos(LPINPUTCONTEXT lpIMC);
 	void _SetCompositionWindow(LPINPUTCONTEXT lpIMC);
 	void _UpdateInputPosition(LPINPUTCONTEXT lpIMC, POINT pt);
+	HKL GetTextServiceHandle();
 
 private:
 	static HINSTANCE s_hModule;
@@ -70,5 +72,8 @@ private:
 	HIMC m_hIMC;
 	bool m_composing;
 	bool m_preferCandidatePos;
+	bool m_hotkey{};
+	weasel::UI m_ui;
+	weasel::UIStyle _style;
 	weasel::Client m_client;
 };

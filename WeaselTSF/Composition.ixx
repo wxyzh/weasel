@@ -1,5 +1,6 @@
 ﻿module;
 #include "stdafx.h"
+// #include <immdev.h>
 #include <WeaselCommon.h>
 #include "cmath"
 #include <UIAutomation.h>
@@ -15,7 +16,7 @@ import ResponseParser;
 import CandidateList;
 import WeaselUtility;
 
-// #pragma comment(lib, "Oleacc.lib")
+// #pragma comment(lib, "imm32.lib")
 
 export
 {
@@ -65,8 +66,7 @@ export
 
 		/* ITfEditSession */
 		STDMETHODIMP DoEditSession(TfEditCookie ec);
-		// RECT GetOleAccLocation(HWND hwnd);
-		void CalculatePosition(_Inout_opt_ RECT& rc);
+		void CalculatePosition(_In_ const RECT& rcExt, _Inout_opt_ RECT& rc);
 
 	private:
 		com_ptr<ITfContextView> _pContextView;
@@ -198,16 +198,16 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 
 STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 {
-	com_ptr<ITfRange> pRangeComposition;
-	RECT rc;
+	RECT rc{}, rcExt{};
 	BOOL fClipped;
 	HRESULT hr;
+	com_ptr<ITfRange> pRange;
 
-	if (_pComposition == nullptr || FAILED(_pComposition->GetRange(&pRangeComposition)))
+	if (_pComposition == nullptr || FAILED(_pComposition->GetRange(&pRange)))
 	{
 		// composition end
 		// note: selection.range is always an empty range
-		hr = _pContext->GetEnd(ec, &pRangeComposition);
+		hr = _pContext->GetEnd(ec, &pRange);
 	}
 
 	HWND hwnd;
@@ -219,10 +219,12 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	GetClassName(hwnd, name.data(), name.capacity());
 	name = name.data();
 
-	hr = _pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped);
+	_pContextView->GetScreenExt(&rcExt);
+	hr = _pContextView->GetTextExt(ec, pRange, &rc, &fClipped);
+
 #ifdef TEST
-	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {:s}, className = {}", 
-		rc.left, rc.top, (unsigned)hr, (bool)fClipped, to_string(name, CP_UTF8));
+	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {:s}, className = {}, rcExt = ({}, {}, {}, {})",
+		rc.left, rc.top, (unsigned)hr, (bool)fClipped, to_string(name, CP_UTF8), rcExt.left, rcExt.top, rcExt.right, rcExt.bottom);
 #endif // TEST
 	if (hr == 0x80040057)
 	{
@@ -232,13 +234,13 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 
 	if (SUCCEEDED(hr) && (rc.left != 0 && rc.top != 0))
 	{
-		CalculatePosition(rc);
+		CalculatePosition(rcExt, rc);
 		_pTextService->_SetCompositionPosition(rc);
 #ifdef TEST
 		LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}", rc.left, rc.top);
 #endif // TEST
 	}
-	else if (_pTextService->GetRect().left != 0)						// 个别应用连续输入法时，偶尔会获取到原点坐标，此时用最后一次合成的末码坐标替换
+	else if (_pTextService->GetRect().left != 0)						// 个别应用连续输入时，偶尔会获取到原点坐标，此时用最后一次合成的末码坐标替换
 	{
 		_pTextService->_SetCompositionPosition(_pTextService->GetRect());
 	}
@@ -246,10 +248,23 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	return hr;
 }
 
-void CGetTextExtentEditSession::CalculatePosition(RECT& rc)
+void CGetTextExtentEditSession::CalculatePosition(const RECT& rcExt, RECT& rc)
 {
-	// 保存实时坐标，作为下一次坐标的备用方案
-	_pTextService->SetRect(rc);
+	bool isIn = PtInRect(&rcExt, POINT(rc.left, rc.top));
+	if (isIn)
+	{
+		// 保存实时坐标，作为下一次坐标的备用方案
+		_pTextService->SetRect(rc);
+	}
+	else if (POINT pt{ _pTextService->GetRect().left, _pTextService->GetRect().top }; PtInRect(&rcExt, pt))
+	{
+		rc = _pTextService->GetRect();
+	}
+	else
+	{
+		rc.right = rc.left = rcExt.left + (rcExt.right - rcExt.left) / 3;
+		rc.bottom = rc.top = rcExt.top + (rcExt.bottom - rcExt.top) / 3 * 2;
+	}
 
 	if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT))				// 仅嵌入式候选框记录首码坐标
 	{
@@ -277,22 +292,6 @@ void CGetTextExtentEditSession::CalculatePosition(RECT& rc)
 		}
 	}
 }
-
-//RECT CGetTextExtentEditSession::GetOleAccLocation(HWND hwnd)
-//{
-//	RECT rc{};
-//	com_ptr<IAccessible> pAccessible;
-//	if (SUCCEEDED(AccessibleObjectFromWindow(hwnd, OBJID_CARET, IID_IAccessible, (VOID**)&pAccessible)) && pAccessible)
-//	{
-//		LONG x, y, cx, cy;
-//		VARIANT var{};
-//		if (SUCCEEDED(pAccessible->accLocation(&x, &y, &cx, &cy, var)))
-//		{
-//			SetRect(&rc, x, y, x + cx, y + cy);
-//		}
-//	}
-//	return rc;
-//}
 
 STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 {
@@ -361,8 +360,8 @@ STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec)
 	TF_SELECTION tfSelection;
 	HRESULT hRet = S_OK;
 
-	if (FAILED(_pComposition->GetRange(&pRange)))
-		return E_FAIL;
+	if (FAILED(hRet = _pComposition->GetRange(&pRange)))
+		return hRet;
 
 	auto ret = pRange->SetText(ec, 0, _text.c_str(), _text.length());
 #ifdef TEST

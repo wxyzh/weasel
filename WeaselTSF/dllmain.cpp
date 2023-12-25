@@ -5,9 +5,9 @@
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
 #include "logging.h"
+#pragma comment(lib, "glog.lib")
 #endif // TEST
 
-#pragma comment(lib, "glog.lib")
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID pvReserved)
 {

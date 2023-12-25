@@ -23,7 +23,6 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 #ifdef TEST
 	LOG(INFO) << std::format("From WeaselTSF::OnEndEdit.");
 #endif // TEST
-
 	/* did the selection change? */
 	BOOL fSelectionChanged;
 	if (SUCCEEDED(pEditRecord->GetSelectionStatus(&fSelectionChanged)) && fSelectionChanged)
@@ -52,22 +51,20 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 	}
 
 	/* text modification? */
-	com_ptr<IEnumTfRanges> pEnumTextChanges;
-	com_ptr<ITfRange> pRange;
+	com_ptr<IEnumTfRanges> pEnumTextChanges;	
 	if (SUCCEEDED(pEditRecord->GetTextAndPropertyUpdates(TF_GTP_INCL_TEXT, NULL, 0, &pEnumTextChanges)))
 	{
+		com_ptr<ITfRange> pRange;
+		ULONG fetched{};
+		if (SUCCEEDED(pEnumTextChanges->Next(1, &pRange, &fetched)))
+		{
 #ifdef TEST
-		LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. pEditRecord->GetTextAndPropertyUpdates.");
-#endif // TEST		
-		if (SUCCEEDED(pEnumTextChanges->Next(1, &pRange, NULL)))
-		{
-			pRange.Release();
-		}
-		pEnumTextChanges.Release();
-
-		if (GetBit(WeaselFlag::CARET_FOLLOWING) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))
-		{
-			_UpdateCompositionWindow(pContext);
+			LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. pEditRecord->GetTextAndPropertyUpdates.");
+#endif // TEST
+			if (GetBit(WeaselFlag::CARET_FOLLOWING) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))
+			{
+				_UpdateCompositionWindow(pContext);
+			}
 		}
 	}
 	return S_OK;

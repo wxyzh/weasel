@@ -154,4 +154,9 @@ void StatusUpdater::Store(const Deserializer::KeyType& k, std::wstring const& va
 		m_pTarget->p_status->s2t = bool_value;
 		return;
 	}
+
+	if (k[1] == L"prediction")
+	{
+		m_pTarget->p_status->prediction = bool_value;
+	}
 }

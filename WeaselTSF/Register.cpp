@@ -62,7 +62,7 @@ BOOL RegisterProfiles()
 			achIconFile,
 			cchIconFile,
 			TEXTSERVICE_ICON_INDEX,
-			NULL,
+			FindIME(),
 			0,
 			TRUE,
 			0);

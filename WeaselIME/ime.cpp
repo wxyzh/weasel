@@ -1,6 +1,13 @@
 ﻿#include "stdafx.h"
 #include "WeaselIME.h"
 
+#include "test.h"
+#ifdef TEST
+#define WEASEL_ENABLE_LOGGING
+#include "logging.h"
+namespace fs = std::filesystem;
+#endif // TEST
+
 #pragma warning(disable: 4996)
 
 static BOOL g_is_winlogon = FALSE;
@@ -44,12 +51,18 @@ BOOL WINAPI ImeConfigure(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 
 DWORD WINAPI ImeConversionList(HIMC hIMC, LPCTSTR lpSource, LPCANDIDATELIST lpCandList, DWORD dwBufLen, UINT uFlag)
 {
+#ifdef TEST
+	LOG(INFO) << std::format("ImeConversionList.");
+#endif // TEST
 	//
 	return TRUE;
 }
 
 BOOL WINAPI ImeDestroy(UINT uForce)
 {
+#ifdef TEST
+	LOG(INFO) << std::format("ImeDestroy. uForce = 0x{:X}", (unsigned)uForce);
+#endif // TEST
 	//
 	return TRUE;
 }
@@ -111,6 +124,39 @@ UINT WINAPI ImeToAsciiEx (UINT uVKey, UINT uScanCode, CONST LPBYTE lpbKeyState, 
 
 BOOL WINAPI NotifyIME(HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD dwValue)
 {
+#ifdef TEST
+	LOG(INFO) << std::format("NotifyIME. dwAction = 0x{:X}", (unsigned)dwAction);
+#endif // TEST
+	switch (dwAction)
+	{
+	case IMN_CLOSESTATUSWINDOW:
+		break;
+
+	case IMN_CHANGECANDIDATE:
+#ifdef TEST
+		LOG(INFO) << std::format("NotifyIME. dwAction = IMN_CHANGECANDIDATE");
+#endif // TEST
+		break;
+
+	case IMN_CLOSECANDIDATE:
+		break;	
+
+	case IMN_OPENCANDIDATE:
+		break;
+	}
+	IMN_CHANGECANDIDATE;
+	IMN_CLOSECANDIDATE;
+	IMN_CLOSESTATUSWINDOW;
+	IMN_GUIDELINE;
+	IMN_OPENCANDIDATE;
+	IMN_OPENSTATUSWINDOW;
+	IMN_SETCANDIDATEPOS;
+	IMN_SETCOMPOSITIONFONT;
+	IMN_SETCOMPOSITIONWINDOW;
+	IMN_SETCONVERSIONMODE;
+	IMN_SETOPENSTATUS;
+	IMN_SETSENTENCEMODE;
+	IMN_SETSTATUSWINDOWPOS;
 	//
 	return TRUE;
 }
