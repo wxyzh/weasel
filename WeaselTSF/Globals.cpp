@@ -59,3 +59,10 @@ static const GUID WEASEL_CARET_FOLLOWING_PRESERVED_KEY =
 // {BDD3F624-2AF4-4E70-8C8F-63A8293FE3CB}
 static const GUID WEASEL_DAEMON_PRESERVED_KEY =
 { 0xbdd3f624, 0x2af4, 0x4e70, { 0x8c, 0x8f, 0x63, 0xa8, 0x29, 0x3f, 0xe3, 0xcb } };
+
+// This GUID is used in Windows Vista/7/8 by MS_IME to represents if the
+// candidate window is visible or not.
+// TODO: Make sure if it is safe to use this GUID.
+// {745537CC-8130-4056-920B-018457A4EC06}
+static const GUID WEASEL_CUAS_CANDIDATE_MESSAGE_COMPARTMENT =
+{ 0x745537cc, 0x8130, 0x4056, { 0x92, 0xb, 0x1, 0x84, 0x57, 0xa4, 0xec, 0x6 } };

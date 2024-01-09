@@ -12,11 +12,6 @@
 
 namespace fs = std::filesystem;
 
-//#pragma data_seg("Shared")
-//bool g_checked = true;
-//#pragma data_seg()
-//
-//#pragma comment(linker, "/SECTION:Shared,RWS")
 module WeaselTSF;
 import CandidateList;
 import LanguageBar;
@@ -44,6 +39,7 @@ WeaselTSF::WeaselTSF()
 	_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 	_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
 	_activeLanguageProfileNotifySinkCookie = TF_INVALID_COOKIE;
+	m_context = std::make_shared<weasel::Context>();
 
 	_cand.Attach(new CCandidateList(*this));
 	SetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);
@@ -51,48 +47,6 @@ WeaselTSF::WeaselTSF()
 
 	DllAddRef();
 	// CatchUnhandledException();
-
-	auto pid = GetCurrentProcessId();
-	auto hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
-
-	std::wstring name;
-	DWORD len{ 1024 };
-	name.reserve(len);
-
-	auto ret = QueryFullProcessImageName(hProcess, 0, name.data(), &len);
-	CloseHandle(hProcess);
-	name = name.data();
-
-	if (fs::path(name).filename().wstring() == L"acad.exe")
-	{
-		SetBit(WeaselFlag::AUTOCAD);
-	}
-
-	if (fs::path(name).filename().wstring() == L"wezterm-gui.exe")
-	{
-		SetBit(WeaselFlag::WEZTERM_FIRST_KEY);
-	}
-
-	if (fs::path(name).filename().wstring() == L"firefox.exe")
-	{
-		SetBit(WeaselFlag::FIREFOX);
-	}
-
-	for (size_t i{}; i < _gameNames.size(); ++i)
-	{
-		if (fs::path(name).filename().wstring() == _gameNames[i])
-		{
-			SetBit(WeaselFlag::GAME_MODE);
-			if (i == 0)
-			{
-				SetBit(WeaselFlag::GAME_WAR3);
-			}
-		}
-	}
-
-#ifdef TEST
-	LOG(INFO) << std::format("Process {} starting log. AppName: {}, length = {}, is successful? {:s}", pid, fs::path(name).filename().string(), name.size(), static_cast<bool>(ret)).data();
-#endif // TEST
 }
 
 WeaselTSF::~WeaselTSF()
@@ -192,6 +146,8 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 
 	_pThreadMgr = pThreadMgr;
 	_tfClientId = tfClientId;
+
+	_InitWeaselData();
 
 #ifdef TEST
 	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitThreadMgrEventSink.");
@@ -293,4 +249,49 @@ void WeaselTSF::_EnsureServerConnected()
 			}
 		}
 	}
+}
+
+void WeaselTSF::_InitWeaselData()
+{
+	auto pid = GetCurrentProcessId();
+	auto hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+
+	std::wstring name;
+	DWORD len{ 1024 };
+	name.reserve(len);
+
+	auto ret = QueryFullProcessImageName(hProcess, 0, name.data(), &len);
+	CloseHandle(hProcess);
+	name = name.data();
+
+	if (fs::path(name).filename().wstring() == L"acad.exe")
+	{
+		SetBit(WeaselFlag::AUTOCAD);
+	}
+
+	if (fs::path(name).filename().wstring() == L"wezterm-gui.exe")
+	{
+		SetBit(WeaselFlag::WEZTERM_FIRST_KEY);
+	}
+
+	if (fs::path(name).filename().wstring() == L"firefox.exe")
+	{
+		SetBit(WeaselFlag::FIREFOX);
+	}
+
+	for (size_t i{}; i < _gameNames.size(); ++i)
+	{
+		if (fs::path(name).filename().wstring() == _gameNames[i])
+		{
+			SetBit(WeaselFlag::GAME_MODE);
+			if (i == 0)
+			{
+				SetBit(WeaselFlag::GAME_WAR3);
+			}
+		}
+	}
+
+#ifdef TEST
+	LOG(INFO) << std::format("Process {} starting log. AppName: {}, length = {}, is successful? {:s}", pid, fs::path(name).filename().string(), name.size(), static_cast<bool>(ret)).data();
+#endif // TEST
 }

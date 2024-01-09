@@ -6,15 +6,18 @@ module;
 #include "logging.h"
 #endif // TEST
 module WeaselTSF;
+import Composition;
+// import PrivateContextWrapper;
 
 static BOOL IsRangeCovered(TfEditCookie ec, ITfRange* pRangeTest, ITfRange* pRangeCover)
 {
 	LONG lResult;
 
-	if (pRangeCover->CompareStart(ec, pRangeTest, TF_ANCHOR_START, &lResult) != S_OK || 0 < lResult)
+	if (FAILED(pRangeCover->CompareStart(ec, pRangeTest, TF_ANCHOR_START, &lResult)) || 0 < lResult)
 		return FALSE;
-	if (pRangeCover->CompareEnd(ec, pRangeTest, TF_ANCHOR_END, &lResult) != S_OK || lResult < 0)
+	if (FAILED(pRangeCover->CompareEnd(ec, pRangeTest, TF_ANCHOR_END, &lResult)) || lResult < 0)
 		return FALSE;
+
 	return TRUE;
 }
 
@@ -33,7 +36,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 			TF_SELECTION tfSelection;
 			ULONG cFetched;
 
-			if (pContext->GetSelection(ecReadOnly, TF_DEFAULT_SELECTION, 1, &tfSelection, &cFetched) == S_OK && cFetched == 1)
+			if (SUCCEEDED(pContext->GetSelection(ecReadOnly, TF_DEFAULT_SELECTION, 1, &tfSelection, &cFetched)) && cFetched == 1)
 			{
 				com_ptr<ITfRange> pRangeComposition;
 				if (_pComposition->GetRange(&pRangeComposition) == S_OK)
@@ -59,10 +62,10 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 		if (SUCCEEDED(pEnumTextChanges->Next(1, &pRange, &fetched)))
 		{
 #ifdef TEST
-			LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. pEditRecord->GetTextAndPropertyUpdates.");
-#endif // TEST
-			if (GetBit(WeaselFlag::CARET_FOLLOWING) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION))
-			{
+			LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. pEditRecord->GetTextAndPropertyUpdates. fetched = {}", fetched);
+#endif // TEST		
+			if (GetBit(WeaselFlag::CARET_FOLLOWING) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION) && fetched == 0)
+			{			
 				_UpdateCompositionWindow(pContext);
 			}
 		}

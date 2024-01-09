@@ -3,7 +3,6 @@
 // #include <immdev.h>
 #include <WeaselCommon.h>
 #include "cmath"
-#include <UIAutomation.h>
 #include "test.h"
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
@@ -175,7 +174,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 {
 	/* Clear the dummy text we set before, if any. */
-	if (_pComposition == nullptr) return S_OK;
+	if (_pComposition == nullptr) return S_OK;	
 
 	if (_pTextService->GetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE))
 	{
@@ -185,6 +184,10 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 	com_ptr<ITfRange> pCompositionRange;
 	if (_clear && _pComposition->GetRange(&pCompositionRange) == S_OK)
 	{
+		/*if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT))
+		{
+			ClearReadingProperties(_pContext, pCompositionRange, ec);
+		}*/
 		pCompositionRange->SetText(ec, 0, L"", 0);
 	}
 
@@ -208,27 +211,33 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 		// composition end
 		// note: selection.range is always an empty range
 		hr = _pContext->GetEnd(ec, &pRange);
-	}
+	}	
 
 	HWND hwnd;
 	_pContextView->GetWnd(&hwnd);
 	_pTextService->SetHWND(hwnd);
+	_pContextView->GetScreenExt(&rcExt);
+	hr = _pContextView->GetTextExt(ec, pRange.p, &rc, &fClipped);
 
+	/*auto himc = ImmGetContext(hwnd);
+	COMPOSITIONFORM candidateFrom{};
+	bool ret = ImmRequestMessage(himc, IMR_COMPOSITIONWINDOW, (LPARAM)&candidateFrom);
+	POINT pt = candidateFrom.ptCurrentPos;
+	RECT rc1 = candidateFrom.rcArea;*/
+
+#ifdef TEST
 	std::wstring name{};
 	name.reserve(512);
 	GetClassName(hwnd, name.data(), name.capacity());
 	name = name.data();
 
-	_pContextView->GetScreenExt(&rcExt);
-	hr = _pContextView->GetTextExt(ec, pRange, &rc, &fClipped);
-
-#ifdef TEST
 	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {:s}, className = {}, rcExt = ({}, {}, {}, {})",
 		rc.left, rc.top, (unsigned)hr, (bool)fClipped, to_string(name, CP_UTF8), rcExt.left, rcExt.top, rcExt.right, rcExt.bottom);
 #endif // TEST
-	if (hr == 0x80040057)
+	if ((hr == 0x80040057) ||
+		(hr == 0x80070057 && _pTextService->GetBit(WeaselFlag::AUTOCAD)))
 	{
-		_pTextService->OnCompositionTerminated(ec, _pComposition);
+		_pTextService->_AbortComposition(true);
 		return hr;
 	}
 
@@ -262,8 +271,8 @@ void CGetTextExtentEditSession::CalculatePosition(const RECT& rcExt, RECT& rc)
 	}
 	else
 	{
-		rc.right = rc.left = rcExt.left + (rcExt.right - rcExt.left) / 3;
-		rc.bottom = rc.top = rcExt.top + (rcExt.bottom - rcExt.top) / 3 * 2;
+		rc.left = rc.right = rc.right / 3.0;
+		rc.top = rc.bottom = rc.bottom / 3.0 * 2;
 	}
 
 	if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT))				// 仅嵌入式候选框记录首码坐标
@@ -300,28 +309,28 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 #endif // TEST
 	std::wstring preedit = _context->preedit.str;
 
-	com_ptr<ITfRange> pRangeComposition;
+	com_ptr<ITfRange> pRangeComposition;	
 	if ((_pComposition->GetRange(&pRangeComposition)) != S_OK)
 		return E_FAIL;
 
-	com_ptr<ITfProperty> pProperty;
-	VARIANT var{};
-	_pContext->GetProperty(GUID_PROP_COMPOSING, &pProperty);
-	auto ret = pProperty->GetValue(ec, pRangeComposition, &var);
+	HRESULT hr;
+	if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT_LOST_FIRST_KEY))
+	{
+		hr = pRangeComposition->SetText(ec, 0, L"", 0);
+	}
+	else
+	{
+		hr = pRangeComposition->SetText(ec, 0, preedit.c_str(), preedit.length());
+	}
 
-	HRESULT hr = pRangeComposition->SetText(ec, TF_ST_CORRECTION, preedit.c_str(), preedit.length());
+	// SetReadingProperties(_pContext, pRangeComposition, preedit, ec);
+
 #ifdef TEST
-	LOG(INFO) << std::format("From CInlinePreeditEditSession::DoEditSession. preedit = {}, hr = 0x{:X}, ret = 0x{:X}, isComposition = {}", to_string(preedit), (unsigned)hr, (unsigned)ret, var.lVal);
+	LOG(INFO) << std::format("From CInlinePreeditEditSession::DoEditSession. preedit = {}, hr = 0x{:X}", to_string(preedit), (unsigned)hr);
 #endif // TEST
 	if (FAILED(hr))
 	{
-		// _pTextService->_AbortComposition();
-		if (_pTextService->GetBit(WeaselFlag::AUTOCAD))
-		{
-			_pTextService->ResetBit(WeaselFlag::FOCUS_CHANGED);
-			_pTextService->SetBit(WeaselFlag::RETRY_COMPOSITION);
-		}
-		_pTextService->OnCompositionTerminated(ec, _pComposition);
+		_pTextService->_AbortComposition(false);
 		return hr;
 	}
 
@@ -349,7 +358,7 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 	tfSelection.range = pRangeComposition;
 	tfSelection.style.ase = TF_AE_NONE;
 	tfSelection.style.fInterimChar = FALSE;
-	_pContext->SetSelection(ec, 1, &tfSelection);
+	hr = _pContext->SetSelection(ec, 1, &tfSelection);
 
 	return S_OK;
 }

@@ -22,6 +22,7 @@
 #include <format>
 #include <array>
 #include <functional>
+#include <unordered_map>
 
 template<typename I>
 using com_ptr = CComPtr<I>;

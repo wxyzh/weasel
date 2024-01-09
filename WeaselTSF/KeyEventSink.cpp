@@ -14,7 +14,24 @@ import CandidateList;
 void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten, bool isTest)
 {
 	if (!_IsKeyboardOpen())
+	{
+		if (wParam == 0x39 && GetKeyState(VK_CONTROL) < 0)
+		{
+			_SetKeyboardOpen(TRUE);
+		}
 		return;
+	}
+
+	if (GetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK) && wParam == VK_CAPITAL && GetKeyState(VK_CAPITAL) > 0)
+	{
+		ResetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);
+		SimulatingKeyboardEvents(VK_CAPITAL);
+	}
+
+	if (_IsComposing() && wParam == VK_CAPITAL && GetKeyState(VK_CAPITAL) < 0)
+	{
+		SetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);
+	}	
 
 	_EnsureServerConnected();
 	weasel::KeyEvent ke;
@@ -27,24 +44,7 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten, bo
 	else
 	{
 		*pfEaten = (BOOL)m_client.ProcessKeyEvent(ke);
-		switch ((unsigned)ke)
-		{
-		case 0xFFE5:			// Caps Lock down
-			if (_IsComposing())
-			{
-				SetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);
-			}
-			break;
-
-		case 0x4002'FFE5:		// Caps Lock up
-			if (GetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK))
-			{
-				ResetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);
-				SimulatingKeyboardEvents(VK_CAPITAL);
-			}
-			break;
-		}
-		if (!isTest && !(*pfEaten) && !(lParam >> 31) && (isdigit(ke.keycode) || ispunct(ke.keycode)) && !(ke.mask & (ibus::CONTROL_MASK | ibus::ALT_MASK)))
+		if (!isTest && !(*pfEaten) && !GetBit(WeaselFlag::ASCII_PUNCT) && !(lParam >> 31) && (isdigit(ke.keycode) || ispunct(ke.keycode)) && !(ke.mask & (ibus::CONTROL_MASK | ibus::ALT_MASK)))
 		{
 			SetBit(WeaselFlag::EATEN);
 			_keycode = ke.keycode;
@@ -124,11 +124,19 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 		LOG(INFO) << std::format("From OnKeyDown. *pfEaten = {}", *pfEaten);
 #endif // TEST
 	}
-	if (lParam == 0x4000'0000 || lParam == 0x4000'0001)
+	if (GetBit(WeaselFlag::AUTOCAD))
 	{
-		SetBit(WeaselFlag::RETRY_COMPOSITION);
-		ResetBit(WeaselFlag::FOCUS_CHANGED);
-		OnCompositionTerminated(_dwTextEditSinkCookie, _pComposition);
+		if (lParam == 0x4000'0000 || lParam == 0x4000'0001)
+		{
+			if (!GetBit(WeaselFlag::INLINE_PREEDIT))
+			{
+				SetBit(WeaselFlag::NOT_INLINE_PREEDIT_LOST_FIRST_KEY);
+			}
+			else
+			{
+				SetBit(WeaselFlag::INLINE_PREEDIT_LOST_FIRST_KEY);
+			}
+		}
 	}
 	_UpdateComposition(pContext);
 
@@ -212,7 +220,7 @@ STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEa
 		}
 		*pfEaten = TRUE;
 	}
-	else if (IsEqualGUID(rguid, GUID_IME_MODE_PRESERVED_KEY))
+	/*else if (IsEqualGUID(rguid, GUID_IME_MODE_PRESERVED_KEY))
 	{
 		com_ptr<ITfInputProcessorProfileMgr> pInputProcessorProfileMgr;
 		if (SUCCEEDED(pInputProcessorProfileMgr.CoCreateInstance(CLSID_TF_InputProcessorProfiles, nullptr, CLSCTX_ALL)))
@@ -233,7 +241,7 @@ STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEa
 				}
 			}
 		}
-	}
+	}*/
 	return S_OK;
 }
 
@@ -274,14 +282,14 @@ BOOL WeaselTSF::_InitPreservedKey()
 		_preservedKeyDaemon.uVKey = 0x44;			// 'D'
 		_preservedKeyDaemon.uModifiers = TF_MOD_CONTROL | TF_MOD_SHIFT;
 
-		_preservedKeyImeMode.uVKey = 0x39;
-		_preservedKeyImeMode.uModifiers = TF_MOD_CONTROL;
+		//_preservedKeyImeMode.uVKey = 0x39;			// '9'
+		//_preservedKeyImeMode.uModifiers = TF_MOD_CONTROL;
 
 		std::wstring uilessMode{ L"сно╥дёй╫" };
 		auto hr = pKeystrokeMgr->PreserveKey(_tfClientId, WEASEL_UILESS_MODE_PRESERVED_KEY, &_preservedKeyGameMode, uilessMode.data(), uilessMode.size());
 		hr = pKeystrokeMgr->PreserveKey(_tfClientId, WEASEL_CARET_FOLLOWING_PRESERVED_KEY, &_preservedKeyCaretFollowing, L"", 0);
 		hr = pKeystrokeMgr->PreserveKey(_tfClientId, WEASEL_DAEMON_PRESERVED_KEY, &_preservedKeyDaemon, L"", 0);
-		hr = pKeystrokeMgr->PreserveKey(_tfClientId, GUID_IME_MODE_PRESERVED_KEY, &_preservedKeyImeMode, L"", 0);
+		// hr = pKeystrokeMgr->PreserveKey(_tfClientId, GUID_IME_MODE_PRESERVED_KEY, &_preservedKeyImeMode, L"", 0);
 
 		return SUCCEEDED(hr);
 	}
@@ -315,6 +323,6 @@ void WeaselTSF::_UninitPreservedKey()
 		pKeystrokeMgr->UnpreserveKey(WEASEL_UILESS_MODE_PRESERVED_KEY, &_preservedKeyGameMode);
 		pKeystrokeMgr->UnpreserveKey(WEASEL_CARET_FOLLOWING_PRESERVED_KEY, &_preservedKeyCaretFollowing);
 		pKeystrokeMgr->UnpreserveKey(WEASEL_DAEMON_PRESERVED_KEY, &_preservedKeyDaemon);
-		pKeystrokeMgr->UnpreserveKey(GUID_IME_MODE_PRESERVED_KEY, &_preservedKeyImeMode);
+		// pKeystrokeMgr->UnpreserveKey(GUID_IME_MODE_PRESERVED_KEY, &_preservedKeyImeMode);
 	}
 }

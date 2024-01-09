@@ -99,7 +99,7 @@ STDAPI CLangBarItemButton::GetInfo(TF_LANGBARITEMINFO *pInfo)
 {
 	pInfo->clsidService = c_clsidTextService;
 	pInfo->guidItem = _guid;
-	pInfo->dwStyle = TF_LBI_STYLE_BTN_BUTTON | TF_LBI_STYLE_BTN_MENU | TF_LBI_STYLE_SHOWNINTRAY;
+	pInfo->dwStyle = TF_LBI_STYLE_BTN_BUTTON | TF_LBI_STYLE_BTN_MENU | TF_LBI_STYLE_SHOWNINTRAYONLY;
 	pInfo->ulSort = 1;
 	lstrcpyW(pInfo->szDescription, L"WeaselTSF Button");
 	return S_OK;

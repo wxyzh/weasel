@@ -78,8 +78,9 @@ void UI::UIImpl::Show()
 #ifdef TEST
 	LOG(INFO) << std::format("From UIImpl::Show. panel.IsWindow() = {}", panel.IsWindow());
 #endif // TEST
-	if (!panel.IsWindow()) return;
+	if (!panel.IsWindow()) return;	
 	panel.ShowWindow(SW_SHOWNA);
+	NotifyWinEvent(EVENT_OBJECT_IME_SHOW, panel.m_hWnd, OBJID_CLIENT, CHILDID_SELF);
 #ifdef TEST
 	LOG(INFO) << std::format("From UIImpl::Show. timer = {}", timer);
 #endif // TEST
@@ -93,8 +94,9 @@ void UI::UIImpl::Show()
 
 void UI::UIImpl::Hide()
 {
-	if (!panel.IsWindow()) return;
+	if (!panel.IsWindow()) return;	
 	panel.ShowWindow(SW_HIDE);
+	NotifyWinEvent(EVENT_OBJECT_IME_HIDE, panel.m_hWnd, OBJID_CLIENT, CHILDID_SELF);
 	m_ui.m_data->shown = false;
 	if (timer)
 	{
@@ -235,8 +237,9 @@ void UI::Refresh()
 void UI::UpdateInputPosition(RECT const& rc)
 {
 	if (pimpl_ && pimpl_->panel.IsWindow())
-	{
-		pimpl_->panel.MoveTo(rc);
+	{		
+		pimpl_->panel.MoveTo(rc); 
+		NotifyWinEvent(EVENT_OBJECT_IME_CHANGE, pimpl_->panel.m_hWnd, OBJID_CLIENT, CHILDID_SELF);
 	}
 }
 

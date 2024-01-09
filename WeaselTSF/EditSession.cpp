@@ -17,8 +17,8 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	// get commit string from server
 	std::wstring commit;
 	weasel::Config config;
-	auto context = std::make_shared<weasel::Context>();
-	weasel::ResponseParser parser(&commit, context.get(), &_status, &config, &_cand->style());
+	// auto context = std::make_shared<weasel::Context>();
+	weasel::ResponseParser parser(&commit, m_context.get(), &_status, &config, &_cand->style());
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
 	auto state = _UpdateLanguageBar();
@@ -50,7 +50,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 		}
 		else
 		{
-			m_preedit = !context->preedit.empty();
+			m_preedit = !m_context->preedit.empty();
 			if (!commit.empty())
 			{
 				// For auto-selecting, commit and preedit can both exist.
@@ -72,7 +72,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 			}
 			if (_IsComposing() && (config.inline_preedit || GetBit(WeaselFlag::GAME_MODE)))
 			{
-				_ShowInlinePreedit(_pEditSessionContext, context);
+				_ShowInlinePreedit(_pEditSessionContext, m_context);
 				SetBit(WeaselFlag::INLINE_PREEDIT);
 			}
 			if (GetBit(WeaselFlag::CARET_FOLLOWING))
@@ -85,7 +85,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 			}
 		}
 	}		
-	_UpdateUI(*context, _status);
+	_UpdateUI(*m_context, _status);
 
 	return S_OK;
 }

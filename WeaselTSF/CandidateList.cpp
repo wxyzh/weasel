@@ -2,6 +2,7 @@ module;
 #include "stdafx.h"
 #include <WeaselUI.h>
 #include <WeaselCommon.h>
+#include "Globals.h"
 #include "test.h"
 #ifdef TEST
 #define WEASEL_ENABLE_LOGGING
@@ -114,6 +115,25 @@ STDMETHODIMP CCandidateList::GetGUID(GUID* pguid)
 
 STDMETHODIMP CCandidateList::Show(BOOL showCandidateWindow)
 {
+	com_ptr<ITfCompartmentMgr> pCompartmentMgr;
+	if (_pContextDocument)
+	{
+		if (SUCCEEDED(_pContextDocument->QueryInterface(&pCompartmentMgr)))
+		{
+			// Update a hidden compartment to generate
+			// IMN_OPENCANDIDATE/IMN_CLOSECANDIDATE notifications for the 
+			// application compatibility.
+			com_ptr<ITfCompartment> pCompartment;
+			if (SUCCEEDED(pCompartmentMgr->GetCompartment(WEASEL_CUAS_CANDIDATE_MESSAGE_COMPARTMENT, &pCompartment)))
+			{
+				VARIANT var{};
+				var.vt = VT_I4;
+				var.lVal = showCandidateWindow ? TRUE : FALSE;
+				pCompartment->SetValue(_tsf.GetClientId(), &var);
+			}
+		}
+	}
+
 	if (showCandidateWindow)
 	{
 		_ui.Show();
@@ -121,7 +141,7 @@ STDMETHODIMP CCandidateList::Show(BOOL showCandidateWindow)
 	else
 	{
 		_ui.Hide();
-	}
+	}	
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::Show. show = {}", showCandidateWindow);
 #endif // TEST
@@ -370,7 +390,6 @@ void CCandidateList::UpdateUI(const Context& ctx, const Status& status)
 		// _flags = TF_RIUIE_CONTEXT | TF_RIUIE_STRING | TF_RIUIE_MAXREADINGSTRINGLENGTH | TF_RIUIE_VERTICALORDER;
 		// _flags = TF_RIUIE_STRING | TF_RIUIE_VERTICALORDER;
 		_UpdateUIElement();
-		PostMessage(_GetActiveWnd(), WM_IME_NOTIFY, IMN_CHANGECANDIDATE, 0x1);
 	}
 
 #ifdef TEST
@@ -492,7 +511,6 @@ void CCandidateList::StartUI()
 			return;
 		}
 		auto ret = pUIElementMgr->EndUIElement(uiid);
-		PostMessage(_GetActiveWnd(), WM_IME_STARTCOMPOSITION, 0, 0);
 #ifdef TEST
 		LOG(INFO) << std::format("From CCandidateList::StartUI. ret = 0x{:X}", _pbShow, (unsigned)ret);
 #endif // TEST

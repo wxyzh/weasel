@@ -17,16 +17,18 @@ void WeaselTSF::_StartComposition(ITfContext* pContext, bool not_inline_preedit)
 #endif // TEST
 	com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
 	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, not_inline_preedit));
-	_cand->StartUI();
 	if (pStartCompositionEditSession != nullptr)
 	{
 		HRESULT hr;
 		auto ret = pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+		if (!GetBit(WeaselFlag::DONT_DESTROY_UI))
+			_cand->StartUI();
+		else
+			ResetBit(WeaselFlag::DONT_DESTROY_UI);
 		SetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
 #ifdef TEST
 		LOG(INFO) << std::format("From _StartComposition. hr = {:#x}, ret = {:#x}", (unsigned)hr, (unsigned)ret);
 #endif // TEST
-
 		if (SUCCEEDED(ret) && FAILED(hr))
 		{
 			m_client.ClearComposition();
@@ -47,8 +49,13 @@ void WeaselTSF::_EndComposition(ITfContext* pContext, BOOL clear)
 	{
 		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 	}
+	if (GetBit(WeaselFlag::DONT_DESTROY_UI) && SUCCEEDED(hr))
+	{
+		return;
+	}
 	// after pEditSession, less flicker
 	_cand->EndUI();
+	ResetBit(WeaselFlag::DONT_DESTROY_UI);
 #ifdef TEST
 	LOG(INFO) << std::format("From _EndComposition. hr = 0x{:X}", (unsigned)hr);
 #endif // TEST
@@ -57,6 +64,11 @@ void WeaselTSF::_EndComposition(ITfContext* pContext, BOOL clear)
 /* Composition Window Handling */
 BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 {
+	if (GetBit(WeaselFlag::NOT_INLINE_PREEDIT_LOST_FIRST_KEY))
+	{
+		_AbortComposition(true);
+		return TRUE;
+	}
 	com_ptr<ITfContextView> pContextView;
 	HRESULT hr;
 
@@ -166,15 +178,7 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 
 	if (!GetBit(WeaselFlag::FOCUS_CHANGED))
 	{
-		if (GetBit(WeaselFlag::AUTOCAD))					// 无焦点输入时，AutoCAD会终止首码的合成
-		{
-			if (GetBit(WeaselFlag::RETRY_COMPOSITION))
-			{
-				ResetBit(WeaselFlag::RETRY_COMPOSITION);
-				RetryKey();
-			}
-		}
-		else if (GetBit(WeaselFlag::FIREFOX) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION) && !GetBit(WeaselFlag::PREDICTION))	// 重发意外终止的首码事件
+		if (GetBit(WeaselFlag::FIREFOX) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION) && !GetBit(WeaselFlag::PREDICTION))	// 重发意外终止的首码事件
 		{
 			SetBit(WeaselFlag::RETRY_COMPOSITION);
 			RetryKey();
@@ -186,12 +190,31 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 
 void WeaselTSF::_AbortComposition(bool clear)
 {
-	m_client.ClearComposition();
-
-	if (_IsComposing()) {
-		_EndComposition(_pEditSessionContext, clear);
+	BOOL eaten{};
+	if (GetBit(WeaselFlag::INLINE_PREEDIT_LOST_FIRST_KEY))
+	{
+		ResetBit(WeaselFlag::INLINE_PREEDIT_LOST_FIRST_KEY);
+		SetBit(WeaselFlag::DONT_DESTROY_UI);
+		_EndComposition(_pEditSessionContext, false);
+		if (m_context->preedit.str.size() > 1)
+		{			
+			_ProcessKeyEvent(VK_BACK, 0x1, &eaten);
+		}
+		return;
 	}
-	_cand->Destroy();
+
+	m_client.ClearComposition();
+	if (_IsComposing()) {
+		if (GetBit(WeaselFlag::NOT_INLINE_PREEDIT_LOST_FIRST_KEY))
+		{
+			ResetBit(WeaselFlag::NOT_INLINE_PREEDIT_LOST_FIRST_KEY);
+			_ProcessKeyEvent(_lastKey, 0x1, &eaten);
+			SetBit(WeaselFlag::DONT_DESTROY_UI);
+		}
+		_EndComposition(_pEditSessionContext, clear);		
+		return;
+	}
+	_cand->Destroy();	
 }
 
 void WeaselTSF::_FinalizeComposition()
@@ -222,15 +245,16 @@ bool WeaselTSF::RetryKey()
 	return send == 1;
 }
 
-//获取程序当前所在显示器的分辨率大小，可以动态的获取程序所在显示器的分辨率
-SIZE WeaselTSF::GetScreenResolution() {
+// 获取程序当前所在显示器的分辨率大小，可以动态的获取程序所在显示器的分辨率
+SIZE WeaselTSF::GetScreenResolution()
+{
 	SIZE size{};
 	if (!m_hwnd)
 		return size;
 
-	//MONITOR_DEFAULTTONEAREST 返回值是最接近该点的屏幕句柄
-	//MONITOR_DEFAULTTOPRIMARY 返回值是主屏幕的句柄
-	//如果其中一个屏幕包含该点，则返回值是该屏幕的HMONITOR句柄。如果没有一个屏幕包含该点，则返回值取决于dwFlags的值
+	// MONITOR_DEFAULTTONEAREST 返回值是最接近该点的屏幕句柄
+	// MONITOR_DEFAULTTOPRIMARY 返回值是主屏幕的句柄
+	// 如果其中一个屏幕包含该点，则返回值是该屏幕的HMONITOR句柄。如果没有一个屏幕包含该点，则返回值取决于dwFlags的值
 	HMONITOR hMonitor = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTONEAREST);
 	MONITORINFOEX miex;
 	miex.cbSize = sizeof(miex);
@@ -241,8 +265,8 @@ SIZE WeaselTSF::GetScreenResolution() {
 	dm.dmSize = sizeof(dm);
 	dm.dmDriverExtra = 0;
 
-	//ENUM_CURRENT_SETTINGS 检索显示设备的当前设置
-	//ENUM_REGISTRY_SETTINGS 检索当前存储在注册表中的显示设备的设置
+	// ENUM_CURRENT_SETTINGS 检索显示设备的当前设置
+	// ENUM_REGISTRY_SETTINGS 检索当前存储在注册表中的显示设备的设置
 	if (!EnumDisplaySettings(miex.szDevice, ENUM_CURRENT_SETTINGS, &dm))
 		return size;
 

@@ -62,7 +62,7 @@ BOOL RegisterProfiles()
 			achIconFile,
 			cchIconFile,
 			TEXTSERVICE_ICON_INDEX,
-			FindIME(),
+			NULL,
 			0,
 			TRUE,
 			0);
@@ -97,8 +97,6 @@ const GUID SupportCategories0[] =
 {
 	 GUID_TFCAT_CATEGORY_OF_TIP,
 	 GUID_TFCAT_TIP_KEYBOARD,
-	 // GUID_TFCAT_TIP_SPEECH,
-	 // GUID_TFCAT_TIP_HANDWRITING,
 	 GUID_TFCAT_TIPCAP_SECUREMODE,
 	 GUID_TFCAT_TIPCAP_UIELEMENTENABLED,
 	 GUID_TFCAT_TIPCAP_INPUTMODECOMPARTMENT,
@@ -118,9 +116,8 @@ const GUID SupportCategories0[] =
 BOOL RegisterCategories()
 {
 	com_ptr<ITfCategoryMgr> pCategoryMgr;
-	HRESULT hr;
 
-	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void**)&pCategoryMgr);
+	HRESULT hr = pCategoryMgr.CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER);
 	if (hr != S_OK)
 		return FALSE;
 
@@ -138,9 +135,8 @@ BOOL RegisterCategories()
 void UnregisterCategories()
 {
 	com_ptr<ITfCategoryMgr> pCategoryMgr;
-	HRESULT hr;
+	HRESULT hr = pCategoryMgr.CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER);
 
-	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void**)&pCategoryMgr);
 	if (FAILED(hr))
 		return;
 

@@ -199,6 +199,11 @@ export
 		BOOL _InitCleanupContextDurationSink();
 		void _UninitCleanupContextDurationSink();
 
+		void _InitWeaselData();
+		/*void EnsurePrivateContextExists(ITfContext* pContext);
+		void RemovePrivateContextIfExists(ITfContext* pContext);
+		void UninitPrivateContexts();*/
+
 		bool isImmersive() const {
 			return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;
 		}
@@ -263,11 +268,12 @@ export
 		bool m_preedit{};
 
 		DWORD m_globalCompartment{ 0xFC00'0003 };
-
+		std::shared_ptr<weasel::Context> m_context;
+		
 		TF_PRESERVEDKEY _preservedKeyGameMode;			// Ctrl+Shift+G
 		TF_PRESERVEDKEY _preservedKeyCaretFollowing;	// Ctrl+Shift+F
 		TF_PRESERVEDKEY _preservedKeyDaemon;			// Ctrl+Shift+D
-		TF_PRESERVEDKEY _preservedKeyImeMode;			// Ctrl+9
+		// TF_PRESERVEDKEY _preservedKeyImeMode;			// Ctrl+9
 		std::array<std::wstring, 2> _gameNames
 		{
 			L"War3.exe",
@@ -287,6 +293,9 @@ export
 		FOCUS_CHANGED,
 		SUPPORT_DISPLAY_ATTRIBUTE,
 		AUTOCAD,
+		INLINE_PREEDIT_LOST_FIRST_KEY,
+		NOT_INLINE_PREEDIT_LOST_FIRST_KEY,
+		DONT_DESTROY_UI,
 		WEZTERM_FIRST_KEY,
 		SIMPLIFIED_TO_TRADITIONAL,
 		FIRST_KEY_COMPOSITION,
@@ -300,6 +309,6 @@ export
 		PRESERVED_KEY_SWITCH,
 		GAME_MODE_SELF_REDRAW,
 		PREDICTION,
-		FIREFOX
+		FIREFOX,
 	};
 }
