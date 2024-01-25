@@ -14,11 +14,6 @@ import Compartment;
 
 STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 {
-	BOOL writeSession{};
-	_pEditSessionContext->InWriteSession(_tfClientId, &writeSession);
-	if (!writeSession)
-		return S_OK;
-
 	// get commit string from server
 	std::wstring commit;
 	weasel::Config config;
