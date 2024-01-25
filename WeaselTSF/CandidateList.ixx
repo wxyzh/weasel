@@ -5,12 +5,12 @@ module;
 #include "ctffunc.h"
 export module CandidateList;
 import WeaselTSF;
+// import ReadingInformation;
 
 export
 {
 	class CCandidateList :
 		public ITfIntegratableCandidateListUIElement,
-		public ITfReadingInformationUIElement,
 		public ITfCandidateListUIElementBehavior		
 	{
 	public:
@@ -52,14 +52,6 @@ export
 		STDMETHODIMP ShowCandidateNumbers(_Out_ BOOL* pIsShow);
 		STDMETHODIMP FinalizeExactCompositionString();
 
-		// ITfReadingInformationUIElement
-		STDMETHODIMP GetContext(_Out_ ITfContext** ppic) override;
-		STDMETHODIMP GetErrorIndex(_Out_ UINT* pErrorIndex) override;
-		STDMETHODIMP GetMaxReadingStringLength(_Out_ UINT* pcchMax) override;
-		STDMETHODIMP GetString(_Out_ BSTR*  pstr) override;
-		// STDMETHODIMP ITfReadingInformationUIElement::GetUpdatedFlags(_Out_ DWORD* pdwFlags) override;
-		STDMETHODIMP IsVerticalOrderPreferred(_Out_ BOOL* pfVertical) override;
-
 		/* Update */
 		void UpdateUI(const weasel::Context& ctx, const weasel::Status& status);
 		void UpdateStyle(const weasel::UIStyle& sty);
@@ -91,8 +83,10 @@ export
 		weasel::UI _ui;
 		// 改为引用后，成员变量的初始化顺序是依据定义时的顺序，需要调整下定义的位置
 		WeaselTSF& _tsf;
+		// com_ptr<CReadingInformation> _pReadingInformation;
 		DWORD _cRef;
 		DWORD uiid{};
+		// DWORD uiid2{};
 		TfIntegratableCandidateListSelectionStyle _selectionStyle = STYLE_ACTIVE_SELECTION;
 
 		BOOL _pbShow;
@@ -100,7 +94,5 @@ export
 
 		com_ptr<ITfContext> _pContextDocument;
 		DWORD _flags{};
-
-		std::wstring _preedit{};
 	};
 }

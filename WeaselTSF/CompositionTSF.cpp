@@ -19,7 +19,7 @@ void WeaselTSF::_StartComposition(ITfContext* pContext, bool not_inline_preedit)
 	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, not_inline_preedit));
 	if (pStartCompositionEditSession != nullptr)
 	{
-		HRESULT hr;
+		HRESULT hr{ S_OK };
 		auto ret = pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 		if (!GetBit(WeaselFlag::DONT_DESTROY_UI))
 			_cand->StartUI();
@@ -27,13 +27,14 @@ void WeaselTSF::_StartComposition(ITfContext* pContext, bool not_inline_preedit)
 			ResetBit(WeaselFlag::DONT_DESTROY_UI);
 		SetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
 #ifdef TEST
-		LOG(INFO) << std::format("From _StartComposition. hr = {:#x}, ret = {:#x}", (unsigned)hr, (unsigned)ret);
+		LOG(INFO) << std::format("From _StartComposition. hr = 0x{:X}, ret = 0x{:X}", (unsigned)hr, (unsigned)ret);
 #endif // TEST
-		if (SUCCEEDED(ret) && FAILED(hr))
+		if (SUCCEEDED(ret) && FAILED(hr) && !GetBit(WeaselFlag::COMPOSITION_FAILED))
 		{
 			m_client.ClearComposition();
 			_cand->Destroy();
 			_FinalizeComposition();
+			SetBit(WeaselFlag::COMPOSITION_FAILED);
 			RetryFailedEvent();
 		}
 	}
@@ -56,6 +57,7 @@ void WeaselTSF::_EndComposition(ITfContext* pContext, BOOL clear)
 	// after pEditSession, less flicker
 	_cand->EndUI();
 	ResetBit(WeaselFlag::DONT_DESTROY_UI);
+	ResetBit(WeaselFlag::COMPOSITION_FAILED);
 #ifdef TEST
 	LOG(INFO) << std::format("From _EndComposition. hr = 0x{:X}", (unsigned)hr);
 #endif // TEST
@@ -68,10 +70,9 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 	{
 		_AbortComposition(true);
 		return TRUE;
-	}
+	}	
 	com_ptr<ITfContextView> pContextView;
 	HRESULT hr;
-
 	hr = pContext->GetActiveView(&pContextView);
 #ifdef TEST
 	LOG(INFO) << std::format("From _UpdateCompositionWindow. hr = {:#x}, pContextView = 0x{:X}", (unsigned)hr, (size_t)pContextView.p);
@@ -96,9 +97,9 @@ void WeaselTSF::_SetCompositionPosition(const RECT& rc)
 {
 	/* Test if rect is valid.
 	 * If it is invalid during CUAS test, we need to apply CUAS workaround */
+	static RECT rect{};
 	if (!_fCUASWorkaroundTested)
 	{
-		RECT rect{};
 		::SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
 		_fCUASWorkaroundTested = true;
 		if ((abs(rc.left - rect.left) < 2 && abs(rc.top - rect.top) < 2)
@@ -110,13 +111,17 @@ void WeaselTSF::_SetCompositionPosition(const RECT& rc)
 #endif // TEST
 		}
 	}
-
 #ifdef TEST
 	LOG(INFO) << std::format("From _SetCompositionPosition. left = {}, top = {}, right = {}, bottom = {}", rc.left, rc.top, rc.right, rc.bottom);
 #endif // TEST
-
-	m_client.UpdateInputPosition(rc);
-	_cand->UpdateInputPosition(rc);
+	RECT rcCopy{ rc };
+	if (rcCopy.left == 0 || abs(rcCopy.right - rect.right) < 5)
+	{
+		rcCopy.left = rcCopy.right = rect.right / 3.0;
+		rcCopy.top = rcCopy.bottom = rect.bottom / 3.0 * 2;
+	}
+	m_client.UpdateInputPosition(rcCopy);
+	_cand->UpdateInputPosition(rcCopy);
 }
 
 BOOL WeaselTSF::_ShowInlinePreedit(ITfContext* pContext, const std::shared_ptr<weasel::Context> context)
@@ -159,7 +164,8 @@ void WeaselTSF::_UpdateComposition(ITfContext* pContext)
 	if (hr == TF_S_ASYNC)
 		SetBit(WeaselFlag::ASYNC_EDIT);
 #ifdef TEST
-	LOG(INFO) << std::format("From _UpdateComposition. hr = 0x{:X}, pContext = 0x{:X}, _tfClientId = 0x{:X}, ret = 0x{:X}", (unsigned)hr, (size_t)pContext, _tfClientId, (unsigned)ret);
+	LOG(INFO) << std::format("From _UpdateComposition. hr = 0x{:X}, pContext = 0x{:X}, _tfClientId = 0x{:X}, ret = 0x{:X}, _pTextEditSinkContext = 0x{:X}", 
+		(unsigned)hr, (size_t)pContext, _tfClientId, (unsigned)ret, (size_t)_pTextEditSinkContext.p);
 #endif // TEST
 }
 
@@ -196,7 +202,7 @@ void WeaselTSF::_AbortComposition(bool clear)
 		ResetBit(WeaselFlag::INLINE_PREEDIT_LOST_FIRST_KEY);
 		SetBit(WeaselFlag::DONT_DESTROY_UI);
 		_EndComposition(_pEditSessionContext, false);
-		if (m_context->preedit.str.size() > 1)
+		if (m_preeditCount > 1)
 		{			
 			_ProcessKeyEvent(VK_BACK, 0x1, &eaten);
 		}
@@ -211,7 +217,7 @@ void WeaselTSF::_AbortComposition(bool clear)
 			_ProcessKeyEvent(_lastKey, 0x1, &eaten);
 			SetBit(WeaselFlag::DONT_DESTROY_UI);
 		}
-		_EndComposition(_pEditSessionContext, clear);		
+		_EndComposition(_pEditSessionContext, clear);
 		return;
 	}
 	_cand->Destroy();	
@@ -274,7 +280,6 @@ SIZE WeaselTSF::GetScreenResolution()
 	size.cy = dm.dmPelsHeight;
 	return size;
 }
-
 
 void WeaselTSF::RetryFailedEvent()
 {

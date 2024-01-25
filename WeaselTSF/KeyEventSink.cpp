@@ -15,10 +15,10 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten, bo
 {
 	if (!_IsKeyboardOpen())
 	{
-		if (wParam == 0x39 && GetKeyState(VK_CONTROL) < 0)
+		/*if (wParam == 0x39 && GetKeyState(VK_CONTROL) < 0)
 		{
 			_SetKeyboardOpen(TRUE);
-		}
+		}*/
 		return;
 	}
 
@@ -44,9 +44,9 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten, bo
 	else
 	{
 		*pfEaten = (BOOL)m_client.ProcessKeyEvent(ke);
-		if (!isTest && !(*pfEaten) && !GetBit(WeaselFlag::ASCII_PUNCT) && !(lParam >> 31) && (isdigit(ke.keycode) || ispunct(ke.keycode)) && !(ke.mask & (ibus::CONTROL_MASK | ibus::ALT_MASK)))
+		if (!isTest && !(*pfEaten) && !GetBit(WeaselFlag::ASCII_PUNCT) && !(lParam >> 31) && ispunct(ke.keycode) && !(ke.mask & (ibus::CONTROL_MASK | ibus::ALT_MASK)))
 		{
-			SetBit(WeaselFlag::EATEN);
+			SetBit(WeaselFlag::ASYNC_DIGIT_PUNCT_EATEN);
 			_keycode = ke.keycode;
 			*pfEaten = true;
 		}
@@ -96,11 +96,6 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 	if (*pfEaten)
 	{
 		_fTestKeyDownPending = true;
-		if (GetBit(WeaselFlag::WEZTERM_FIRST_KEY))
-		{
-			ResetBit(WeaselFlag::WEZTERM_FIRST_KEY);
-			_UpdateComposition(pContext);
-		}
 	}
 	return S_OK;
 }
@@ -119,6 +114,7 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 	}
 	else
 	{
+		ResetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
 #ifdef TEST
 		LOG(INFO) << std::format("From OnKeyDown. *pfEaten = {}", *pfEaten);
@@ -126,7 +122,7 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 	}
 	if (GetBit(WeaselFlag::AUTOCAD))
 	{
-		if (lParam == 0x4000'0000 || lParam == 0x4000'0001)
+		if (lParam == 0x4000'0000 || lParam == 0x4000'0001)		
 		{
 			if (!GetBit(WeaselFlag::INLINE_PREEDIT))
 			{
@@ -177,11 +173,7 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BO
 	else
 	{
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
-#ifdef TEST
-		LOG(INFO) << std::format("From OnKeyUp. *pfEaten = {}", *pfEaten);
-#endif // TEST
-		if (!GetBit(WeaselFlag::ASYNC_EDIT))
-			_UpdateComposition(pContext);
+		_UpdateComposition(pContext);
 	}
 
 	return S_OK;
@@ -195,8 +187,6 @@ STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEa
 		if (GetBit(WeaselFlag::GAME_MODE))
 		{
 			SetBit(WeaselFlag::GAME_MODE_SELF_REDRAW);
-			ResetBit(WeaselFlag::CARET_FOLLOWING);
-			_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
 		}
 		else
 		{

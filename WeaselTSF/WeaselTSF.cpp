@@ -39,7 +39,6 @@ WeaselTSF::WeaselTSF()
 	_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 	_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
 	_activeLanguageProfileNotifySinkCookie = TF_INVALID_COOKIE;
-	m_context = std::make_shared<weasel::Context>();
 
 	_cand.Attach(new CCandidateList(*this));
 	SetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);
@@ -279,6 +278,13 @@ void WeaselTSF::_InitWeaselData()
 		SetBit(WeaselFlag::FIREFOX);
 	}
 
+	if (fs::path(name).filename().wstring() == L"dota2.exe")
+	{
+		SetBit(WeaselFlag::GAME_MODE_SELF_REDRAW);
+		ResetBit(WeaselFlag::CARET_FOLLOWING);
+		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
+	}
+
 	for (size_t i{}; i < _gameNames.size(); ++i)
 	{
 		if (fs::path(name).filename().wstring() == _gameNames[i])
@@ -290,7 +296,6 @@ void WeaselTSF::_InitWeaselData()
 			}
 		}
 	}
-
 #ifdef TEST
 	LOG(INFO) << std::format("Process {} starting log. AppName: {}, length = {}, is successful? {:s}", pid, fs::path(name).filename().string(), name.size(), static_cast<bool>(ret)).data();
 #endif // TEST

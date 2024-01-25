@@ -234,6 +234,9 @@ void WeaselPanel::_CaptureRect(CRect& rect)
 
 LRESULT WeaselPanel::OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+#ifdef TEST
+	LOG(INFO) << std::format("From WeaselPanel::OnMouseActivate. lParam = 0x{:X}", (unsigned)lParam);
+#endif // TEST
 	bHandled = true;
 	return MA_NOACTIVATE;
 }

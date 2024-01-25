@@ -50,9 +50,6 @@ export
 		STDMETHODIMP OnSetFocus(ITfDocumentMgr* pDocMgrFocus, ITfDocumentMgr* pDocMgrPrevFocus);
 		STDMETHODIMP OnPushContext(ITfContext* pContext);
 		STDMETHODIMP OnPopContext(ITfContext* pContext);
-		HRESULT SwitchContext(ITfContext* pContext);
-		HRESULT SwitchToActiveContext();
-		HRESULT SwitchToActiveContextForDocumentManager(ITfDocumentMgr* pDocumentMgr);
 
 		/* ITfTextEditSink */
 		STDMETHODIMP OnEndEdit(ITfContext* pic, TfEditCookie ecReadOnly, ITfEditRecord* pEditRecord);
@@ -141,7 +138,6 @@ export
 
 		bool execute(std::wstring_view cmd, std::wstring_view args = L"");
 		bool explore(std::wstring_view path);
-		// com_ptr<ITfCompartment> _GetGlobalCompartmentDaemon() { return _pGlobalCompartment; }
 		void SetRect(const RECT& rc) { m_rcFallback = rc; }
 		RECT GetRect() const { return m_rcFallback; }
 		WCHAR GetInput() const { return static_cast<WCHAR>(_keycode); }
@@ -200,14 +196,12 @@ export
 		void _UninitCleanupContextDurationSink();
 
 		void _InitWeaselData();
-		/*void EnsurePrivateContextExists(ITfContext* pContext);
-		void RemovePrivateContextIfExists(ITfContext* pContext);
-		void UninitPrivateContexts();*/
 
 		bool isImmersive() const {
 			return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;
 		}
 
+	private:
 		com_ptr<ITfThreadMgr> _pThreadMgr;
 		TfClientId _tfClientId;
 		DWORD _dwThreadMgrEventSinkCookie;
@@ -257,24 +251,21 @@ export
 
 		RECT m_rcFallback{};
 		HWND m_hwnd{};
-
-		bool _threadMgrEventSinkInitialized{};
-
 		std::bitset<32> _bitset{};
 
 		std::wstring _schema_id{};
 		unsigned _keycode{};
 		unsigned short _lastKey{};
-		bool m_preedit{};
+		bool m_hasPreedit{};
+		int m_preeditCount{};
 
 		DWORD m_globalCompartment{ 0xFC00'0003 };
-		std::shared_ptr<weasel::Context> m_context;
 		
 		TF_PRESERVEDKEY _preservedKeyGameMode;			// Ctrl+Shift+G
 		TF_PRESERVEDKEY _preservedKeyCaretFollowing;	// Ctrl+Shift+F
 		TF_PRESERVEDKEY _preservedKeyDaemon;			// Ctrl+Shift+D
 		// TF_PRESERVEDKEY _preservedKeyImeMode;			// Ctrl+9
-		std::array<std::wstring, 2> _gameNames
+		std::array<std::wstring, 3> _gameNames
 		{
 			L"War3.exe",
 			L"WoW.exe"
@@ -303,12 +294,13 @@ export
 		ASYNC_EDIT,
 		COMPOSITION_WITH_CAPSLOCK,
 		CARET_FOLLOWING,
-		EATEN,
+		ASYNC_DIGIT_PUNCT_EATEN,
 		GAME_MODE,
 		GAME_WAR3,
 		PRESERVED_KEY_SWITCH,
 		GAME_MODE_SELF_REDRAW,
 		PREDICTION,
 		FIREFOX,
+		COMPOSITION_FAILED
 	};
 }

@@ -13,12 +13,12 @@ STDAPI WeaselTSF::OnInitDocumentMgr(ITfDocumentMgr* pDocMgr)
 #ifdef TEST
 	LOG(INFO) << std::format("From WeaselTSF::OnInitDocumentMgr. pDocMgr = {:#x}", (size_t)pDocMgr);
 #endif // TEST
-	return SwitchToActiveContext();
+	return E_NOTIMPL;
 }
 
 STDAPI WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr* pDocMgr)
 {
-	return SwitchToActiveContext();
+	return E_NOTIMPL;
 }
 
 STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr* pDocMgrFocus, ITfDocumentMgr* pDocMgrPrevFocus)
@@ -62,45 +62,12 @@ STDAPI WeaselTSF::OnPushContext(ITfContext* pContext)
 #ifdef TEST
 	LOG(INFO) << std::format("From WeaselTSF::OnPushContext. pContext = {:#x}", (size_t)pContext);
 #endif // TEST
-	return SwitchToActiveContext();
+	return E_NOTIMPL;
 }
 
 STDAPI WeaselTSF::OnPopContext(ITfContext* pContext)
 {
-	return SwitchToActiveContext();
-}
-
-HRESULT WeaselTSF::SwitchContext(ITfContext* pContext)
-{
-	if (_pTextEditSinkContext == pContext && _threadMgrEventSinkInitialized)
-		return S_OK;
-
-	_pTextEditSinkContext = pContext;
-	return S_OK;
-}
-
-HRESULT WeaselTSF::SwitchToActiveContext()
-{
-	com_ptr<ITfDocumentMgr> pDocumentMgr;
-	if (FAILED(_pThreadMgr->GetFocus(&pDocumentMgr)))
-	{
-		return SwitchContext(nullptr);
-	}
-	return SwitchToActiveContextForDocumentManager(pDocumentMgr);
-}
-
-HRESULT WeaselTSF::SwitchToActiveContextForDocumentManager(ITfDocumentMgr* pDocumentMgr)
-{
-	if (!pDocumentMgr)
-		return SwitchContext(nullptr);
-
-	com_ptr<ITfContext> pContext;
-	if (FAILED(pDocumentMgr->GetTop(&pContext)) || !pContext)
-	{
-		return SwitchContext(nullptr);
-	}
-
-	return SwitchContext(pContext);
+	return E_NOTIMPL;
 }
 
 BOOL WeaselTSF::_InitThreadMgrEventSink()
@@ -113,7 +80,6 @@ BOOL WeaselTSF::_InitThreadMgrEventSink()
 		_dwThreadMgrEventSinkCookie = TF_INVALID_COOKIE;
 		return FALSE;
 	}
-	_threadMgrEventSinkInitialized = true;
 	return TRUE;
 }
 
@@ -127,5 +93,58 @@ void WeaselTSF::_UninitThreadMgrEventSink()
 		pSource->UnadviseSink(_dwThreadMgrEventSinkCookie);
 	}
 	_dwThreadMgrEventSinkCookie = TF_INVALID_COOKIE;
-	_threadMgrEventSinkInitialized = false;
 }
+
+//void WeaselTSF::EnsurePrivateContextExists(ITfContext* pContext)
+//{
+//	if (pContext == nullptr)
+//	{
+//		// Do not care about nullptr pContext.
+//		return;
+//	}
+//	if (m_privateContext.contains(pContext))
+//	{
+//		return;
+//	}
+//
+//	com_ptr<ITfSource> pSource;
+//	if (SUCCEEDED(pContext->QueryInterface(&pSource)) && pSource)
+//	{
+//		DWORD textEditSinkCookie{ TF_INVALID_COOKIE };
+//		DWORD textLayoutSinkCookie{ TF_INVALID_COOKIE };
+//		if (FAILED(pSource->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink*)this, &textEditSinkCookie)))
+//		{
+//			// In general this should not happen
+//			textEditSinkCookie = TF_INVALID_COOKIE;
+//		}
+//		if (FAILED(pSource->AdviseSink(IID_ITfTextLayoutSink, (ITfTextLayoutSink*)this, &textLayoutSinkCookie)))
+//		{
+//			// In general this should not happen.
+//			textEditSinkCookie = TF_INVALID_COOKIE;
+//		}
+//
+//		// Register private context with sink-cleanup callback.
+//		m_privateContext.emplace(pContext, std::make_unique<PrivateContextWrapper>
+//			([=]()
+//			{
+//				if (textEditSinkCookie != TF_INVALID_COOKIE)
+//				{
+//					pSource->UnadviseSink(textEditSinkCookie);
+//				}
+//				if (textLayoutSinkCookie != TF_INVALID_COOKIE)
+//				{
+//					pSource->UnadviseSink(textLayoutSinkCookie);
+//				}
+//			}));
+//	}
+//}
+//
+//void WeaselTSF::RemovePrivateContextIfExists(ITfContext* pContext)
+//{
+//	m_privateContext.erase(pContext);
+//}
+//
+//void WeaselTSF::UninitPrivateContexts()
+//{ 
+//	m_privateContext.clear(); 
+//}

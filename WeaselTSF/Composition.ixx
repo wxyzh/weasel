@@ -1,6 +1,5 @@
 ﻿module;
 #include "stdafx.h"
-// #include <immdev.h>
 #include <WeaselCommon.h>
 #include "cmath"
 #include "test.h"
@@ -14,8 +13,6 @@ import EditSession;
 import ResponseParser;
 import CandidateList;
 import WeaselUtility;
-
-// #pragma comment(lib, "imm32.lib")
 
 export
 {
@@ -65,7 +62,9 @@ export
 
 		/* ITfEditSession */
 		STDMETHODIMP DoEditSession(TfEditCookie ec);
-		void CalculatePosition(_In_ const RECT& rcExt, _Inout_opt_ RECT& rc);
+
+	private:
+		void CalculatePosition(_Inout_ RECT& rc);
 
 	private:
 		com_ptr<ITfContextView> _pContextView;
@@ -114,16 +113,10 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 	com_ptr<ITfRange> pRangeComposition;
 	if (FAILED(hr = _pContext->QueryInterface(&pInsertAtSelection)))
 	{
-#ifdef TEST
-		LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. QueryInterface: hr = 0x{:X}", (unsigned)hr);
-#endif // TEST
 		return hr;
 	}
 	if (FAILED(hr = pInsertAtSelection->InsertTextAtSelection(ec, TF_IAS_QUERYONLY, NULL, 0, &pRangeComposition)))
 	{
-#ifdef TEST
-		LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. InsertTextAtSelection: hr = 0x{:X}", (unsigned)hr);
-#endif // TEST
 		return hr;
 	}
 
@@ -136,7 +129,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 	{
 		_pTextService->_SetComposition(pComposition);
 
-		if (_pTextService->GetBit(WeaselFlag::EATEN))	// 处理数字和标点的合成
+		if (_pTextService->GetBit(WeaselFlag::ASYNC_DIGIT_PUNCT_EATEN))	// 处理数字和标点的合成
 		{
 			std::wstring input{ _pTextService->GetInput() };
 			hr = pRangeComposition->SetText(ec, 0, input.data(), input.size());
@@ -184,10 +177,6 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 	com_ptr<ITfRange> pCompositionRange;
 	if (_clear && _pComposition->GetRange(&pCompositionRange) == S_OK)
 	{
-		/*if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT))
-		{
-			ClearReadingProperties(_pContext, pCompositionRange, ec);
-		}*/
 		pCompositionRange->SetText(ec, 0, L"", 0);
 	}
 
@@ -211,19 +200,13 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 		// composition end
 		// note: selection.range is always an empty range
 		hr = _pContext->GetEnd(ec, &pRange);
-	}	
+	}
 
 	HWND hwnd;
 	_pContextView->GetWnd(&hwnd);
 	_pTextService->SetHWND(hwnd);
 	_pContextView->GetScreenExt(&rcExt);
-	hr = _pContextView->GetTextExt(ec, pRange.p, &rc, &fClipped);
-
-	/*auto himc = ImmGetContext(hwnd);
-	COMPOSITIONFORM candidateFrom{};
-	bool ret = ImmRequestMessage(himc, IMR_COMPOSITIONWINDOW, (LPARAM)&candidateFrom);
-	POINT pt = candidateFrom.ptCurrentPos;
-	RECT rc1 = candidateFrom.rcArea;*/
+	hr = _pContextView->GetTextExt(ec, pRange, &rc, &fClipped);
 
 #ifdef TEST
 	std::wstring name{};
@@ -231,8 +214,8 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	GetClassName(hwnd, name.data(), name.capacity());
 	name = name.data();
 
-	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}, hr = {:#x}, fClipped = {:s}, className = {}, rcExt = ({}, {}, {}, {})",
-		rc.left, rc.top, (unsigned)hr, (bool)fClipped, to_string(name, CP_UTF8), rcExt.left, rcExt.top, rcExt.right, rcExt.bottom);
+	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc = ({}, {}, {}, {}), hr = {:#x}, fClipped = {:s}, className = {}, rcExt = ({}, {}, {}, {}), cookie = 0x{:X}",
+		rc.left, rc.top, rc.right, rc.bottom, (unsigned)hr, (bool)fClipped, to_string(name, CP_UTF8), rcExt.left, rcExt.top, rcExt.right, rcExt.bottom, (unsigned)ec);
 #endif // TEST
 	if ((hr == 0x80040057) ||
 		(hr == 0x80070057 && _pTextService->GetBit(WeaselFlag::AUTOCAD)))
@@ -243,7 +226,7 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 
 	if (SUCCEEDED(hr) && (rc.left != 0 && rc.top != 0))
 	{
-		CalculatePosition(rcExt, rc);
+		CalculatePosition(rc);
 		_pTextService->_SetCompositionPosition(rc);
 #ifdef TEST
 		LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}", rc.left, rc.top);
@@ -257,23 +240,10 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	return hr;
 }
 
-void CGetTextExtentEditSession::CalculatePosition(const RECT& rcExt, RECT& rc)
+void CGetTextExtentEditSession::CalculatePosition(RECT& rc)
 {
-	bool isIn = PtInRect(&rcExt, POINT(rc.left, rc.top));
-	if (isIn)
-	{
-		// 保存实时坐标，作为下一次坐标的备用方案
-		_pTextService->SetRect(rc);
-	}
-	else if (POINT pt{ _pTextService->GetRect().left, _pTextService->GetRect().top }; PtInRect(&rcExt, pt))
-	{
-		rc = _pTextService->GetRect();
-	}
-	else
-	{
-		rc.left = rc.right = rc.right / 3.0;
-		rc.top = rc.bottom = rc.bottom / 3.0 * 2;
-	}
+	// 保存实时坐标，作为下一次坐标的备用方案
+	_pTextService->SetRect(rc);
 
 	if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT))				// 仅嵌入式候选框记录首码坐标
 	{
@@ -291,7 +261,7 @@ void CGetTextExtentEditSession::CalculatePosition(const RECT& rcExt, RECT& rc)
 		{
 			rcFirst = rc;
 		}
-		else if (rc.left < rcFirst.left)								// 换行时更新坐标
+		else if (rc.left < rcFirst.left && rc.top != rcFirst.top)		// 换行时更新坐标
 		{
 			rcFirst = rc;
 		}
@@ -299,6 +269,10 @@ void CGetTextExtentEditSession::CalculatePosition(const RECT& rcExt, RECT& rc)
 		{
 			rc = rcFirst;
 		}
+#ifdef TEST
+		LOG(INFO) << std::format("From CGetTextExtentEditSession::CalculatePosition.. rc = ({}, {}, {}, {}), rcFirst = ({}, {}, {}, {})",
+			rc.left, rc.top, rc.right, rc.bottom, rcFirst.left, rcFirst.top, rcFirst.right, rcFirst.bottom);
+#endif // TEST
 	}
 }
 
@@ -317,13 +291,13 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 	if (_pTextService->GetBit(WeaselFlag::INLINE_PREEDIT_LOST_FIRST_KEY))
 	{
 		hr = pRangeComposition->SetText(ec, 0, L"", 0);
+		_pTextService->_AbortComposition(false);
+		return hr;
 	}
 	else
 	{
 		hr = pRangeComposition->SetText(ec, 0, preedit.c_str(), preedit.length());
 	}
-
-	// SetReadingProperties(_pContext, pRangeComposition, preedit, ec);
 
 #ifdef TEST
 	LOG(INFO) << std::format("From CInlinePreeditEditSession::DoEditSession. preedit = {}, hr = 0x{:X}", to_string(preedit), (unsigned)hr);

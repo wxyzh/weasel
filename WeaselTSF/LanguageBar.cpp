@@ -204,7 +204,7 @@ STDAPI CLangBarItemButton::GetIcon(HICON *phIcon)
 STDAPI CLangBarItemButton::GetText(BSTR *pbstrText)
 {
 	*pbstrText = SysAllocString(L"WeaselTSF Button");
-	return (*pbstrText == NULL)? E_OUTOFMEMORY: S_OK;
+	return (*pbstrText == NULL) ? E_OUTOFMEMORY : S_OK;
 }
 
 STDAPI CLangBarItemButton::AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCookie)

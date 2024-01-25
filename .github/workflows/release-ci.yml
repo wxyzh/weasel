@@ -136,7 +136,7 @@ jobs:
           # 执行替换操作
           $newContent = $fileContent -replace 'typedef uintptr_t RimeSessionId;', 'using RimeSessionId = uint64_t;'
           # 在指定行后添加新行
-          $newContent = $newContent -replace 'Bool is_ascii_punct;', ('Bool is_ascii_punct;' + "`r`n  Bool is_s2t;")
+          $newContent = $newContent -replace 'Bool is_ascii_punct;', ('Bool is_ascii_punct;' + "`r`n  Bool is_s2t;`r`n Bool is_prediction;")
           # 将新内容写回源文件
           Set-Content -Path $sourceFilePath -Value $newContent
           Write-Host "替换完成。"

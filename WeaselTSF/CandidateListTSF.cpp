@@ -44,7 +44,7 @@ void WeaselTSF::_DeleteCandidateList()
 
 void WeaselTSF::_SelectCandidateOnCurrentPage(const int index)
 {	
-	if (m_preedit)
+	if (m_hasPreedit)
 	{
 		m_client.SelectCandidateOnCurrentPage(index);
 		// fake a empty presskey to get data back and DoEditSession	

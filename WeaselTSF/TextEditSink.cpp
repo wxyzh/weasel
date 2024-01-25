@@ -43,9 +43,6 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 				{
 					if (!IsRangeCovered(ecReadOnly, tfSelection.range, pRangeComposition))
 					{
-#ifdef TEST
-						LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. The caret moves out of composition range.");
-#endif // TEST
 						_EndComposition(pContext, true);
 					}
 				}
@@ -54,7 +51,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 	}
 
 	/* text modification? */
-	com_ptr<IEnumTfRanges> pEnumTextChanges;	
+	com_ptr<IEnumTfRanges> pEnumTextChanges;
 	if (SUCCEEDED(pEditRecord->GetTextAndPropertyUpdates(TF_GTP_INCL_TEXT, NULL, 0, &pEnumTextChanges)))
 	{
 		com_ptr<ITfRange> pRange;
@@ -65,7 +62,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 			LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. pEditRecord->GetTextAndPropertyUpdates. fetched = {}", fetched);
 #endif // TEST		
 			if (GetBit(WeaselFlag::CARET_FOLLOWING) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION) && fetched == 0)
-			{			
+			{
 				_UpdateCompositionWindow(pContext);
 			}
 		}
@@ -84,7 +81,7 @@ STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext, TfLayoutCode lcode, ITfCo
 	if (pContext != _pTextEditSinkContext)
 		return S_OK;
 
-	if (GetBit(WeaselFlag::CARET_FOLLOWING))
+	if (/*m_privateContext.contains(pContext) && */GetBit(WeaselFlag::CARET_FOLLOWING))
 	{
 		_UpdateCompositionWindow(pContext);
 	}

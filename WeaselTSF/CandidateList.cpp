@@ -13,11 +13,12 @@ import WeaselUtility;
 
 using namespace weasel;
 
-CCandidateList::CCandidateList(WeaselTSF& textService)
-	: _tsf(textService)
-	, _pbShow(TRUE)
+CCandidateList::CCandidateList(WeaselTSF& textService) :
+	_tsf(textService)
 {
+	// _pReadingInformation.Attach(new CReadingInformation(_tsf, &_ui));
 	_cRef = 1;
+	_pbShow = TRUE;
 	_ui.SetSelectCallback([this](int* const sel, int* const hov, bool* const next) { _tsf.HandleUICallback(sel, hov, next); });
 	_ui.SetRectCallback([this](const RECT& rc) { _tsf.SetRect(rc); });
 }
@@ -53,13 +54,6 @@ STDMETHODIMP CCandidateList::QueryInterface(REFIID riid, void** ppvObj)
 			LOG(INFO) << std::format("From CCandidateList::QueryInterface. ITfCandidateListUIElement.");
 		if (IsEqualIID(riid, IID_ITfCandidateListUIElementBehavior))
 			LOG(INFO) << std::format("From CCandidateList::QueryInterface. ITfCandidateListUIElementBehavior.");
-#endif // TEST
-	}
-	else if (IsEqualIID(riid, IID_ITfReadingInformationUIElement))
-	{
-		*ppvObj = (ITfReadingInformationUIElement*)this;
-#ifdef TEST
-		LOG(INFO) << std::format("From CCandidateList::QueryInterface. ITfReadingInformationUIElement.");
 #endif // TEST
 	}
 	else if (IsEqualIID(riid, IID_IUnknown) ||
@@ -141,7 +135,7 @@ STDMETHODIMP CCandidateList::Show(BOOL showCandidateWindow)
 	else
 	{
 		_ui.Hide();
-	}	
+	}
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::Show. show = {}", showCandidateWindow);
 #endif // TEST
@@ -166,7 +160,7 @@ STDMETHODIMP CCandidateList::GetUpdatedFlags(DWORD* pdwFlags)
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::GetUpdateFlags. _flags = 0x{:X}", (unsigned)_flags);
 #endif // TEST
-	_flags = 0;	
+	_flags = 0;
 
 	return S_OK;
 }
@@ -188,6 +182,9 @@ STDMETHODIMP CCandidateList::GetDocumentMgr(ITfDocumentMgr** ppdim)
 
 STDMETHODIMP CCandidateList::GetCount(UINT* pCandidateCount)
 {
+	if (pCandidateCount == nullptr)
+		return E_INVALIDARG;
+
 	*pCandidateCount = _ui.ctx().cinfo.candies.size();
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::GetCount. count = {}", *pCandidateCount);
@@ -305,64 +302,6 @@ STDMETHODIMP CCandidateList::FinalizeExactCompositionString()
 	return S_OK;
 }
 
-STDMETHODIMP CCandidateList::GetContext(ITfContext** ppic)
-{
-#ifdef TEST
-	LOG(INFO) << std::format("From CCandidateList::GetContext.");
-#endif // TEST
-	return E_NOTIMPL;
-}
-
-STDMETHODIMP CCandidateList::GetErrorIndex(UINT* pErrorIndex)
-{
-#ifdef TEST
-	LOG(INFO) << std::format("From CCandidateList::GetErrorIndex.");
-#endif // TEST
-	return E_NOTIMPL;
-}
-
-STDMETHODIMP CCandidateList::GetMaxReadingStringLength(UINT* pcchMax)
-{
-#ifdef TEST
-	LOG(INFO) << std::format("From CCandidateList::GetMaxReadingStringLength.");
-#endif // TEST
-	if (!pcchMax)
-		return E_INVALIDARG;
-
-	*pcchMax = _preedit.size();
-
-	return S_OK;
-}
-
-STDMETHODIMP CCandidateList::GetString(BSTR* pstr)
-{
-	*pstr = nullptr;
-
-	if (!_preedit.empty())
-	{
-		*pstr = SysAllocStringLen(_preedit.data(), _preedit.size());
-	}
-#ifdef TEST
-	LOG(INFO) << std::format("From CCandidateList::GetString. str = {}, *pstr == nullptr ? {:s}", to_string(_preedit, CP_UTF8), *pstr == NULL);
-#endif // TEST
-
-	return S_OK;
-}
-
-STDMETHODIMP CCandidateList::IsVerticalOrderPreferred(BOOL* pfVertical)
-{
-#ifdef TEST
-	LOG(INFO) << std::format("From CCandidateList::IsVerticalOrderPreferred.");
-#endif // TEST
-	if (pfVertical)
-	{
-		*pfVertical = false;
-		return S_OK;
-	}
-
-	return E_INVALIDARG;
-}
-
 void CCandidateList::UpdateUI(const Context& ctx, const Status& status)
 {
 #ifdef TEST
@@ -380,15 +319,22 @@ void CCandidateList::UpdateUI(const Context& ctx, const Status& status)
 	// In UWP, candidate window will only be shown
 	// if it is owned by active view window
 	//_UpdateOwner();
-	if (!ctx.preedit.empty())
-		_preedit = ctx.preedit.str;
+	/*if (!ctx.cinfo.candies.empty())
+	{
+		std::wstring temp{};
+		temp.reserve(256);
+		temp = std::format(L"{} ", ctx.cinfo.candies[0].str);
+		for (int i = 1; i < ctx.cinfo.candies.size(); ++i)
+		{
+			temp += std::format(L" {}.{} ", i + 1, ctx.cinfo.candies[i].str);
+		}
+		_pReadingInformation->SetString(temp);		
+	}*/
 
 	_ui.Update(ctx, status);
 	if (_pbShow == FALSE && status.composing)
 	{
 		_flags = TF_CLUIE_DOCUMENTMGR | TF_CLUIE_COUNT | TF_CLUIE_SELECTION | TF_CLUIE_STRING | TF_CLUIE_CURRENTPAGE;
-		// _flags = TF_RIUIE_CONTEXT | TF_RIUIE_STRING | TF_RIUIE_MAXREADINGSTRINGLENGTH | TF_RIUIE_VERTICALORDER;
-		// _flags = TF_RIUIE_STRING | TF_RIUIE_VERTICALORDER;
 		_UpdateUIElement();
 	}
 
@@ -398,6 +344,11 @@ void CCandidateList::UpdateUI(const Context& ctx, const Status& status)
 
 	if (status.composing)
 	{
+		if (_tsf.GetBit(WeaselFlag::WEZTERM_FIRST_KEY))
+		{
+			_tsf.ResetBit(WeaselFlag::WEZTERM_FIRST_KEY);
+			return;
+		}
 		Show(_pbShow);
 	}
 	else
@@ -428,7 +379,6 @@ void CCandidateList::Destroy()
 
 UIStyle& CCandidateList::style()
 {
-	//return _ui.style();
 	return _style;
 }
 
@@ -477,6 +427,7 @@ HRESULT CCandidateList::_UpdateUIElement()
 
 	if (SUCCEEDED(pThreadMgr->QueryInterface(&pUIElementMgr)))
 	{
+		// hr = pUIElementMgr->UpdateUIElement(uiid2);
 		hr = pUIElementMgr->UpdateUIElement(uiid);
 	}
 
@@ -496,8 +447,9 @@ void CCandidateList::StartUI()
 		return;
 	}
 
-	// ToDo: send select candidate info back to rime
-	hr = pUIElementMgr->BeginUIElement(dynamic_cast<ITfReadingInformationUIElement*>(this), &_pbShow, &uiid);
+	// ToDo: send select candidate info back to rime	
+	hr = pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
+	// hr = pUIElementMgr->BeginUIElement(_pReadingInformation, &_pbShow, &uiid2);
 #ifdef TEST
 	LOG(INFO) << std::format("From CCandidateList::StartUI. _pbShow = {}, hr = 0x{:X}, id = 0x{:X}", _pbShow, (unsigned)hr, (unsigned)uiid);
 #endif // TEST
@@ -510,9 +462,8 @@ void CCandidateList::StartUI()
 			_pbShow = false;
 			return;
 		}
-		auto ret = pUIElementMgr->EndUIElement(uiid);
 #ifdef TEST
-		LOG(INFO) << std::format("From CCandidateList::StartUI. ret = 0x{:X}", _pbShow, (unsigned)ret);
+		LOG(INFO) << std::format("From CCandidateList::StartUI. ", _pbShow);
 #endif // TEST
 		_ui.style() = _style;
 		_MakeUIWindow();
@@ -534,8 +485,8 @@ void CCandidateList::EndUI()
 		if (emgr != NULL)
 		{
 			_flags = 0;
-			_preedit.clear();
 			emgr->EndUIElement(uiid);
+			// emgr->EndUIElement(uiid2);
 			if (_tsf.GetBit(WeaselFlag::GAME_WAR3))
 			{
 				PostMessage(_GetActiveWnd(), WM_IME_NOTIFY, IMN_CLOSECANDIDATE, 0);

@@ -14,28 +14,34 @@ import Compartment;
 
 STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 {
+	BOOL writeSession{};
+	_pEditSessionContext->InWriteSession(_tfClientId, &writeSession);
+	if (!writeSession)
+		return S_OK;
+
 	// get commit string from server
 	std::wstring commit;
 	weasel::Config config;
-	// auto context = std::make_shared<weasel::Context>();
-	weasel::ResponseParser parser(&commit, m_context.get(), &_status, &config, &_cand->style());
+	auto context = std::make_shared<weasel::Context>();
+	weasel::ResponseParser parser(&commit, context.get(), &_status, &config, &_cand->style());
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
 	auto state = _UpdateLanguageBar();
 
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, ok = {}, isComposing = {}, prediction = {:s}, _status.prediction = {:s}, s2t = {:s}", state, ok, _IsComposing(), GetBit(WeaselFlag::PREDICTION), _status.prediction, _status.s2t);
+	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, ok = {}, isComposing = {}, prediction = {:s}, _status.prediction = {:s}, s2t = {:s}, m_preeditCount = {}", 
+		state, ok, _IsComposing(), GetBit(WeaselFlag::PREDICTION), _status.prediction, _status.s2t, m_preeditCount);
 #endif // TEST
 
-	if (GetBit(WeaselFlag::EATEN))				// Word 2021进入异步编辑时，遇到标点符号输入时，必须进入合成，否则句点输入就失去了数字后的智能判断
+	if (GetBit(WeaselFlag::ASYNC_DIGIT_PUNCT_EATEN))	// Word 2021进入异步编辑时，遇到标点符号输入时，必须进入合成，否则句点输入就失去了数字后的智能判断
 	{
-		_StartComposition(_pEditSessionContext, !config.inline_preedit);		
+		_StartComposition(_pEditSessionContext, !config.inline_preedit);
 		_EndComposition(_pEditSessionContext, false);
-		ResetBit(WeaselFlag::EATEN);
+		ResetBit(WeaselFlag::ASYNC_DIGIT_PUNCT_EATEN);
 	}
-	else if (ok)
+	if (ok)
 	{
-		if (state && !_IsComposing())			// 执行算法服务内的UI状态更新，为它提供正确的坐标
+		if (state && !_IsComposing())					// 执行算法服务内的UI状态更新，为它提供正确的坐标
 		{
 			_StartComposition(_pEditSessionContext, !config.inline_preedit);
 			if (GetBit(WeaselFlag::CARET_FOLLOWING))
@@ -50,7 +56,8 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 		}
 		else
 		{
-			m_preedit = !m_context->preedit.empty();
+			m_hasPreedit = !context->preedit.empty();
+			m_preeditCount = context->preedit.str.size();
 			if (!commit.empty())
 			{
 				// For auto-selecting, commit and preedit can both exist.
@@ -72,7 +79,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 			}
 			if (_IsComposing() && (config.inline_preedit || GetBit(WeaselFlag::GAME_MODE)))
 			{
-				_ShowInlinePreedit(_pEditSessionContext, m_context);
+				_ShowInlinePreedit(_pEditSessionContext, context);
 				SetBit(WeaselFlag::INLINE_PREEDIT);
 			}
 			if (GetBit(WeaselFlag::CARET_FOLLOWING))
@@ -84,8 +91,8 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 				_SetCompositionPosition(m_rcFallback);
 			}
 		}
-	}		
-	_UpdateUI(*m_context, _status);
+	}
+	_UpdateUI(*context, _status);
 
 	return S_OK;
 }
