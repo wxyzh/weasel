@@ -476,7 +476,6 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="test.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resource\en.ico" />

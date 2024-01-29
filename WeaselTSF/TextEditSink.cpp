@@ -1,10 +1,5 @@
 module;
 #include "stdafx.h"
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 module WeaselTSF;
 import Composition;
 // import PrivateContextWrapper;
@@ -23,9 +18,6 @@ static BOOL IsRangeCovered(TfEditCookie ec, ITfRange* pRangeTest, ITfRange* pRan
 
 STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEditRecord* pEditRecord)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnEndEdit.");
-#endif // TEST
 	/* did the selection change? */
 	BOOL fSelectionChanged;
 	if (SUCCEEDED(pEditRecord->GetSelectionStatus(&fSelectionChanged)) && fSelectionChanged)
@@ -57,10 +49,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 		com_ptr<ITfRange> pRange;
 		ULONG fetched{};
 		if (SUCCEEDED(pEnumTextChanges->Next(1, &pRange, &fetched)))
-		{
-#ifdef TEST
-			LOG(INFO) << std::format("From WeaselTSF::OnEndEdit. pEditRecord->GetTextAndPropertyUpdates. fetched = {}", fetched);
-#endif // TEST		
+		{		
 			if (GetBit(WeaselFlag::CARET_FOLLOWING) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION) && fetched == 0)
 			{
 				_UpdateCompositionWindow(pContext);
@@ -72,9 +61,6 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext, TfEditCookie ecReadOnly, ITfEd
 
 STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext, TfLayoutCode lcode, ITfContextView* pContextView)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnLayoutChange. pContext = 0x{:X}, _pTextEditSinkContext = 0x{:X}, pContextView = 0x{:X}", (size_t)pContext, (size_t)_pTextEditSinkContext.p, (size_t)pContextView);
-#endif // TEST
 	if (!_IsComposing())
 		return S_OK;
 
@@ -107,10 +93,6 @@ BOOL WeaselTSF::_InitTextEditSink(ITfDocumentMgr* pDocMgr)
 		_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 		_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
 	}
-
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::_InitTextEditSink. pDocMgr = {:#x}, _dwTextEditSinkCookie = {:#x}, hr1 = 0x{:X}, hr2 = 0x{:X}", (size_t)pDocMgr, (unsigned)_dwTextEditSinkCookie, (unsigned)hr1, (unsigned)hr2);
-#endif // TEST
 
 	if (pDocMgr == NULL)
 		return TRUE;

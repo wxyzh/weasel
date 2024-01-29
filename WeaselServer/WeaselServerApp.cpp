@@ -5,8 +5,6 @@ module;
 #include "resource.h"
 #include <winsparkle.h>
 
- //#define WEASEL_ENABLE_LOGGING
- //#include "logging.h"
 module WeaselServerApp;
 
 WeaselServerApp::WeaselServerApp()
@@ -16,13 +14,11 @@ WeaselServerApp::WeaselServerApp()
 	//m_handler.reset(new RimeWithWeaselHandler(&m_ui));
 	m_server.SetRequestHandler(m_handler.get());
 	SetupMenuHandlers();
-
-	// google::InitGoogleLogging("WeaselServer.log");
 }
 
 WeaselServerApp::~WeaselServerApp()
 {
-	// google::ShutdownGoogleLogging();
+	
 }
 
 int WeaselServerApp::Run()

@@ -5,11 +5,6 @@ module;
 #include <format>
 #include <shellapi.h>
 #include "resource.h"
-// #include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 module WeaselTSF;
 import LanguageBar;
 import CandidateList;
@@ -59,9 +54,6 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 	{
 		Flip(WeaselFlag::DAEMON_ENABLE);
 		UpdateGlobalCompartment();
-#ifdef TEST
-		LOG(INFO) << std::format("From WeaselTSF::_HandleLangBarMenuSelect. hr = {:#x}", (size_t)hr);
-#endif // TEST
 	}
 	break;
 
@@ -168,9 +160,6 @@ bool WeaselTSF::_UpdateLanguageBar()
 
 	DWORD flags{};
 	_pCompartmentConversion->_GetCompartmentDWORD(flags);
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::_UpdateLanguageBar. flags = {:#x}, ascii_mode = {}, full_shape = {}, ascii_punct = {}, _InitInputMethodState = {}", flags, stat.ascii_mode, stat.full_shape, stat.ascii_punct, !GetBit(4));
-#endif // TEST
 
 	if (!GetBit(WeaselFlag::INIT_INPUT_METHOD_STATE))
 	{
@@ -266,10 +255,6 @@ bool WeaselTSF::_UpdateLanguageBar()
 			state = true;
 		}
 	}
-
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::_UpdateLanguageBar. flags = {:#x}", flags);
-#endif // TEST
 
 	// _SetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
 	_pCompartmentConversion->_SetCompartmentDWORD(flags);

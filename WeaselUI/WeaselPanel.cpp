@@ -19,11 +19,6 @@
 #define IS_FULLSCREENLAYOUT(style)	(style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 #define NOT_FULLSCREENLAYOUT(style)	(style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN && style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
-
 #pragma comment(lib, "Shcore.lib")
 import Utility;
 
@@ -90,9 +85,6 @@ WeaselPanel::~WeaselPanel()
 
 void WeaselPanel::_ResizeWindow()
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_ResizeWindow");
-#endif // TEST
 	CDCHandle dc = GetDC();
 	CSize m_size = m_layout->GetContentSize();
 	SetWindowPos(NULL, 0, 0, m_size.cx, m_size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW);
@@ -101,9 +93,6 @@ void WeaselPanel::_ResizeWindow()
 
 void WeaselPanel::_CreateLayout()
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_CreateLayout");
-#endif // TEST
 	if (m_layout != NULL)
 		delete m_layout;
 
@@ -145,10 +134,6 @@ void WeaselPanel::Refresh()
 	// when to hide_cadidates?
 	// 1. margin_negative, and not in show tips mode( ascii switching / half-full switching / simp-trad switching / error tips), and not in schema menu
 	hide_candidates = margin_negative && !show_tips && !show_schema_menu;
-
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::Refresh. hide_candidates = {}, margin_negative = {}, should_show_icon = {}, show_tips = {}", hide_candidates, margin_negative, should_show_icon, show_tips);
-#endif // TEST
 
 	// only RedrawWindow if no need to hide candidates window
 	if (!hide_candidates)
@@ -234,9 +219,6 @@ void WeaselPanel::_CaptureRect(CRect& rect)
 
 LRESULT WeaselPanel::OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::OnMouseActivate. lParam = 0x{:X}", (unsigned)lParam);
-#endif // TEST
 	bHandled = true;
 	return MA_NOACTIVATE;
 }
@@ -266,9 +248,6 @@ LRESULT WeaselPanel::OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::OnLeftClicked. lParam = 0x{:X}", (unsigned)lParam);
-#endif // TEST
 	if (hide_candidates)
 	{
 		bHandled = true;
@@ -371,9 +350,6 @@ LRESULT WeaselPanel::OnLeftReleased(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 {
 	if (!m_following && m_holder)
 	{
-#ifdef TEST
-		LOG(INFO) << std::format("From WeaselPanel::OnLeftReleased. lParam = 0x{:X}", (unsigned)lParam);
-#endif // TEST
 		RECT rcWindow;
 		GetWindowRect(&rcWindow);
 		if (m_reversed)
@@ -407,9 +383,6 @@ LRESULT WeaselPanel::OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 		if (abs(point.y - rc.top) < 10 || abs(point.y - rc.bottom) < 10 || abs(point.x - rc.left) < 10 || abs(point.x - rc.right) < 10)
 		{
 			SetCursor(LoadCursor(nullptr, IDC_SIZEALL));			
-#ifdef TEST
-			LOG(INFO) << std::format("From WeaselPanel::OnMouseHover. lParam = 0x{:X}", (unsigned)lParam);
-#endif // TEST
 		}
 		else
 		{
@@ -461,9 +434,6 @@ LRESULT WeaselPanel::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 			GetWindowRect(&rc);
 			rc.OffsetRect(ptTemp);
 			MoveWindow(&rc);
-#ifdef TEST
-			LOG(INFO) << std::format("Form WeaselPanel::OnMoveMouse. pt = ({}, {}), point.y = {},", rc.left, rc.top, point.y);
-#endif // TEST
 			return 0;
 		}
 		ptPreview = point;
@@ -564,9 +534,6 @@ void WeaselPanel::_HighlightText(CDCHandle& dc, const CRect& rc, const COLORREF&
 // draw preedit text, text only
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_DrawPreedit. text = {}, rc.left = {}, rc.top = {}", weasel::to_string(text.str, CP_UTF8), rc.left, rc.top);
-#endif // TEST
 	bool drawn = false;
 	std::wstring const& t = text.str;
 	auto txtFormat = m_pDWR->pPreeditTextFormat;
@@ -659,9 +626,6 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 // draw hilited back color, back only
 bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& rc)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_DrawPreeditBack. text = {}, rc.left = {}, rc.top = {}", to_string(text.str, CP_UTF8), rc.left, rc.top);
-#endif // TEST
 	bool drawn = false;
 	std::wstring const& t = text.str;
 	IDWriteTextFormat1* txtFormat = m_pDWR->pPreeditTextFormat.Get();
@@ -698,9 +662,6 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 				// if preedit rect size smaller than icon, fill the gap to STATUS_ICON_SIZE
 				if (m_layout->ShouldDisplayStatusIcon())
 				{
-#ifdef TEST
-					LOG(INFO) << std::format("From WeaselPanel::_DrawPreeditBack. m_layout->ShouldDisplayStatusIcon() = true");
-#endif // TEST
 					if ((m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL) && hilitedSz.cy < STATUS_ICON_SIZE)
 						rc_hi.InflateRect(0, (STATUS_ICON_SIZE - hilitedSz.cy) / 2);
 					if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && hilitedSz.cx < STATUS_ICON_SIZE)
@@ -723,9 +684,6 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 
 bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_DrawCandidates. back = {}", back);
-#endif // TEST
 	bool drawn = false;
 	const std::vector<Text>& candidates(m_ctx.cinfo.candies);
 	const std::vector<Text>& comments(m_ctx.cinfo.comments);
@@ -852,9 +810,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 				rect = m_layout->GetCandidateTextRect((int)i);
 				if (m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
 				_TextOut(rect, text, text.length(), candidate_text_color, txtFormat.Get());
-#ifdef TEST
-				LOG(INFO) << std::format("text = {}", to_string(text, CP_UTF8));
-#endif // TEST
 			}
 			// Draw comment
 			std::wstring comment = comments.at(i).str;
@@ -895,10 +850,6 @@ void WeaselPanel::DoPaint(CDCHandle dc/*, RECT& rect*/)
 {
 	// turn off WS_EX_TRANSPARENT, for better resp performance
 	bool ret = ModifyStyleEx(WS_EX_TRANSPARENT, WS_EX_LAYERED);
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::DoPaint. m_inputPos.left = {}, m_inputPos.top = {}, hide_candidates = {}, m_ctx.empty() = {}, m_status.composing = {}, inline_preedit = {}, m_candidateCount = {}, ret = {:s}",
-		m_inputPos.left, m_inputPos.top, hide_candidates, m_ctx.empty(), m_status.composing, m_style.inline_preedit, m_candidateCount, ret);
-#endif // TEST
 
 	GetClientRect(&rcw);
 	// prepare memDC
@@ -991,9 +942,6 @@ void WeaselPanel::DoPaint(CDCHandle dc/*, RECT& rect*/)
 
 		// status icon (I guess Metro IME stole my idea :)
 		if (m_layout->ShouldDisplayStatusIcon()) {
-#ifdef TEST
-			LOG(INFO) << std::format("From WeaselPanel::DoPaint. m_layout->ShouldDisplayStatusIcon() = true, ascii_mode = {}", m_status.ascii_mode);
-#endif // TEST
 			// decide if custom schema zhung icon to show
 			LoadIconNecessary(m_current_zhung_icon, m_style.current_zhung_icon, m_iconEnabled, IDI_ZH);
 			LoadIconNecessary(m_current_ascii_icon, m_style.current_ascii_icon, m_iconAlpha, IDI_EN);
@@ -1030,19 +978,12 @@ void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 	BLENDFUNCTION bf = { AC_SRC_OVER, 0, 0XFF, AC_SRC_ALPHA };
 	auto result = UpdateLayeredWindow(m_hWnd, ScreenDC, &WindowPosAtScreen, &sz, dc, &PointOriginal, RGB(0, 0, 0), &bf, ULW_ALPHA);
 	ReleaseDC(ScreenDC);
-
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_LayerUpdate. rc.left = {}, rc.top = {}, result = {}", rc.left, rc.top, result);
-#endif // TEST
 }
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	GetWindowRect(&m_inputPos);
 	Refresh();
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::OnCreate. m_inputPos.left = {}, m_inputPos.top = {}", m_inputPos.left, m_inputPos.top);
-#endif // TEST
 	return TRUE;
 }
 
@@ -1063,9 +1004,6 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::MoveTo. left = {}, bottom = {}, m_oinputPos.left = {}, m_oinputPos.bottom = {}, m_ctx.aux = {}", rc.left, rc.bottom, m_oinputPos.left, m_oinputPos.bottom, to_string(m_ctx.aux.str, CP_UTF8));
-#endif // TEST
 	if (!m_layout)	return;			// avoid handling nullptr in _RepositionWindow
 
 	// if ascii_tip_follow_cursor set, move tip icon to mouse cursor
@@ -1100,9 +1038,6 @@ void WeaselPanel::MoveTo(RECT const& rc)
 
 void WeaselPanel::_RepositionWindow(bool adj)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. adj = {}, m_inputPos.left = {}, m_inputPos.top = {}, m_inputPos.bottom = {}, m_iconEnabled.IsNull = {}", adj, m_inputPos.left, m_inputPos.top, m_inputPos.bottom, m_iconEnabled.IsNull());
-#endif // TEST
 	RECT rcWorkArea;
 	memset(&rcWorkArea, 0, sizeof(rcWorkArea));
 	HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
@@ -1117,10 +1052,6 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	GetWindowRect(&rcWindow);
 	int width = (rcWindow.right - rcWindow.left);
 	int height = (rcWindow.bottom - rcWindow.top);
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. rcWindow.bottom = {}, rcWindow.top = {}, height = {}, rcWorkArea.bottom = {}, inline_preedit = {:s}", 
-		rcWindow.bottom, rcWindow.top, height, rcWorkArea.bottom, m_style.inline_preedit);
-#endif // TEST
 	// keep panel visible
 	rcWorkArea.right -= width;
 	rcWorkArea.bottom -= height;
@@ -1150,9 +1081,6 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	if (x > rcWorkArea.right) x = rcWorkArea.right;		// over workarea right
 	if (x < rcWorkArea.left) x = rcWorkArea.left;		// over workarea left
 	// show panel above the input focus if we're around the bottom
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. First: x = {}, y = {}, height = {}, rcWorkArea.bottom = {}, adj = {}", x, y, height, rcWorkArea.bottom, adj);
-#endif // TEST
 	if (m_reversed)
 	{
 		y -= saved_bottom - rcWorkArea.bottom;
@@ -1174,23 +1102,14 @@ void WeaselPanel::_RepositionWindow(bool adj)
 			y += (m_style.shadow_offset_y < 0 || COLORTRANSPARENT(m_style.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
 	}
 
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. Second: x = {}, y = {}, adj = {}, hwnd = 0x{:X}, reverse = {:s}", x, y, adj, (size_t)m_hWnd, (bool)m_style.vertical_auto_reverse);
-#endif // TEST
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
 	SetWindowPos(HWND_TOP, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOREDRAW);
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_RepositionWindow. Third: x = {}, y = {}, isWindow = {:s}", x, y, (bool)::IsWindow(m_hWnd));
-#endif // TEST
 }
 
 void WeaselPanel::_TextOut(CRect const& rc, std::wstring_view psz, size_t cch, int inColor, IDWriteTextFormat1* const pTextFormat)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselPanel::_TextOut. rc.left = {}, rc.top = {}, psz = {}", rc.left, rc.top, to_string(psz.data(), CP_UTF8));
-#endif // TEST
 	if (pTextFormat == NULL) return;
 	float r = (float)(GetRValue(inColor)) / 255.0f;
 	float g = (float)(GetGValue(inColor)) / 255.0f;

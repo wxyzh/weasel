@@ -69,9 +69,6 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GdiplusBlur.h">
       <Filter>Header Files</Filter>
     </ClInclude>

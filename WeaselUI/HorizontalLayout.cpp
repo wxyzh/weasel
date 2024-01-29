@@ -1,19 +1,10 @@
 #include "pch.h"
 #include "HorizontalLayout.h"
 
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
-
 using namespace weasel;
 
 void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From HorizontalLayout::DoLayout.");
-#endif // TEST
 	CSize size;
 	int width = offsetX + real_margin_x, height = offsetY + real_margin_y;
 	int w = offsetX + real_margin_x;
@@ -79,9 +70,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 	// only when there are candidates
 	if(candidates_count)
 	{
-#ifdef TEST
-		LOG(INFO) << std::format("From HorizontalLayout::DoLayout. candidates_count = {}", candidates_count);
-#endif // TEST
 		w = offsetX + real_margin_x;
 		for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
@@ -244,8 +232,4 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 	_contentRect.DeflateRect(deflatex, deflatey);
 	// eliminate the 1 pixel gap when border width odd and padding equal to margin
 	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
-
-#ifdef TEST
-	LOG(INFO) << std::format("From HorizontalLayout::DoLayout. done.");
-#endif // TEST
 }

@@ -4,11 +4,6 @@
 #include "Globals.h"
 #include <resource.h>
 #include <filesystem>
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 
 namespace fs = std::filesystem;
 
@@ -148,9 +143,6 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 
 	_InitWeaselData();
 
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitThreadMgrEventSink.");
-#endif // TEST
 	if (!_InitThreadMgrEventSink())
 		goto ExitError;
 
@@ -165,15 +157,8 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	if (!_InitKeyEventSink())
 		goto ExitError;
 
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitActiveLanguageProfileNotifySink");
-#endif // TEST
-
 	if (!_InitActiveLanguageProfileNotifySink())
 	{
-#ifdef TEST
-		LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitActiveLanguageProfileNotifySink Failed.");
-#endif // TEST
 		goto ExitError;
 	}
 
@@ -193,10 +178,6 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 
 	_EnsureServerConnected();
 
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitCompartment. supportDiaplayAttribute = {:s}", GetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE));
-#endif // TEST
-
 	if (!_InitCompartment())
 		goto ExitError;	
 
@@ -212,9 +193,6 @@ ExitError:
 
 STDMETHODIMP WeaselTSF::OnActivated(REFCLSID clsid, REFGUID guidProfile, BOOL isActivated)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnActivated. isActivated = {}", isActivated);
-#endif // TEST
 	if (!IsEqualCLSID(clsid, c_clsidTextService))
 	{
 		return S_OK;
@@ -299,7 +277,4 @@ void WeaselTSF::_InitWeaselData()
 			}
 		}
 	}
-#ifdef TEST
-	LOG(INFO) << std::format("Process {} starting log. AppName: {}, length = {}, is successful? {:s}", pid, fs::path(name).filename().string(), name.size(), static_cast<bool>(ret)).data();
-#endif // TEST
 }

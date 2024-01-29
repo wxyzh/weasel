@@ -2,11 +2,6 @@ module;
 #include "stdafx.h"
 #include "Globals.h"
 #include <resource.h>
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 module WeaselTSF;
 import Compartment;
 import ResponseParser;
@@ -98,9 +93,6 @@ HRESULT WeaselTSF::_SetKeyboardOpen(BOOL fOpen)
 			hr = pCompartment->SetValue(_tfClientId, &var);
 		}
 	}
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::_SetKeyboardOpen. fOpen = {}, hr = 0x{:X}", fOpen, (unsigned)hr);
-#endif // TEST
 
 	return hr;
 }
@@ -117,9 +109,6 @@ BOOL WeaselTSF::_InitCompartment()
 		(IUnknown*)_pThreadMgr,
 		GUID_COMPARTMENT_KEYBOARD_OPENCLOSE
 	);
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::_InitCompartment. hr = 0x{:X}", (unsigned)hr);
-#endif // TEST
 
 	_pConversionCompartmentSink = new CCompartmentEventSink(callback);
 	if (!_pConversionCompartmentSink)
@@ -128,9 +117,6 @@ BOOL WeaselTSF::_InitCompartment()
 		(IUnknown*)_pThreadMgr,
 		GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION
 	);
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::_InitCompartment. hr = 0x{:X}", (unsigned)hr);
-#endif // TEST
 
 	return SUCCEEDED(hr);
 }
@@ -160,22 +146,10 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 			SetBit(WeaselFlag::KEYBOARD_DISABLE);
 		}
 		_EnableLanguageBar(isOpen);
-#ifdef TEST
-		LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. GUID_COMPARTMENT_KEYBOARD_OPENCLOSE: isOpen = {}", isOpen);
-#endif // TEST
 	}
 	else if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION))
-	{		
-#ifdef TEST
-		DWORD flag;
-		_pCompartmentConversion->_GetCompartmentDWORD(flag);
-		LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION, flag = 0x{:X}", (unsigned)flag);
-#endif // TEST
+	{
 	}
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::_HandleCompartment. guidCompartment = {:X}-{:X}-{:X}-{:X}{:X}{:X}{:X}{:X}{:X}{:X}{:X}", guidCompartment.Data1, guidCompartment.Data2, guidCompartment.Data3, guidCompartment.Data4[0],
-		guidCompartment.Data4[1], guidCompartment.Data4[2], guidCompartment.Data4[3], guidCompartment.Data4[4], guidCompartment.Data4[5], guidCompartment.Data4[6], guidCompartment.Data4[7]);
-#endif // TEST
 
 	return S_OK;
 }

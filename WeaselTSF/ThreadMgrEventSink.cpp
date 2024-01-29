@@ -1,18 +1,10 @@
 module;
 #include "stdafx.h"
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 module WeaselTSF;
 import CandidateList;
 
 STDAPI WeaselTSF::OnInitDocumentMgr(ITfDocumentMgr* pDocMgr)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnInitDocumentMgr. pDocMgr = {:#x}", (size_t)pDocMgr);
-#endif // TEST
 	return E_NOTIMPL;
 }
 
@@ -24,10 +16,6 @@ STDAPI WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr* pDocMgr)
 STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr* pDocMgrFocus, ITfDocumentMgr* pDocMgrPrevFocus)
 {
 	_InitTextEditSink(pDocMgrFocus);
-
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnSetFocus. pDocMgrFocus = {:#x}, pDocMrgPrevFocus = {:#x}", (size_t)pDocMgrFocus, (size_t)pDocMgrPrevFocus);
-#endif // TEST
 
 	if (!pDocMgrFocus)
 	{
@@ -59,9 +47,6 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr* pDocMgrFocus, ITfDocumentMgr* pDocM
 
 STDAPI WeaselTSF::OnPushContext(ITfContext* pContext)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnPushContext. pContext = {:#x}", (size_t)pContext);
-#endif // TEST
 	return E_NOTIMPL;
 }
 

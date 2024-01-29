@@ -3,11 +3,6 @@
 #include "Globals.h"
 #include <WeaselUI.h>
 #include "resource.h"
-// #include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 module LanguageBar;
 import WeaselTSF;
 import CandidateList;
@@ -18,9 +13,6 @@ static void HMENU2ITfMenu(HMENU hMenu, ITfMenu *pTfMenu)
 {
 	/* NOTE: Only limited functions are supported */
 	int N = GetMenuItemCount(hMenu);
-#ifdef TEST
-	LOG(INFO) << std::format("From HMENU2ITfMenu.");
-#endif // TEST
 	for (int i = 0; i < N; i++)
 	{
 		MENUITEMINFO mii;
@@ -142,9 +134,6 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click, POINT pt, const RECT *prcAr
 
 STDAPI CLangBarItemButton::InitMenu(ITfMenu *pMenu)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From CLangBarItemButton::InitMenu. _daemon_enable = {}", _textService.GetBit(WeaselFlag::DAEMON_ENABLE));
-#endif // TEST
 	HMENU menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP));
 	HMENU popupMenu = GetSubMenu(menu, 0);
 	HMENU2ITfMenu(popupMenu, pMenu);
@@ -321,10 +310,7 @@ void CLangBarItemButton::RightClick(POINT& pt)
 		CheckMenuItem(firstPopupMenu, ID_STYLE_PRESERVED_KEY_SWITCH,
 			MF_BYCOMMAND | (_textService.GetBit(WeaselFlag::PRESERVED_KEY_SWITCH) ? MF_CHECKED : MF_UNCHECKED));
 
-		UINT wID = TrackPopupMenuEx(mainMenu, TPM_CENTERALIGN | TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x, pt.y - 32, hwnd, NULL);
-#ifdef TEST
-		LOG(INFO) << std::format("From CLangBarItemButton::OnClick. _daemon_enable = {}, wID = {}, var.lval = {:#x}", _textService.GetBit(WeaselFlag::DAEMON_ENABLE), wID, var.lVal);
-#endif // TEST			
+		UINT wID = TrackPopupMenuEx(mainMenu, TPM_CENTERALIGN | TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x, pt.y - 32, hwnd, NULL);		
 		DestroyMenu(menu);
 		_textService._HandleLangBarMenuSelect(wID);
 	}

@@ -1,5 +1,4 @@
 ﻿module;
-// #define WEASEL_ENABLE_LOGGING
 #include "stdafx.h"
 #include <WeaselUI.h>
 #include <logging.h>
@@ -318,7 +317,6 @@ void RimeWithWeaselHandler::OnNotify(void* context_object,
 	// may be running in a thread when deploying rime
 	RimeWithWeaselHandler* self = reinterpret_cast<RimeWithWeaselHandler*>(context_object);
 	if (!self || !message_type || !message_value) return;
-	// LOG(INFO) << std::format("From RimeWithWeaselHandler::OnNotify. m_message_type = {}, m_message_value = {}", m_message_type, m_message_value);
 	m_message_type = message_type;
 	m_message_value = message_value;
 	RimeApi* rime = rime_get_api();
@@ -428,7 +426,6 @@ void RimeWithWeaselHandler::_GetCandidateInfo(weasel::CandidateInfo& cinfo, Rime
 	cinfo.highlighted = ctx.menu.highlighted_candidate_index;
 	cinfo.currentPage = ctx.menu.page_no;
 	cinfo.is_last_page = ctx.menu.is_last_page;
-	// LOG(INFO) << std::format("From RimeWithWeaselHandler::_GetCandidateInfo. cinfo.empty = {}, ctx.menu.num_candidates = {}", cinfo.empty(), ctx.menu.num_candidates);
 }
 
 void RimeWithWeaselHandler::StartMaintenance()
@@ -711,7 +708,6 @@ void RimeWithWeaselHandler::_LoadAppInlinePreeditSet(RimeSessionId session_id, b
 
 bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& status)
 {
-	// LOG(INFO) << std::format("From RimeWithWeaselHandler::_ShowMessage. m_message_value = {}", m_message_value);
 	// show as auxiliary string
 	std::wstring& tips(ctx.aux.str);
 	bool show_icon = false;
@@ -751,7 +747,6 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 	if (tips.empty() && !show_icon)
 		return m_ui->IsCountingDown();
 
-	// LOG(INFO) << std::format("From RimeWithWeaselHandler::_ShowMessage. tips = {}, m_add_session = {:s}, m_message_type = {}", to_string(tips.data(), CP_UTF8), m_add_session, m_message_type);
 	auto foption = m_show_notifications.find(m_option_name);
 	auto falways = m_show_notifications.find("always");
 	if ((!m_add_session && (foption != m_show_notifications.end() ||
@@ -777,7 +772,6 @@ inline std::string _GetLabelText(const std::vector<weasel::Text>& labels, int id
 
 bool RimeWithWeaselHandler::_Respond(RimeSessionId session_id, EatLine eat)
 {
-	// LOG(INFO) << std::format("From RimeWithWeaselHandler::_Respond.");
 	std::set<std::string> actions;
 	std::list<std::string> messages;
 
@@ -804,7 +798,6 @@ bool RimeWithWeaselHandler::_Respond(RimeSessionId session_id, EatLine eat)
 		messages.emplace_back(std::format("status.s2t={}\n", status.is_s2t));
 		messages.emplace_back(std::format("status.prediction={}\n", status.is_prediction));
 		messages.emplace_back(std::format("status.schema_id={}\n", status.schema_id));
-		// LOG(INFO) << std::format("From RimeWithWeaselHandler::_Respond. status.is_prediction = {:s}", (bool)status.is_prediction);
 		if (m_global_ascii_mode && (session_status.status.is_ascii_mode != status.is_ascii_mode))
 		{
 			for (auto& pair : m_session_status_map)
@@ -1417,7 +1410,6 @@ void RimeWithWeaselHandler::_GetContext(weasel::Context& weasel_context, RimeSes
 		}
 		RimeFreeContext(&ctx);
 	}
-	// LOG(INFO) << std::format("From RimeWithWeaselHandler::_GetContext. cinfo.empty = {}, ctx.menu.num_candidates = {}", weasel_context.empty(), ctx.menu.num_candidates);
 }
 
 bool RimeWithWeaselHandler::_IsSessionTSF(RimeSessionId session_id)

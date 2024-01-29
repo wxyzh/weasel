@@ -2,11 +2,6 @@
 #include "stdafx.h"
 #include <WeaselCommon.h>
 #include "cmath"
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 export module Composition;
 import WeaselTSF;
 import EditSession;
@@ -157,9 +152,6 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		tfSelection.style.ase = TF_AE_NONE;
 		tfSelection.style.fInterimChar = FALSE;
 		auto ret = _pContext->SetSelection(ec, 1, &tfSelection);
-#ifdef TEST
-		LOG(INFO) << std::format("From CStartCompositionEditSession::DoEditSession. ret = 0x{:X}, hr = 0x{:X}", (unsigned)ret, (unsigned)hr);
-#endif // TEST
 	}
 
 	return S_OK;
@@ -182,9 +174,6 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 	}
 
 	auto hr = _pComposition->EndComposition(ec);
-#ifdef TEST
-	LOG(INFO) << std::format("From CEndCompositionEditSession::DoEditSession. hr = 0x{:X}", (unsigned)hr);
-#endif // TEST
 	_pTextService->_FinalizeComposition();
 	return hr;
 }
@@ -209,15 +198,6 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	_pContextView->GetScreenExt(&rcExt);
 	hr = _pContextView->GetTextExt(ec, pRange, &rc, &fClipped);
 
-#ifdef TEST
-	std::wstring name{};
-	name.reserve(512);
-	GetClassName(hwnd, name.data(), name.capacity());
-	name = name.data();
-
-	LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc = ({}, {}, {}, {}), hr = {:#x}, fClipped = {:s}, className = {}, rcExt = ({}, {}, {}, {}), cookie = 0x{:X}",
-		rc.left, rc.top, rc.right, rc.bottom, (unsigned)hr, (bool)fClipped, to_string(name, CP_UTF8), rcExt.left, rcExt.top, rcExt.right, rcExt.bottom, (unsigned)ec);
-#endif // TEST
 	if ((hr == 0x80040057) ||
 		(hr == 0x80070057 && _pTextService->GetBit(WeaselFlag::AUTOCAD)))
 	{
@@ -229,9 +209,6 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	{
 		CalculatePosition(rc);
 		_pTextService->_SetCompositionPosition(rc);
-#ifdef TEST
-		LOG(INFO) << std::format("From CGetTextExtentEditSession::DoEditSession. rc.left = {}, rc.top = {}", rc.left, rc.top);
-#endif // TEST
 	}
 	else if (_pTextService->GetRect().left != 0)						// 个别应用连续输入时，偶尔会获取到原点坐标，此时用最后一次合成的末码坐标替换
 	{
@@ -270,18 +247,11 @@ void CGetTextExtentEditSession::CalculatePosition(RECT& rc)
 		{
 			rc = rcFirst;
 		}
-#ifdef TEST
-		LOG(INFO) << std::format("From CGetTextExtentEditSession::CalculatePosition.. rc = ({}, {}, {}, {}), rcFirst = ({}, {}, {}, {})",
-			rc.left, rc.top, rc.right, rc.bottom, rcFirst.left, rcFirst.top, rcFirst.right, rcFirst.bottom);
-#endif // TEST
 	}
 }
 
 STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From CInlinePreeditEditSession::DoEditSession.");
-#endif // TEST
 	std::wstring preedit = _context->preedit.str;
 
 	com_ptr<ITfRange> pRangeComposition;	
@@ -300,9 +270,6 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 		hr = pRangeComposition->SetText(ec, 0, preedit.c_str(), preedit.length());
 	}
 
-#ifdef TEST
-	LOG(INFO) << std::format("From CInlinePreeditEditSession::DoEditSession. preedit = {}, hr = 0x{:X}", to_string(preedit), (unsigned)hr);
-#endif // TEST
 	if (FAILED(hr))
 	{
 		_pTextService->_AbortComposition(false);
@@ -348,9 +315,6 @@ STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec)
 		return hRet;
 
 	auto ret = pRange->SetText(ec, 0, _text.c_str(), _text.length());
-#ifdef TEST
-	LOG(INFO) << std::format("From CInsertTextEditSession::DoEditSession. _text = {}, ret = 0x{:X}", to_string(_text, CP_UTF8), (unsigned)ret);
-#endif // TEST
 	if (FAILED(ret))
 	{
 		return E_FAIL;

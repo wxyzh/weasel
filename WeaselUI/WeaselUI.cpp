@@ -1,13 +1,7 @@
 #include "pch.h"
 #include <WeaselUI.h>
 #include "WeaselPanel.h"
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
 #include "logging.h"
-#else
-#include "logging.h"
-#endif // TEST
 
 using namespace weasel;
 
@@ -75,15 +69,9 @@ UINT_PTR UI::UIImpl::timer = 0;
 
 void UI::UIImpl::Show()
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From UIImpl::Show. panel.IsWindow() = {}", panel.IsWindow());
-#endif // TEST
 	if (!panel.IsWindow()) return;	
 	panel.ShowWindow(SW_SHOWNA);
 	NotifyWinEvent(EVENT_OBJECT_IME_SHOW, panel.m_hWnd, OBJID_CLIENT, CHILDID_SELF);
-#ifdef TEST
-	LOG(INFO) << std::format("From UIImpl::Show. timer = {}", timer);
-#endif // TEST
 	m_ui.m_data->shown = true;
 	if (timer)
 	{
@@ -151,20 +139,11 @@ UI::~UI()
 
 bool UI::Create(HWND parent)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From UI::Create.");
-#endif // TEST
 	if (!pimpl_)
 	{
 		pimpl_ = std::make_unique<UIImpl>(*this);
 	}
-#ifdef TEST
-	LOG(INFO) << std::format("From UI::Create. make_unique<UIImpl>(*this)");
-#endif // TEST
 	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT, 0U, 0);
-#ifdef TEST
-	LOG(INFO) << std::format("From UI::Create. done.");
-#endif // TEST
 	return true;
 }
 
@@ -177,9 +156,6 @@ void UI::Destroy(bool full)
 		if (pimpl_->panel.IsWindow())
 		{
 			pimpl_->panel.DestroyWindow();
-#ifdef TEST
-			LOG(INFO) << std::format("From UI::Destroy. pimpl_->panel.DestroyWindow()");
-#endif // TEST
 		}
 		if (full)
 		{
@@ -191,9 +167,6 @@ void UI::Destroy(bool full)
 
 void UI::Show()
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From UI::Show.");
-#endif // TEST
 	if (pimpl_)
 	{
 		pimpl_->Show();

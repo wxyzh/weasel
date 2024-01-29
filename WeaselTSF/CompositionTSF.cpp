@@ -1,10 +1,5 @@
 module;
 #include "stdafx.h"
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 module WeaselTSF;
 import Composition;
 import CandidateList;
@@ -13,9 +8,6 @@ import WeaselUtility;
 
 void WeaselTSF::_StartComposition(ITfContext* pContext, bool not_inline_preedit)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From _StartComposition.");
-#endif // TEST
 	com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
 	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, not_inline_preedit));
 	if (pStartCompositionEditSession != nullptr)
@@ -27,9 +19,6 @@ void WeaselTSF::_StartComposition(ITfContext* pContext, bool not_inline_preedit)
 		else
 			ResetBit(WeaselFlag::DONT_DESTROY_UI);
 		SetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
-#ifdef TEST
-		LOG(INFO) << std::format("From _StartComposition. hr = 0x{:X}, ret = 0x{:X}", (unsigned)hr, (unsigned)ret);
-#endif // TEST
 		if (SUCCEEDED(ret) && FAILED(hr) && !GetBit(WeaselFlag::COMPOSITION_FAILED))
 		{
 			m_client.ClearComposition();
@@ -59,9 +48,6 @@ void WeaselTSF::_EndComposition(ITfContext* pContext, BOOL clear)
 	_cand->EndUI();
 	ResetBit(WeaselFlag::DONT_DESTROY_UI);
 	ResetBit(WeaselFlag::COMPOSITION_FAILED);
-#ifdef TEST
-	LOG(INFO) << std::format("From _EndComposition. hr = 0x{:X}", (unsigned)hr);
-#endif // TEST
 }
 
 /* Composition Window Handling */
@@ -75,9 +61,6 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 	com_ptr<ITfContextView> pContextView;
 	HRESULT hr;
 	hr = pContext->GetActiveView(&pContextView);
-#ifdef TEST
-	LOG(INFO) << std::format("From _UpdateCompositionWindow. hr = {:#x}, pContextView = 0x{:X}", (unsigned)hr, (size_t)pContextView.p);
-#endif // TEST
 	if (FAILED(hr))
 		return FALSE;
 	com_ptr<CGetTextExtentEditSession> pEditSession;
@@ -88,9 +71,6 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 	}
 
 	auto ret = pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READ, &hr);
-#ifdef TEST
-	LOG(INFO) << std::format("From _UpdateCompositionWindow. hr = {:#x}, ret = {:#x}", (unsigned)hr, (unsigned)ret);
-#endif // TEST
 	return SUCCEEDED(ret);
 }
 
@@ -107,14 +87,8 @@ void WeaselTSF::_SetCompositionPosition(const RECT& rc)
 			|| (abs(rc.left - rect.right) < 5 && abs(rc.top - rect.bottom) < 5))
 		{
 			_fCUASWorkaroundEnabled = true;
-#ifdef TEST
-			LOG(INFO) << std::format("From _SetCompositionPosition. _fCUASWorkaroundEnabled = {}, CUASWorkaroundMode = {}", _fCUASWorkaroundEnabled, GetBit(WeaselFlag::AUTOCAD));
-#endif // TEST
 		}
 	}
-#ifdef TEST
-	LOG(INFO) << std::format("From _SetCompositionPosition. left = {}, top = {}, right = {}, bottom = {}", rc.left, rc.top, rc.right, rc.bottom);
-#endif // TEST
 	RECT rcCopy{ rc };
 	if (rcCopy.left == 0 || abs(rcCopy.right - rect.right) < 5)
 	{
@@ -148,11 +122,6 @@ BOOL WeaselTSF::_InsertText(ITfContext* pContext, std::wstring_view text)
 	{
 		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 	}
-
-#ifdef TEST
-	LOG(INFO) << std::format("From _InsertText. text = {}, hr = 0x{:X}", to_string(text.data(), CP_UTF8), (unsigned)hr);
-#endif // TEST
-
 	return TRUE;
 }
 
@@ -165,10 +134,6 @@ void WeaselTSF::_UpdateComposition(ITfContext* pContext)
 	auto ret = _pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 	if (hr == TF_S_ASYNC)
 		SetBit(WeaselFlag::ASYNC_EDIT);
-#ifdef TEST
-	LOG(INFO) << std::format("From _UpdateComposition. hr = 0x{:X}, pContext = 0x{:X}, _tfClientId = 0x{:X}, ret = 0x{:X}, _pTextEditSinkContext = 0x{:X}", 
-		(unsigned)hr, (size_t)pContext, _tfClientId, (unsigned)ret, (size_t)_pTextEditSinkContext.p);
-#endif // TEST
 }
 
 /* Composition State */
@@ -178,10 +143,6 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 	// This will be called when an edit session ended up with an empty composition string,
 	// Even if it is closed normally.
 	// Silly M$.
-#ifdef TEST
-	LOG(INFO) << std::format("From OnCompositionTerminated. _AbortComposition. _AutoCADTest = {}, retry = {:s}, focusChanged = {:s}",
-		GetBit(WeaselFlag::AUTOCAD), GetBit(WeaselFlag::RETRY_COMPOSITION), GetBit(WeaselFlag::FOCUS_CHANGED));
-#endif // TEST
 	_AbortComposition();
 
 	if (!GetBit(WeaselFlag::FOCUS_CHANGED))

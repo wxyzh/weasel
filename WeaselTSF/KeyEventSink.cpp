@@ -1,11 +1,6 @@
 module;
 #include "stdafx.h"
 #include "Globals.h"
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 module WeaselTSF;
 import WeaselIPC;
 import KeyEvent;
@@ -52,10 +47,6 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten, bo
 			_keycode = ke.keycode;
 			*pfEaten = true;
 		}
-#ifdef TEST
-		LOG(INFO) << std::format("From WeaselTSF::_ProcessKeyEvent. ke = 0x{:X}, Caps_Lock = {}, eaten = {:s}, _inputKey = 0x{:X}", 
-			(unsigned)ke, GetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK), (bool)*pfEaten, _keycode);
-#endif // TEST
 	}
 }
 
@@ -84,9 +75,6 @@ STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
 
 STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From OnTestKeyDown. wParam = {:#x}, lParam = {:#x}, pContext = {:#x}", wParam, lParam, (size_t)pContext);
-#endif // TEST
 	_fTestKeyUpPending = false;
 	if (_fTestKeyDownPending)
 	{
@@ -103,9 +91,6 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 
 STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From OnKeyDown. _fTestKeyDownPending = {}, wParam = {:#x}, lParam = {:#x}, pContext = {:#x}", _fTestKeyDownPending, wParam, lParam, (size_t)pContext);
-#endif // TEST
 	_lastKey = static_cast<unsigned short>(wParam);
 	_fTestKeyUpPending = false;
 	if (_fTestKeyDownPending)
@@ -116,9 +101,6 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 	else
 	{
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
-#ifdef TEST
-		LOG(INFO) << std::format("From OnKeyDown. *pfEaten = {}", *pfEaten);
-#endif // TEST
 	}
 	if (GetBit(WeaselFlag::AUTOCAD))
 	{
@@ -141,9 +123,6 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 
 STDAPI WeaselTSF::OnTestKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From OnTestKeyUp. wParam = {:#x}, lParam = {:#x}, pContext = {:#x}", wParam, (unsigned)lParam, (size_t)pContext);
-#endif // TEST
 	_fTestKeyDownPending = false;
 	if (_fTestKeyUpPending)
 	{
@@ -161,9 +140,6 @@ STDAPI WeaselTSF::OnTestKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam
 
 STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From OnKeyUp. wParam = {:#x}, lParam = {:#x}", wParam, (unsigned)lParam);
-#endif // TEST
 	_fTestKeyDownPending = false;
 	if (_fTestKeyUpPending)
 	{

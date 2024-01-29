@@ -1,18 +1,10 @@
 #include "pch.h"
 #include "VHorizontalLayout.h"
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 
 using namespace weasel;
 
 void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From VHorizontalLayout::DoLayout.");
-#endif // TEST
 	if(_style.vertical_text_with_wrap)
 	{
 		DoLayoutWithWrap(dc, pDWR);

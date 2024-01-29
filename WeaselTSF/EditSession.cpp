@@ -23,11 +23,6 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	bool ok = m_client.GetResponseData(std::ref(parser));
 	auto state = _UpdateLanguageBar();
 
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::DoEditSession. state = {}, ok = {}, isComposing = {}, prediction = {:s}, _status.prediction = {:s}, s2t = {:s}, m_preeditCount = {}", 
-		state, ok, _IsComposing(), GetBit(WeaselFlag::PREDICTION), _status.prediction, _status.s2t, m_preeditCount);
-#endif // TEST
-
 	if (GetBit(WeaselFlag::ASYNC_DIGIT_PUNCT_EATEN))	// Word 2021进入异步编辑时，遇到标点符号输入时，必须进入合成，否则句点输入就失去了数字后的智能判断
 	{
 		_StartComposition(_pEditSessionContext, !config.inline_preedit);
