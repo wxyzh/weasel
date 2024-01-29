@@ -196,10 +196,17 @@ namespace weasel
 		CandidateInfo cinfo;
 	};
 
+	enum IconType
+	{
+		SCHEMA,
+		FULL_SHAPE
+	};
+
 	// 由ime管理
 	struct Status
 	{
-		Status() : ascii_mode(false), composing(false), disabled(false), full_shape(false), ascii_punct{}, s2t{}, prediction{} {}
+		Status() : ascii_mode(false), composing(false), disabled(false), full_shape(false), 
+			ascii_punct{}, s2t{}, prediction{}, type{ SCHEMA } {}
 		void reset()
 		{
 			schema_name.clear();
@@ -211,6 +218,7 @@ namespace weasel
 			ascii_punct = false;
 			s2t = false;
 			prediction = false;
+			type = SCHEMA;
 		}
 		// 输入方案
 		std::wstring schema_name{};
@@ -230,6 +238,8 @@ namespace weasel
 		bool s2t;
 		// 联想
 		bool prediction;
+		// 图标类型
+		IconType type;
 	};
 
 	// 用于向前端告知设置信息

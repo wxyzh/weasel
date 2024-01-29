@@ -33,9 +33,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
-		MARK_GAP = MARK_WIDTH + 4;
+		if (_style.mark_text.empty())
+			MARK_WIDTH /= 2;
+		MARK_GAP = _style.mark_text.empty() ? MARK_WIDTH : MARK_WIDTH + _style.hilite_spacing;
 	}
-	int base_offset =  ((_style.hilited_mark_color & 0xff00'0000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
+	int base_offset = (_style.hilited_mark_color & 0xff00'0000) ? MARK_GAP : 0;
 
 	// calc page indicator 
 	CSize pgszl, pgszr;
@@ -102,7 +104,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 			current_cand_width += (size.cx + _style.hilite_spacing) * textFontValid;
 
 			/* Comment */
-			if (!comments.at(i).str.empty() && cmtFontValid )
+			bool cmtFontNotTrans = (i == id && (_style.hilited_comment_text_color & 0xff00'0000)) ||
+				(i != id && (_style.comment_text_color & 0xff00'0000));
+			if (!comments.at(i).str.empty() && cmtFontValid && cmtFontNotTrans)
 			{
 				std::wstring_view comment = comments.at(i).str;
 				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);

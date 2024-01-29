@@ -805,14 +805,14 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 				{
 					int x = rect.left + (rect.Width() - width) / 2;
-					CRect mkrc{ x, rect.top, x + width, rect.top + m_layout->MARK_HEIGHT / 2 };
+					CRect mkrc{ x, rect.top, x + width, rect.top + m_layout->MARK_HEIGHT };
 					GraphicsRoundRectPath mk_path(mkrc, 2);
 					g_back.FillPath(&mk_brush, &mk_path);
 				}
 				else
 				{
 					int y = rect.top + (rect.Height() - height) / 2;
-					CRect mkrc{ rect.left, y, rect.left + m_layout->MARK_WIDTH / 2, y + height };
+					CRect mkrc{ rect.left, y, rect.left + m_layout->MARK_WIDTH, y + height };
 					GraphicsRoundRectPath mk_path(mkrc, 2);
 					g_back.FillPath(&mk_brush, &mk_path);
 				}
@@ -858,7 +858,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 			}
 			// Draw comment
 			std::wstring comment = comments.at(i).str;
-			if (!comment.empty()) {
+			if (!comment.empty() && COLORNOTTRANSPARENT(comment_text_color)) {
 				rect = m_layout->GetCandidateCommentRect((int)i);
 				if (m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
 				_TextOut(rect, comment, comment.length(), comment_text_color, commenttxtFormat.Get());
@@ -875,11 +875,15 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back)
 			int hgap = m_layout->MARK_WIDTH ? (rc.Width() - m_layout->MARK_WIDTH) / 2 : 0;
 			CRect hlRc;
 			if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-				hlRc = CRect(rc.left + hgap, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1,
-					rc.left + hgap + m_layout->MARK_WIDTH, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1 + m_layout->MARK_HEIGHT);
+				hlRc = CRect(rc.left + hgap, 
+					rc.top + m_style.hilite_padding_y,
+					rc.left + hgap + m_layout->MARK_WIDTH, 
+					rc.top + m_style.hilite_padding_y + m_layout->MARK_HEIGHT);
 			else
-				hlRc = CRect(rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap,
-					rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
+				hlRc = CRect(rc.left + m_style.hilite_padding_x,
+					rc.top + vgap,
+					rc.left + m_style.hilite_padding_x + m_layout->MARK_WIDTH, 
+					rc.bottom - vgap);
 			_TextOut(hlRc, m_style.mark_text, m_style.mark_text.length(), m_style.hilited_mark_color, m_pDWR->pTextFormat.Get());
 		}
 	}
@@ -1001,7 +1005,8 @@ void WeaselPanel::DoPaint(CDCHandle dc/*, RECT& rect*/)
 			else if (m_istorepos && !m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
 				iconRect.OffsetRect(0, m_offsety_preedit);
 
-			CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : m_iconEnabled);
+			CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : 
+				(m_status.type == SCHEMA ? m_iconEnabled : (m_status.full_shape ? m_iconFull : m_iconHalf)));
 			memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 			drawn = true;
 		}

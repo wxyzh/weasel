@@ -22,6 +22,8 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten, bo
 		return;
 	}
 
+	ResetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
+
 	if (GetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK) && wParam == VK_CAPITAL && GetKeyState(VK_CAPITAL) > 0)
 	{
 		ResetBit(WeaselFlag::COMPOSITION_WITH_CAPSLOCK);
@@ -86,7 +88,6 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 	LOG(INFO) << std::format("From OnTestKeyDown. wParam = {:#x}, lParam = {:#x}, pContext = {:#x}", wParam, lParam, (size_t)pContext);
 #endif // TEST
 	_fTestKeyUpPending = false;
-	ResetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
 	if (_fTestKeyDownPending)
 	{
 		*pfEaten = TRUE;
@@ -114,7 +115,6 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, 
 	}
 	else
 	{
-		ResetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
 #ifdef TEST
 		LOG(INFO) << std::format("From OnKeyDown. *pfEaten = {}", *pfEaten);

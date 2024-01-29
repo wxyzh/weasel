@@ -171,6 +171,9 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 
 	if (!_InitActiveLanguageProfileNotifySink())
 	{
+#ifdef TEST
+		LOG(INFO) << std::format("From WeaselTSF::ActivateEx. _InitActiveLanguageProfileNotifySink Failed.");
+#endif // TEST
 		goto ExitError;
 	}
 

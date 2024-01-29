@@ -47,7 +47,7 @@ void WeaselTrayIcon::Refresh()
 			RemoveIcon();
 			m_mode = INITIAL;
 		}
-		// m_disabled = false;
+		m_disabled = false;
 		return;
 	}
 	WeaselTrayMode mode = m_status.disabled ? DISABLED : 

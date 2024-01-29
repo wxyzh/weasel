@@ -26,8 +26,17 @@ export
 		}
 	};
 
-	typedef std::map<std::string, bool> AppOptions;
-	typedef std::map<std::string, AppOptions, CaseInsensitiveCompare> AppOptionsByAppName;
+	using AppOptions = std::map<std::string, bool>;
+	using AppOptionsByAppName = std::map<std::string, AppOptions, CaseInsensitiveCompare>;
+	struct SessionStatus
+	{
+		SessionStatus() { RIME_STRUCT(RimeStatus, status); }
+		weasel::UIStyle style{};
+		bool __synced{};
+		RimeStatus status;		
+	};
+	using SessionStatusMap = std::map<RimeSessionId, SessionStatus>;
+
 	class RimeWithWeaselHandler :
 		public weasel::RequestHandler
 	{
@@ -57,7 +66,7 @@ export
 		void _Setup();
 		bool _IsDeployerRunning();
 		void _UpdateUI(RimeSessionId session_id);
-		void _LoadSchemaSpecificSettings(const std::string& schema_id);
+		void _LoadSchemaSpecificSettings(RimeSessionId session_id, const std::string& schema_id);
 		void _LoadIconSettingFromSchema(RimeConfig& config, char* buffer, const int BUF_SIZE,
 			const char* key1, const char* key2, std::wstring_view user_dir, std::wstring_view shared_dir, std::wstring& value);
 		void _LoadAppInlinePreeditSet(RimeSessionId session_id, bool ignore_app_name = false);
@@ -67,6 +76,7 @@ export
 		void _GetCandidateInfo(weasel::CandidateInfo& cinfo, RimeContext& ctx);
 		void _GetStatus(weasel::Status& stat, RimeSessionId session_id, weasel::Context& ctx);
 		void _GetContext(weasel::Context& ctx, RimeSessionId session_id);
+		void _UpdateShowNotifications(RimeConfig* config, bool initialize = false);
 
 		bool _IsSessionTSF(RimeSessionId session_id);
 		void _UpdateInlinePreeditStatus(RimeSessionId session_id);
@@ -79,7 +89,8 @@ export
 		std::string m_last_app_name;
 		weasel::UIStyle m_base_style;
 		UINT m_show_notifications_when;
-
+		std::map<std::string, bool> m_show_notifications;
+		std::map<std::string, bool> m_show_notifications_base;
 		std::function<void()> _UpdateUICallback;
 
 		static void OnNotify(void* context_object,
@@ -88,7 +99,13 @@ export
 			const char* message_value);
 		static std::string m_message_type;
 		static std::string m_message_value;
-		std::map<RimeSessionId, bool> m_color_sync;
+		static std::string m_message_label;
+		static std::string m_option_name;
+		SessionStatusMap m_session_status_map;		
+		// std::map<RimeSessionId, bool> m_color_sync;
 		bool m_current_dark_mode;
+		bool m_global_ascii_mode;
+		int m_show_notifications_time;
+		bool m_add_session{};
 	};
 }
