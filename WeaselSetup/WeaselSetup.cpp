@@ -5,8 +5,11 @@
 #include "WeaselSetup.h"
 #include "InstallOptionsDialog.h"
 #include <format>
+#include <filesystem>
 import  RimeWithWeasel;
 import WeaselIPC;
+
+namespace fs = std::filesystem;
 
 CAppModule _Module;
 
@@ -115,6 +118,12 @@ static int CustomInstall(bool installing)
 		return 1;
 	}
 
+	auto log_dir{ fs::path(std::format(LR"({}\logs)", user_dir)) };
+	if (!fs::exists(log_dir))
+	{
+		fs::create_directories(log_dir);
+	}
+
 	if (installed)
 	{
 		ResetServer();
@@ -127,7 +136,7 @@ static int CustomInstall(bool installing)
 	{
 		MessageBox(NULL, L"无法写入 Hant", L"安装失败", MB_ICONERROR | MB_OK);
 		return 1;
-	}	
+	}
 
 	return 0;
 }
