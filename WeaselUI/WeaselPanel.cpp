@@ -48,7 +48,6 @@ static inline void ReconfigRoundInfo(IsToRoundStruct& rd, const int& i, const in
 }
 
 WeaselPanel::WeaselPanel(weasel::UI& ui) :
-	m_layout(NULL),
 	m_ctx(ui.ctx()),
 	m_octx{ ui.octx() },
 	m_status(ui.status()),
@@ -79,7 +78,6 @@ WeaselPanel::WeaselPanel(weasel::UI& ui) :
 WeaselPanel::~WeaselPanel()
 {
 	Gdiplus::GdiplusShutdown(_m_gdiplusToken);
-	delete m_layout;
 	m_layout = nullptr;
 }
 
@@ -93,31 +91,29 @@ void WeaselPanel::_ResizeWindow()
 
 void WeaselPanel::_CreateLayout()
 {
-	if (m_layout != NULL)
-		delete m_layout;
+	if (m_layout != nullptr)
+		m_layout.reset();
 
-	Layout* layout = NULL;
 	if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 	{
-		layout = new VHorizontalLayout(m_style, m_ctx, m_status);
+		m_layout = std::make_shared<VHorizontalLayout>(m_style, m_ctx, m_status);
 	}
 	else
 	{
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 		{
-			layout = new VerticalLayout(m_style, m_ctx, m_status);
+			m_layout = std::make_shared<VerticalLayout>(m_style, m_ctx, m_status);
 		}
 		else if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 		{
-			layout = new HorizontalLayout(m_style, m_ctx, m_status);
+			m_layout = std::make_shared<HorizontalLayout>(m_style, m_ctx, m_status);
 		}
 
 		if (IS_FULLSCREENLAYOUT(m_style))
 		{
-			layout = new FullScreenLayout(m_style, m_ctx, m_status, m_inputPos, layout);
+			m_layout = std::make_shared<FullScreenLayout>(m_style, m_ctx, m_status, m_inputPos, m_layout);
 		}
 	}
-	m_layout = layout;
 }
 
 //更新界面
@@ -457,11 +453,11 @@ void WeaselPanel::_HighlightText(CDCHandle& dc, const CRect& rc, const COLORREF&
 	int blurMarginX = m_layout->offsetX;
 	int blurMarginY = m_layout->offsetY;
 
-	GraphicsRoundRectPath* hiliteBackPath;
+	std::unique_ptr<GraphicsRoundRectPath> hiliteBackPath;
 	if (rd.Hemispherical && type != BackType::BACKGROUND && NOT_FULLSCREENLAYOUT(m_style))
-		hiliteBackPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (m_style.border % 2 ? m_style.border / 2 : 0), rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
+		hiliteBackPath = std::make_unique<GraphicsRoundRectPath>(rc, m_style.round_corner_ex - (m_style.border % 2 ? m_style.border / 2 : 0), rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
 	else // background or current candidate background not out of window background
-		hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
+		hiliteBackPath = std::make_unique<GraphicsRoundRectPath>(rc, radius);
 
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
 	if (m_style.shadow_radius && COLORNOTTRANSPARENT(shadowColor) && NOT_FULLSCREENLAYOUT(m_style)) {
@@ -475,10 +471,10 @@ void WeaselPanel::_HighlightText(CDCHandle& dc, const CRect& rc, const COLORREF&
 		BYTE b = GetBValue(shadowColor);
 		BYTE alpha = (BYTE)(shadowColor >> 24);
 		Gdiplus::Color shadow_color = Gdiplus::Color::MakeARGB(alpha, r, g, b);
-		static Gdiplus::Bitmap* pBitmapDropShadow;
-		pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + blurMarginX * 2, (INT)rc.Height() + blurMarginY * 2, PixelFormat32bppPARGB);
+		
+		auto pBitmapDropShadow = std::make_unique<Gdiplus::Bitmap>((INT)rc.Width() + blurMarginX * 2, (INT)rc.Height() + blurMarginY * 2, PixelFormat32bppPARGB);
 
-		Gdiplus::Graphics g_shadow(pBitmapDropShadow);
+		Gdiplus::Graphics g_shadow(pBitmapDropShadow.get());
 		g_shadow.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 		// dropshadow, draw a roundrectangle to blur
 		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0) {
@@ -498,20 +494,16 @@ void WeaselPanel::_HighlightText(CDCHandle& dc, const CRect& rc, const COLORREF&
 				rect.InflateRect(1, 1);
 			}
 		}
-		DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
+		DoGaussianBlur(pBitmapDropShadow.get(), (float)m_style.shadow_radius, (float)m_style.shadow_radius);
 
-		g_back.DrawImage(pBitmapDropShadow, INT(rc.left - blurMarginX), INT(rc.top - blurMarginY));
-
-		// free memory
-		delete pBitmapDropShadow;
-		pBitmapDropShadow = NULL;
+		g_back.DrawImage(pBitmapDropShadow.get(), INT(rc.left - blurMarginX), INT(rc.top - blurMarginY));
 	}
 
 	// 必须back_color非完全透明才绘制
 	if (COLORNOTTRANSPARENT(color)) {
 		Gdiplus::Color back_color = GDPCOLOR_FROM_COLORREF(color);
 		Gdiplus::SolidBrush back_brush(back_color);
-		g_back.FillPath(&back_brush, hiliteBackPath);
+		g_back.FillPath(&back_brush, hiliteBackPath.get());
 	}
 	// draw border, for bordercolor not transparent and border valid
 	if (COLORNOTTRANSPARENT(bordercolor) && m_style.border > 0)
@@ -524,11 +516,8 @@ void WeaselPanel::_HighlightText(CDCHandle& dc, const CRect& rc, const COLORREF&
 			g_back.DrawPath(&gPenBorder, &bgPath);
 		}
 		else if (type != BackType::TEXT)	// hilited_candidate_border / candidate_border
-			g_back.DrawPath(&gPenBorder, hiliteBackPath);
+			g_back.DrawPath(&gPenBorder, hiliteBackPath.get());
 	}
-	// free memory
-	delete hiliteBackPath;
-	hiliteBackPath = NULL;
 }
 
 // draw preedit text, text only
@@ -990,7 +979,7 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	m_sticky = false;
-	delete m_layout;
+	m_layout.reset();
 	m_layout = nullptr;
 	m_reversed = false;
 	return 0;

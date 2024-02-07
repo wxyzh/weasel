@@ -85,21 +85,19 @@ void _RefreshTrayIcon(const RimeSessionId session_id, const std::function<void()
 
 void RimeWithWeaselHandler::_Setup()
 {
-	auto log_dir{ fs::path(std::format(R"({}\logs)", weasel_user_data_dir())) };
-	if (!fs::exists(log_dir))
-	{
-		fs::create_directories(log_dir);
-	}
 	RIME_STRUCT(RimeTraits, weasel_traits);
-	weasel_traits.shared_data_dir = weasel_shared_data_dir();
-	weasel_traits.user_data_dir = weasel_user_data_dir();
+	auto shared_dir{ weasel_shared_data_dir() };
+	auto user_dir{ weasel_user_data_dir() };
+	auto log_dir{ weasel_log_dir() };
+	weasel_traits.shared_data_dir = shared_dir.data();
+	weasel_traits.user_data_dir = user_dir.data();
 	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
 	std::string distribution_name{ to_string(WEASEL_IME_NAME, CP_UTF8) };
 	weasel_traits.distribution_name = distribution_name.data();
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
 	weasel_traits.app_name = "rime.weasel";
-	weasel_traits.log_dir = log_dir.string().data();
+	weasel_traits.log_dir = log_dir.data();
 	RimeSetup(&weasel_traits);
 	RimeSetNotificationHandler(&RimeWithWeaselHandler::OnNotify, this);
 }
@@ -801,8 +799,7 @@ bool RimeWithWeaselHandler::_Respond(RimeSessionId session_id, EatLine eat)
 		messages.emplace_back(std::format("status.disabled={}\n", status.is_disabled));
 		messages.emplace_back(std::format("status.full_shape={}\n", status.is_full_shape));
 		messages.emplace_back(std::format("status.ascii_punct={}\n", status.is_ascii_punct));		
-		messages.emplace_back(std::format("status.s2t={}\n", status.is_s2t));
-		messages.emplace_back(std::format("status.prediction={}\n", status.is_prediction));
+		messages.emplace_back(std::format("status.prediction={}\n", status.is_predictable));
 		messages.emplace_back(std::format("status.schema_id={}\n", status.schema_id));
 		if (m_global_ascii_mode && (session_status.status.is_ascii_mode != status.is_ascii_mode))
 		{
@@ -1366,8 +1363,7 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status& stat, RimeSessionId sessi
 		stat.disabled = !!status.is_disabled;
 		stat.full_shape = !!status.is_full_shape;
 		stat.ascii_punct = !!status.is_ascii_punct;
-		stat.s2t = !!status.is_s2t;
-		stat.prediction = !!status.is_prediction;
+		stat.prediction = !!status.is_predictable;
 		if (schema_id != m_last_schema_id)
 		{
 			m_last_schema_id = schema_id;

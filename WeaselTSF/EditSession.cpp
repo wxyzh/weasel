@@ -1,4 +1,4 @@
-module;
+ï»¿module;
 #include "stdafx.h"
 #include <WeaselCommon.h>
 #include "test.h"
@@ -23,7 +23,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	bool ok = m_client.GetResponseData(std::ref(parser));
 	auto state = _UpdateLanguageBar();
 
-	if (GetBit(WeaselFlag::ASYNC_DIGIT_PUNCT_EATEN))	// Word 2021½øÈëÒì²½±à¼­Ê±£¬Óöµ½±êµã·ûºÅÊäÈëÊ±£¬±ØÐë½øÈëºÏ³É£¬·ñÔò¾äµãÊäÈë¾ÍÊ§È¥ÁËÊý×ÖºóµÄÖÇÄÜÅÐ¶Ï
+	if (GetBit(WeaselFlag::ASYNC_DIGIT_PUNCT_EATEN))	// Word 2021è¿›å…¥å¼‚æ­¥ç¼–è¾‘æ—¶ï¼Œé‡åˆ°æ ‡ç‚¹ç¬¦å·è¾“å…¥æ—¶ï¼Œå¿…é¡»è¿›å…¥åˆæˆï¼Œå¦åˆ™å¥ç‚¹è¾“å…¥å°±å¤±åŽ»äº†æ•°å­—åŽçš„æ™ºèƒ½åˆ¤æ–­
 	{
 		_StartComposition(_pEditSessionContext, !config.inline_preedit);
 		_EndComposition(_pEditSessionContext, false);
@@ -31,55 +31,39 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	}
 	if (ok)
 	{
-		if (state && !_IsComposing())					// Ö´ÐÐËã·¨·þÎñÄÚµÄUI×´Ì¬¸üÐÂ£¬ÎªËüÌá¹©ÕýÈ·µÄ×ø±ê
+		m_hasPreedit = !context->preedit.empty();
+		m_preeditCount = context->preedit.str.size();
+		if (!commit.empty())
 		{
-			_StartComposition(_pEditSessionContext, !config.inline_preedit);
-			if (GetBit(WeaselFlag::CARET_FOLLOWING))
-			{
-				_UpdateCompositionWindow(_pEditSessionContext);
-			}
-			else
-			{
-				_SetCompositionPosition(m_rcFallback);
-			}
-			_EndComposition(_pEditSessionContext, true);
-		}
-		else
-		{
-			m_hasPreedit = !context->preedit.empty();
-			m_preeditCount = context->preedit.str.size();
-			if (!commit.empty())
-			{
-				// For auto-selecting, commit and preedit can both exist.
-				// Commit and close the original composition first.
-				if (!_IsComposing())
-				{
-					_StartComposition(_pEditSessionContext, !config.inline_preedit);
-				}
-				_InsertText(_pEditSessionContext, commit);
-				_EndComposition(_pEditSessionContext, false);
-			}
-			if (_status.composing && !_IsComposing())
+			// For auto-selecting, commit and preedit can both exist.
+			// Commit and close the original composition first.
+			if (!_IsComposing())
 			{
 				_StartComposition(_pEditSessionContext, !config.inline_preedit);
 			}
-			else if (!_status.composing && _IsComposing())
-			{
-				_EndComposition(_pEditSessionContext, true);
-			}
-			if (_IsComposing() && (config.inline_preedit || GetBit(WeaselFlag::GAME_MODE)))
-			{
-				_ShowInlinePreedit(_pEditSessionContext, context);
-				SetBit(WeaselFlag::INLINE_PREEDIT);
-			}
-			if (GetBit(WeaselFlag::CARET_FOLLOWING))
-			{
-				_UpdateCompositionWindow(_pEditSessionContext);
-			}
-			else
-			{
-				_SetCompositionPosition(m_rcFallback);
-			}
+			_InsertText(_pEditSessionContext, commit);
+			_EndComposition(_pEditSessionContext, false);
+		}
+		if (_status.composing && !_IsComposing())
+		{
+			_StartComposition(_pEditSessionContext, !config.inline_preedit);
+		}
+		else if (!_status.composing && _IsComposing())
+		{
+			_EndComposition(_pEditSessionContext, true);
+		}
+		if (_IsComposing() && (config.inline_preedit || GetBit(WeaselFlag::GAME_MODE)))
+		{
+			_ShowInlinePreedit(_pEditSessionContext, context);
+			SetBit(WeaselFlag::INLINE_PREEDIT);
+		}
+		if (GetBit(WeaselFlag::CARET_FOLLOWING))
+		{
+			_UpdateCompositionWindow(_pEditSessionContext);
+		}
+		else
+		{
+			_SetCompositionPosition(m_rcFallback);
 		}
 	}
 	_UpdateUI(*context, _status);

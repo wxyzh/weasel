@@ -287,22 +287,6 @@ void CLangBarItemButton::RightClick(POINT& pt)
 		CheckMenuItem(firstPopupMenu, ID_WEASELTRAY_DAEMON_ENABLE,
 			MF_BYCOMMAND | (_textService.GetBit(WeaselFlag::DAEMON_ENABLE) ? MF_CHECKED : MF_UNCHECKED));
 
-		std::wstring temp(16, 0);
-		MENUITEMINFO mii;
-		mii.cbSize = sizeof(MENUITEMINFO);
-		mii.fMask = MIIM_FTYPE | MIIM_ID | MIIM_STRING | MIIM_SUBMENU | MIIM_CHECKMARKS;
-		mii.dwTypeData = temp.data();
-		mii.cch = temp.capacity();
-		// 2级弹出菜单
-		if (GetMenuItemInfo(firstPopupMenu, 0, TRUE, &mii))
-		{
-			temp = temp.data();
-			temp[4] = _textService.GetBit(WeaselFlag::FULL_SHAPE) ? L'全' : L'半';
-			ModifyMenu(mii.hSubMenu, _textService.GetBit(WeaselFlag::FULL_SHAPE) ? 1 : 0, 
-				MF_BYPOSITION | MF_CHECKED, 0, _textService.GetBit(WeaselFlag::FULL_SHAPE) ? L"全角" : L"半角");
-		}
-		SetMenuItemInfo(firstPopupMenu, 0, true, &mii);
-
 		CheckMenuItem(firstPopupMenu, ID_STYLE_CARET_FOLLOWING,
 			MF_BYCOMMAND | (_textService.GetBit(WeaselFlag::CARET_FOLLOWING) ? MF_CHECKED : MF_UNCHECKED));
 		

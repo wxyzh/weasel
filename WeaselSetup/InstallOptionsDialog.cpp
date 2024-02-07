@@ -46,7 +46,7 @@ LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	
 	GetDlgItem(IDC_BROWSER).EnableWindow(((CButton)GetDlgItem(IDC_RADIO_DEFAULT_DIR)).GetCheck() ? FALSE : TRUE);
 
-	GetDlgItem(IDOK).SetWindowTextW(installed ? L"更改" : L"安装");
+	GetDlgItem(IDOK).SetWindowTextW(installed ? L"鏇存敼" : L"瀹夎");
 
 	CenterWindow();
 	return 0;
@@ -81,7 +81,7 @@ LRESULT InstallOptionsDialog::OnRemove(WORD, WORD code, HWND, BOOL&) {
 	cn_.EnableWindow(!installed);
 	tw_.EnableWindow(!installed);
 	remove_.EnableWindow(installed);
-	GetDlgItem(IDOK).SetWindowTextW(L"安装");
+	GetDlgItem(IDOK).SetWindowTextW(L"瀹夎");
 	return 0;
 }
 
@@ -108,7 +108,7 @@ LRESULT InstallOptionsDialog::OnBrowser(WORD, WORD code, HWND, BOOL&)
 	CShellFileOpenDialog shellFileOpenDialog{ nullptr, FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST | FOS_PICKFOLDERS};
 	if (SUCCEEDED(hr))
 		shellFileOpenDialog.GetPtr()->SetFolder(shellItem);
-	shellFileOpenDialog.GetPtr()->SetTitle(L"自定义小狼毫用户词库目录");
+	shellFileOpenDialog.GetPtr()->SetTitle(L"鑷畾涔夊皬鐙兼鐢ㄦ埛璇嶅簱鐩綍");
 	shellFileOpenDialog.DoModal(m_hWnd);
 
 	hr = shellFileOpenDialog.GetFilePath(cur_dir.data(), cur_dir.capacity());

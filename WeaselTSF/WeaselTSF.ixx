@@ -6,6 +6,7 @@ export module WeaselTSF;
 import WeaselIPC;
 import <bitset>;
 import <memory>;
+import WeaselFlag;
 
 class CCandidateList;
 class CLangBarItemButton;
@@ -14,8 +15,6 @@ class CCompartmentEventSink;
 
 export
 {
-	enum class WeaselFlag;
-
 	class WeaselTSF :
 		public ITfTextInputProcessorEx,
 		public ITfThreadMgrEventSink,
@@ -270,37 +269,5 @@ export
 			L"War3.exe",
 			L"WoW.exe"
 		};
-	};
-
-	enum class WeaselFlag
-	{
-		DAEMON_ENABLE,
-		ASCII_MODE,
-		FULL_SHAPE,
-		ASCII_PUNCT,
-		INIT_INPUT_METHOD_STATE,
-		INLINE_PREEDIT,
-		RETRY_COMPOSITION,
-		FOCUS_CHANGED,
-		SUPPORT_DISPLAY_ATTRIBUTE,
-		AUTOCAD,
-		INLINE_PREEDIT_LOST_FIRST_KEY,
-		NOT_INLINE_PREEDIT_LOST_FIRST_KEY,
-		DONT_DESTROY_UI,
-		WEZTERM_FIRST_KEY,
-		SIMPLIFIED_TO_TRADITIONAL,
-		FIRST_KEY_COMPOSITION,
-		KEYBOARD_DISABLE,
-		ASYNC_EDIT,
-		COMPOSITION_WITH_CAPSLOCK,
-		CARET_FOLLOWING,
-		ASYNC_DIGIT_PUNCT_EATEN,
-		GAME_MODE,
-		GAME_WAR3,
-		PRESERVED_KEY_SWITCH,
-		GAME_MODE_SELF_REDRAW,
-		PREDICTION,
-		FIREFOX,
-		COMPOSITION_FAILED
 	};
 }

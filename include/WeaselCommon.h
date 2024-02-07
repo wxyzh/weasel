@@ -206,7 +206,7 @@ namespace weasel
 	struct Status
 	{
 		Status() : ascii_mode(false), composing(false), disabled(false), full_shape(false), 
-			ascii_punct{}, s2t{}, prediction{}, type{ SCHEMA } {}
+			ascii_punct{}, prediction{}, type{ SCHEMA } {}
 		void reset()
 		{
 			schema_name.clear();
@@ -216,7 +216,6 @@ namespace weasel
 			disabled = false;
 			full_shape = false;
 			ascii_punct = false;
-			s2t = false;
 			prediction = false;
 			type = SCHEMA;
 		}
@@ -234,8 +233,6 @@ namespace weasel
 		bool full_shape;
 		// 标点符号
 		bool ascii_punct;
-		// 简体中文
-		bool s2t;
 		// 联想
 		bool prediction;
 		// 图标类型

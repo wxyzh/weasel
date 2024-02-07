@@ -77,7 +77,8 @@ private:
 
 	void _LayerUpdate(const CRect& rc, CDCHandle dc);
 
-	weasel::Layout* m_layout;
+private:
+	std::shared_ptr<weasel::Layout> m_layout;
 	weasel::Context& m_ctx;
 	weasel::Context& m_octx;
 	weasel::Status& m_status;

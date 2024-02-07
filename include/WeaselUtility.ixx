@@ -2,6 +2,9 @@ module;
 #include <Windows.h>
 export module WeaselUtility;
 import <string>;
+import <filesystem>;
+
+namespace fs = std::filesystem;
 
 export
 {
@@ -137,33 +140,15 @@ export
 		return path;
 	}
 
-	inline const char* weasel_shared_data_dir()
-	{
-		static char path[MAX_PATH] = { 0 };
-		GetModuleFileNameA(NULL, path, _countof(path));
-		std::string str_path(path);
-		size_t k = str_path.find_last_of("/\\");
-		strcpy_s(path + k + 1, _countof(path) - (k + 1), "data");
-		return path;
-	}
-
-	inline const char* weasel_user_data_dir()
-	{
-		static char path[MAX_PATH] = { 0 };
-		// Windows wants multi-byte file paths in native encoding
-		WideCharToMultiByte(CP_ACP, 0, WeaselUserDataPath().c_str(), -1, path, _countof(path) - 1, NULL, NULL);
-		return path;
-	}
-
 	inline std::string to_string(const std::wstring& input, int code_page = CP_ACP)
 	{
-		auto len = WideCharToMultiByte(code_page, 0, input.c_str(), -1, nullptr, 0, nullptr, nullptr);
+		auto len = WideCharToMultiByte(code_page, 0, input.data(), -1, nullptr, 0, nullptr, nullptr);
 		std::string temp;
 
 		if (len > 0)
 		{
 			temp.resize(len);
-			WideCharToMultiByte(code_page, 0, input.c_str(), -1, &temp[0], len, nullptr, nullptr);
+			WideCharToMultiByte(code_page, 0, input.data(), -1, &temp[0], len, nullptr, nullptr);
 			temp = temp.data();
 		}
 
@@ -172,17 +157,48 @@ export
 
 	inline std::wstring to_wstring(const std::string& input, int code_page = CP_ACP)
 	{
-		auto len = MultiByteToWideChar(code_page, 0, input.c_str(), -1, nullptr, 0);
+		auto len = MultiByteToWideChar(code_page, 0, input.data(), -1, nullptr, 0);
 		std::wstring temp;
 
 		if (len > 0)
 		{
 			temp.resize(len);
-			MultiByteToWideChar(code_page, 0, input.c_str(), -1, &temp[0], len);
+			MultiByteToWideChar(code_page, 0, input.data(), -1, &temp[0], len);
 			temp = temp.data();
 		}
 
 		return temp;
+	}
+
+	inline std::string weasel_shared_data_dir()
+	{
+		std::wstring path(MAX_PATH, 0);
+		GetModuleFileName(NULL, path.data(), path.size());
+		path = path.data();
+		path = path.substr(0, path.rfind('\\'));
+		path += LR"(\data)";
+		return to_string(path, CP_UTF8);
+	}
+
+	inline std::string weasel_user_data_dir()
+	{
+		std::string path(MAX_PATH, 0);
+		WideCharToMultiByte(CP_UTF8, 0, WeaselUserDataPath().data(), -1, path.data(), path.size(), NULL, NULL);
+		path = path.data();
+		return path;
+	}
+
+	inline std::string weasel_log_dir()
+	{
+		std::string path(MAX_PATH, 0);
+		WideCharToMultiByte(CP_ACP, 0, WeaselUserDataPath().data(), -1, path.data(), path.size(), NULL, NULL);
+		path = path.data();
+		path += R"(\logs)";
+		if (fs::path log_dir{ path }; !fs::exists(fs::path(log_dir)))
+		{
+			fs::create_directories(log_dir);
+		}
+		return path;
 	}
 
 	// resource

@@ -57,14 +57,6 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 	}
 	break;
 
-	case ID_WEASELTRAY_HALF_SHAPE:
-		ResetBit(WeaselFlag::FULL_SHAPE);
-		goto DEFAULT;
-
-	case ID_WEASELTRAY_FULL_SHAPE:
-		SetBit(WeaselFlag::FULL_SHAPE);
-		goto DEFAULT;
-
 	case ID_STYLE_CARET_FOLLOWING:
 		_bitset.flip(static_cast<int>(WeaselFlag::CARET_FOLLOWING));
 		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
@@ -79,7 +71,7 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 			_UninitPreservedKey();
 		break;
 
-DEFAULT:
+	DEFAULT:
 	default:
 		m_client.TrayCommand(wID);
 	}
@@ -164,10 +156,7 @@ bool WeaselTSF::_UpdateLanguageBar()
 	if (!GetBit(WeaselFlag::INIT_INPUT_METHOD_STATE))
 	{
 		SetBit(WeaselFlag::INIT_INPUT_METHOD_STATE);
-		SetBit(WeaselFlag::ASCII_MODE, _status.ascii_mode);
-		SetBit(WeaselFlag::FULL_SHAPE, _status.full_shape);
 		SetBit(WeaselFlag::ASCII_PUNCT, _status.ascii_punct);
-		SetBit(WeaselFlag::SIMPLIFIED_TO_TRADITIONAL, _status.s2t);
 		SetBit(WeaselFlag::PREDICTION, _status.prediction);
 		_schema_id = _status.schema_id;
 
@@ -200,60 +189,43 @@ bool WeaselTSF::_UpdateLanguageBar()
 	}
 	else
 	{
-		if (GetBit(WeaselFlag::ASCII_MODE) != _status.ascii_mode)
+		if (_status.ascii_mode)
 		{
-			SetBit(WeaselFlag::ASCII_MODE, _status.ascii_mode);
-			if (_status.ascii_mode)
-			{
-				flags &= (~TF_CONVERSIONMODE_NATIVE);
-			}
-			else
-			{
-				flags |= TF_CONVERSIONMODE_NATIVE;
-			}
-			state = true;
+			flags &= (~TF_CONVERSIONMODE_NATIVE);
 		}
-		else if (GetBit(WeaselFlag::FULL_SHAPE) != _status.full_shape)
+		else
 		{
-			SetBit(WeaselFlag::FULL_SHAPE, _status.full_shape);
-			if (_status.full_shape)
-			{
-				flags |= TF_CONVERSIONMODE_FULLSHAPE;
-			}
-			else
-			{
-				flags &= (~TF_CONVERSIONMODE_FULLSHAPE);
-			}
-			state = true;
+			flags |= TF_CONVERSIONMODE_NATIVE;
 		}
-		else if (GetBit(WeaselFlag::ASCII_PUNCT) != _status.ascii_punct)
+
+		if (_status.full_shape)
 		{
-			SetBit(WeaselFlag::ASCII_PUNCT, _status.ascii_punct);
-			if (_status.ascii_punct)
-			{
-				flags |= TF_CONVERSIONMODE_SYMBOL;
-			}
-			else
-			{
-				flags &= (~TF_CONVERSIONMODE_SYMBOL);
-			}
-			state = true;
+			flags |= TF_CONVERSIONMODE_FULLSHAPE;
 		}
-		else if (GetBit(WeaselFlag::SIMPLIFIED_TO_TRADITIONAL) != _status.s2t)
+		else
 		{
-			SetBit(WeaselFlag::SIMPLIFIED_TO_TRADITIONAL, _status.s2t);
-			state = true;
+			flags &= (~TF_CONVERSIONMODE_FULLSHAPE);
 		}
-		else if (GetBit(WeaselFlag::PREDICTION) != _status.prediction)
+
+		SetBit(WeaselFlag::ASCII_PUNCT, _status.ascii_punct);
+		if (_status.ascii_punct)
+		{
+			flags |= TF_CONVERSIONMODE_SYMBOL;
+		}
+		else
+		{
+			flags &= (~TF_CONVERSIONMODE_SYMBOL);
+		}
+
+		if (GetBit(WeaselFlag::PREDICTION) != _status.prediction)
 		{
 			SetBit(WeaselFlag::PREDICTION, _status.prediction);
-			state = true;
 		}
 		else if (_schema_id != _status.schema_id)
 		{
 			_schema_id = _status.schema_id;
-			state = true;
 		}
+		state = true;
 	}
 
 	// _SetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);

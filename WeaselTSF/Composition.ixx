@@ -160,7 +160,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 {
 	/* Clear the dummy text we set before, if any. */
-	if (_pComposition == nullptr) return S_OK;	
+	if (_pComposition == nullptr) return S_OK;
 
 	if (_pTextService->GetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE))
 	{
@@ -168,7 +168,7 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 	}
 
 	com_ptr<ITfRange> pCompositionRange;
-	if (_clear && _pComposition->GetRange(&pCompositionRange) == S_OK)
+	if (_clear && SUCCEEDED(_pComposition->GetRange(&pCompositionRange)))
 	{
 		pCompositionRange->SetText(ec, 0, L"", 0);
 	}
@@ -254,7 +254,7 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 {
 	std::wstring preedit = _context->preedit.str;
 
-	com_ptr<ITfRange> pRangeComposition;	
+	com_ptr<ITfRange> pRangeComposition;
 	if ((_pComposition->GetRange(&pRangeComposition)) != S_OK)
 		return E_FAIL;
 
