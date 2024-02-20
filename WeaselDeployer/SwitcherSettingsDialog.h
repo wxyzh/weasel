@@ -30,6 +30,7 @@ protected:
 	void Populate();
 	void ShowDetails(RimeSchemaInfo* info);
 	void CloseDialog(int nVal);
+	void GetSchemata(HWND hWndCtl);
 
 	RimeLeversApi* api_;
 	RimeSwitcherSettings* settings_;

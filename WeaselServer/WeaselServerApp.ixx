@@ -51,6 +51,39 @@ export
 			return (int)ShellExecuteW(nullptr, L"open", path.data(), NULL, NULL, SW_SHOWNORMAL) > 32;
 		}
 
+		static bool view_log()
+		{
+			fs::path log_path{ weasel_log_dir() };
+			auto id = GetCurrentProcessId();
+
+			fs::recursive_directory_iterator begin{ log_path };
+			fs::recursive_directory_iterator end{};
+			std::vector<std::wstring> logs{};
+			logs.reserve(5);
+			for (auto iter{ begin }; iter != end; ++iter)
+			{
+				auto& entry{ *iter };
+				if (fs::is_regular_file(entry) && stoul(entry.path().extension().string().substr(1)) == id)
+				{
+					std::wstring cmdLine{ std::format(LR"(notepad {})", entry.path().wstring()) };
+					logs.emplace_back(std::move(cmdLine));
+				}
+			}
+
+			for (auto item : logs)
+			{
+				STARTUPINFO si{ sizeof(si) };
+				PROCESS_INFORMATION pi{};
+				auto ret = CreateProcess(nullptr, item.data(), nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi);
+				if (ret)
+				{
+					CloseHandle(pi.hThread);
+					CloseHandle(pi.hProcess);
+				}
+			}
+			return true;
+		}
+
 		static bool check_update()
 		{
 			// when checked manually, show testing versions too

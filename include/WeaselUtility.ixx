@@ -175,8 +175,8 @@ export
 		std::wstring path(MAX_PATH, 0);
 		GetModuleFileName(NULL, path.data(), path.size());
 		path = path.data();
-		path = path.substr(0, path.rfind('\\'));
-		path += LR"(\data)";
+		auto pos{ path.rfind(L'\\') + 1 };
+		path.replace(path.begin() + pos, path.end(), L"data");
 		return to_string(path, CP_UTF8);
 	}
 

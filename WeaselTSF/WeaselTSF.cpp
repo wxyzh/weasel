@@ -15,7 +15,7 @@ import ResponseParser;
 import WeaselUtility;
 // import GenerateDump;
 
-static void error_message(const WCHAR *msg)
+static void error_message(const WCHAR* msg)
 {
 	static DWORD next_tick = 0;
 	DWORD now = GetTickCount();
@@ -48,7 +48,7 @@ WeaselTSF::~WeaselTSF()
 	DllRelease();
 }
 
-STDAPI WeaselTSF::QueryInterface(REFIID riid, void **ppvObject)
+STDAPI WeaselTSF::QueryInterface(REFIID riid, void** ppvObject)
 {
 	if (ppvObject == NULL)
 		return E_INVALIDARG;
@@ -103,7 +103,7 @@ STDAPI_(ULONG) WeaselTSF::Release()
 	return cr;
 }
 
-STDAPI WeaselTSF::Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId)
+STDAPI WeaselTSF::Activate(ITfThreadMgr* pThreadMgr, TfClientId tfClientId)
 {
 	return ActivateEx(pThreadMgr, tfClientId, 0U);
 }
@@ -133,7 +133,7 @@ STDAPI WeaselTSF::Deactivate()
 	return S_OK;
 }
 
-STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DWORD dwFlags)
+STDAPI WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr, TfClientId tfClientId, DWORD dwFlags)
 {
 	com_ptr<ITfDocumentMgr> pDocMgrFocus;
 	_activateFlags = dwFlags;
@@ -179,7 +179,7 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	_EnsureServerConnected();
 
 	if (!_InitCompartment())
-		goto ExitError;	
+		goto ExitError;
 
 	if (GetBit(WeaselFlag::PRESERVED_KEY_SWITCH))
 		_InitPreservedKey();
@@ -218,7 +218,7 @@ void WeaselTSF::_EnsureServerConnected()
 		weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
 		bool ok = m_client.GetResponseData(std::ref(parser));
 		if (ok) {
-			_UpdateLanguageBar();			
+			_UpdateLanguageBar();
 		}
 		if (!m_client.Echo())
 		{
@@ -226,6 +226,13 @@ void WeaselTSF::_EnsureServerConnected()
 			if (GetBit(WeaselFlag::DAEMON_ENABLE))
 			{
 				execute(std::format(LR"({}\WeaselServer.exe)", WeaselRootPath()));
+				Sleep(150);
+				if (!m_client.Echo())
+				{
+					m_client.Disconnect();
+					m_client.Connect(NULL);
+					m_client.StartSession();
+				}
 			}
 		}
 	}

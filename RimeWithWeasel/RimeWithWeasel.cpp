@@ -92,8 +92,8 @@ void RimeWithWeaselHandler::_Setup()
 	weasel_traits.shared_data_dir = shared_dir.data();
 	weasel_traits.user_data_dir = user_dir.data();
 	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
-	std::string distribution_name{ to_string(WEASEL_IME_NAME, CP_UTF8) };
-	weasel_traits.distribution_name = distribution_name.data();
+	auto name{ to_string(WEASEL_IME_NAME, CP_UTF8) };
+	weasel_traits.distribution_name = name.data();
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
 	weasel_traits.app_name = "rime.weasel";

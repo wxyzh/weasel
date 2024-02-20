@@ -29,15 +29,12 @@ void Configurator::Initialize()
 	RIME_STRUCT(RimeTraits, weasel_traits);
 	auto shared_dir{ weasel_shared_data_dir() };
 	auto user_dir{ weasel_user_data_dir() };
+	auto name{ to_string(WEASEL_IME_NAME, CP_UTF8) };
 	auto log_dir{ weasel_log_dir() };
 	weasel_traits.shared_data_dir = shared_dir.data();
 	weasel_traits.user_data_dir = user_dir.data();
-	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
-	const int len = 20;
-	char utf8_str[len];
-	memset(utf8_str, 0, sizeof(utf8_str));
-	WideCharToMultiByte(CP_UTF8, 0, WEASEL_IME_NAME, -1, utf8_str, len - 1, NULL, NULL);
-	weasel_traits.distribution_name = utf8_str;
+	weasel_traits.prebuilt_data_dir = shared_dir.data();
+	weasel_traits.distribution_name = name.data();
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
 	weasel_traits.app_name = "rime.weasel";

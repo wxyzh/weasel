@@ -63,4 +63,5 @@ void WeaselServerApp::SetupMenuHandlers()
 	m_server.AddMenuHandler(ID_WEASELTRAY_CHECKUPDATE, std::bind(check_update));
 	m_server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, std::bind(explore, dir));
 	m_server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG, std::bind(explore, WeaselUserDataPath()));
+	m_server.AddMenuHandler(ID_WEASELTRAY_VIEW_LOG, std::bind(view_log));
 }

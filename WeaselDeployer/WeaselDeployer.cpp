@@ -15,11 +15,11 @@ HWND g_hwnd{ nullptr };
 
 CAppModule _Module;
 
-static int Run(LPTSTR lpCmdLine);
+int Run(LPTSTR lpCmdLine);
 
 void NotifyOtherInstance();
 
-int APIENTRY _tWinMain(HINSTANCE hInstance,
+int WINAPI _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPTSTR    lpCmdLine,
                      int       nCmdShow)
@@ -68,7 +68,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	return ret;
 }
 
-static int Run(LPTSTR lpCmdLine)
+int Run(LPTSTR lpCmdLine)
 {
 	Configurator configurator;
 	configurator.Initialize();

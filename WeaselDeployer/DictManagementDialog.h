@@ -1,13 +1,13 @@
 #pragma once
 
-class DictManagementDialog : public CDialogImpl<DictManagementDialog> {
+class DictManagementDialog : public CDialogImpl<DictManagementDialog>
+{
 public:
 	enum { IDD = IDD_DICT_MANAGEMENT };
 
 	DictManagementDialog();
 	~DictManagementDialog();
 
-protected:
 	BEGIN_MSG_MAP(DictManagementDialog)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_CLOSE, OnClose)
@@ -26,8 +26,10 @@ protected:
 	LRESULT OnImport(WORD, WORD code, HWND, BOOL&);
 	LRESULT OnUserDictListSelChange(WORD, WORD, HWND, BOOL&);
 
+private:
 	void Populate();
 
+private:
 	CListBox user_dict_list_;
 	CButton backup_;
 	CButton restore_;

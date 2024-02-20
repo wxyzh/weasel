@@ -147,7 +147,7 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition* 
 
 	if (!GetBit(WeaselFlag::FOCUS_CHANGED))
 	{
-		if (GetBit(WeaselFlag::FIREFOX) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION) && !GetBit(WeaselFlag::PREDICTION))	// �ط�������ֹ�������¼�
+		if (GetBit(WeaselFlag::FIREFOX) && GetBit(WeaselFlag::FIRST_KEY_COMPOSITION) && !GetBit(WeaselFlag::PREDICTION))	// 重发意外终止的首码事件
 		{
 			SetBit(WeaselFlag::RETRY_COMPOSITION);
 			RetryKey();
@@ -214,16 +214,16 @@ bool WeaselTSF::RetryKey()
 	return send == 1;
 }
 
-// ��ȡ����ǰ������ʾ���ķֱ��ʴ�С�����Զ�̬�Ļ�ȡ����������ʾ���ķֱ���
+// 获取程序当前所在显示器的分辨率大小，可以动态的获取程序所在显示器的分辨率
 SIZE WeaselTSF::GetScreenResolution()
 {
 	SIZE size{};
 	if (!m_hwnd)
 		return size;
 
-	// MONITOR_DEFAULTTONEAREST ����ֵ����ӽ��õ����Ļ���
-	// MONITOR_DEFAULTTOPRIMARY ����ֵ������Ļ�ľ��
-	// �������һ����Ļ�����õ㣬�򷵻�ֵ�Ǹ���Ļ��HMONITOR��������û��һ����Ļ�����õ㣬�򷵻�ֵȡ����dwFlags��ֵ
+	// MONITOR_DEFAULTTONEAREST 返回值是最接近该点的屏幕句柄
+	// MONITOR_DEFAULTTOPRIMARY 返回值是主屏幕的句柄
+	// 如果其中一个屏幕包含该点，则返回值是该屏幕的HMONITOR句柄。如果没有一个屏幕包含该点，则返回值取决于dwFlags的值
 	HMONITOR hMonitor = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTONEAREST);
 	MONITORINFOEX miex;
 	miex.cbSize = sizeof(miex);
@@ -234,8 +234,8 @@ SIZE WeaselTSF::GetScreenResolution()
 	dm.dmSize = sizeof(dm);
 	dm.dmDriverExtra = 0;
 
-	// ENUM_CURRENT_SETTINGS ������ʾ�豸�ĵ�ǰ����
-	// ENUM_REGISTRY_SETTINGS ������ǰ�洢��ע����е���ʾ�豸������
+	// ENUM_CURRENT_SETTINGS 检索显示设备的当前设置
+	// ENUM_REGISTRY_SETTINGS 检索当前存储在注册表中的显示设备的设置
 	if (!EnumDisplaySettings(miex.szDevice, ENUM_CURRENT_SETTINGS, &dm))
 		return size;
 

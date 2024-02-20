@@ -5,6 +5,7 @@
 #include "SwitcherSettingsDialog.h"
 import <algorithm>;
 import <set>;
+import <thread>;
 import WeaselUtility;
 import Config;
 
@@ -81,6 +82,41 @@ void SwitcherSettingsDialog::CloseDialog(int nVal)
 	::PostQuitMessage(nVal);
 }
 
+void SwitcherSettingsDialog::GetSchemata(HWND hWndCtl)
+{
+	SetEnvironmentVariable(L"rime_dir", WeaselUserDataPath().data());
+	HKEY hKey;
+	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, LR"(Software\Rime\Weasel)", &hKey);
+	if (ret == ERROR_SUCCESS) {
+		WCHAR value[MAX_PATH];
+		DWORD len = sizeof(value);
+		DWORD type = 0;
+		DWORD data = 0;
+		ret = RegQueryValueExW(hKey, L"WeaselRoot", NULL, &type, (LPBYTE)value, &len);
+		if (ret == ERROR_SUCCESS && type == REG_SZ) {
+			WCHAR parameters[MAX_PATH + 37];
+			wcscpy_s<_countof(parameters)>(parameters, (std::format(LR"(/k "{}\rime-install.bat")", value).data()));
+			SHELLEXECUTEINFOW cmd = {
+				sizeof(SHELLEXECUTEINFO),
+				SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC,
+				hWndCtl,
+				L"open",
+				L"cmd",
+				parameters,
+				NULL,
+				SW_SHOW,
+				NULL, NULL, NULL, NULL, NULL, NULL, NULL
+			};
+			ShellExecuteExW(&cmd);
+			WaitForSingleObject(cmd.hProcess, INFINITE);
+			CloseHandle(cmd.hProcess);
+			api_->load_settings(reinterpret_cast<RimeCustomSettings*>(settings_));
+			Populate();
+		}
+	}
+	RegCloseKey(hKey);
+}
+
 LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 {
 	schema_list_.SubclassWindow(GetDlgItem(IDC_SCHEMA_LIST));
@@ -108,42 +144,16 @@ LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	return TRUE;
 }
 
-LRESULT SwitcherSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
+LRESULT SwitcherSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) 
+{
 	CloseDialog(0);
 	return 0;
 }
 
-LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&) {
-	HKEY hKey;
-	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, LR"(Software\Rime\Weasel)", &hKey);
-	if (ret == ERROR_SUCCESS) {
-		WCHAR value[MAX_PATH];
-		DWORD len = sizeof(value);
-		DWORD type = 0;
-		DWORD data = 0;
-		ret = RegQueryValueExW(hKey, L"WeaselRoot", NULL, &type, (LPBYTE)value, &len);
-		if (ret == ERROR_SUCCESS && type == REG_SZ) {
-			WCHAR parameters[MAX_PATH + 37];
-			wcscpy_s<_countof(parameters)>(parameters, (std::format(LR"(/k "{}\rime-install.bat\")", value).data()));
-			SHELLEXECUTEINFOW cmd = {
-				sizeof(SHELLEXECUTEINFO),
-				SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC,
-				hWndCtl,
-				L"open",
-				L"cmd",
-				parameters,
-				NULL,
-				SW_SHOW,
-				NULL, NULL, NULL, NULL, NULL, NULL, NULL
-			};
-			ShellExecuteExW(&cmd);
-			WaitForSingleObject(cmd.hProcess, INFINITE);
-			CloseHandle(cmd.hProcess);
-			api_->load_settings(reinterpret_cast<RimeCustomSettings *>(settings_));
-			Populate();
-		}
-	}
-	RegCloseKey(hKey);
+LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&)
+{
+	std::thread t{ &SwitcherSettingsDialog::GetSchemata, this, hWndCtl };
+	t.detach();
 	return 0;
 }
 

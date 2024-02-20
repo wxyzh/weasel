@@ -65,7 +65,7 @@ export
 	inline void to_lower(std::wstring& wstr)
 	{
 		std::setlocale(LC_ALL, "");
-		std::transform(wstr.begin(), wstr.end(), wstr.begin(), std::towlower);
+		std::transform(wstr.cbegin(), wstr.cend(), wstr.begin(), std::towlower);
 	}
 
 	inline std::string to_lower(std::string_view str)

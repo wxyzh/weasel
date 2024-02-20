@@ -26,14 +26,8 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 	bool ret{};
 	switch (wID)
 	{
-	case ID_WEASELTRAY_SETTINGS:
-		ret = execute(std::format(LR"({}\WeaselDeployer.exe)", WeaselRootPath()));
-		if (!ret)
-			goto DEFAULT;
-		break;
-
-	case ID_WEASELTRAY_DICT_MANAGEMENT:
-		ret = execute(std::format(LR"({}\WeaselDeployer.exe)", WeaselRootPath()), LR"(/dict)");
+	case ID_WEASELTRAY_INSTALLDIR:
+		ret = explore(WeaselRootPath());
 		if (!ret)
 			goto DEFAULT;
 		break;
@@ -44,8 +38,14 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 			goto DEFAULT;
 		break;
 
-	case ID_WEASELTRAY_INSTALLDIR:
-		ret = explore(WeaselRootPath());
+	case ID_WEASELTRAY_SETTINGS:
+		ret = execute(std::format(LR"({}\WeaselDeployer.exe)", WeaselRootPath()));
+		if (!ret)
+			goto DEFAULT;
+		break;
+
+	case ID_WEASELTRAY_DICT_MANAGEMENT:
+		ret = execute(std::format(LR"({}\WeaselDeployer.exe)", WeaselRootPath()), LR"(/dict)");
 		if (!ret)
 			goto DEFAULT;
 		break;

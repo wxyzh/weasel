@@ -22,6 +22,9 @@
 #define ID_WEASELTRAY_SYNC              40012
 #define ID_WEASELTRAY_ENABLE_ASCII      40013
 #define ID_WEASELTRAY_DISABLE_ASCII     40014
+#define ID_STYLE_CARET_FOLLOWING        40015
+#define ID_STYLE_PRESERVED_KEY_SWITCH   40016
+#define ID_WEASELTRAY_VIEW_LOG          40017
 
 // Next default values for new objects
 // 

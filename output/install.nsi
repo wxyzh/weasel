@@ -211,8 +211,12 @@ program_files:
   ; shared data files
   SetOutPath $INSTDIR\data
   File "data\*.yaml"
+  File "data\rime.lua"
   File /nonfatal "data\*.txt"
   ; File /nonfatal "data\*.gram"
+  ; lua files
+  SetOutPath $INSTDIR\data\lua
+  File "data\lua\*.lua"
   ; opencc data files
   SetOutPath $INSTDIR\data\opencc
   File "data\opencc\*.json"
@@ -302,10 +306,12 @@ Section "Uninstall"
   SetOutPath $TEMP
   Delete /REBOOTOK "$INSTDIR\data\opencc\*.*"
   Delete /REBOOTOK "$INSTDIR\data\preview\*.*"
+  Delete /REBOOTOK "$INSTDIR\data\lua\*.*"
   Delete /REBOOTOK "$INSTDIR\data\*.*"
   Delete /REBOOTOK "$INSTDIR\*.*"
   RMDir /REBOOTOK "$INSTDIR\data\opencc"
   RMDir /REBOOTOK "$INSTDIR\data\preview"
+  RMDir /REBOOTOK "$INSTDIR\data\lua"
   RMDir /REBOOTOK "$INSTDIR\data"
   RMDir /REBOOTOK "$INSTDIR"
   SetShellVarContext all

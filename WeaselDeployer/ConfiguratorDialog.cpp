@@ -1,4 +1,4 @@
-#include "stdafx.h"
+Ôªø#include "stdafx.h"
 #include "resource.h"
 #include <WeaselVersion.h>
 #include "WeaselDeployer.h"
@@ -48,8 +48,8 @@ LRESULT ConfiguratorDialog::OnInitDialog(UINT, WPARAM, LPARAM lParam, BOOL&)
 	m_tab.Attach(GetDlgItem(IDC_TAB));
 	auto hFont = m_font.CreatePointFont(110, L"@Segoe UI");
 	m_tab.SetFont(hFont);
-	m_tab.AddItem(L"∑Ω∞∏");
-	m_tab.AddItem(L"—˘ Ω");
+	m_tab.AddItem(L"ÊñπÊ°à");
+	m_tab.AddItem(L"Ê†∑Âºè");
 	m_tab.ModifyStyle(0, TCS_FIXEDWIDTH | TCS_MULTILINE | WS_VISIBLE);
 	// m_tab.ModifyStyleEx(0, DT_VCENTER | DT_CENTER, SWP_SHOWWINDOW);
 
@@ -94,7 +94,7 @@ LRESULT ConfiguratorDialog::OnOK(WORD code, WORD wID, HWND hwnd, BOOL& handled)
 		m_styleSettings.ShowWindow(SW_HIDE);
 		m_tab.SetCurSel(0);
 		m_switcherSettings.ShowWindow(SW_SHOWDEFAULT);
-		MessageBox(L"÷¡…Ÿ“™—°”√“ªœÓ∞…°£", L"–°¿«∫¡≤ª «’‚∞„”√∑®", MB_OK | MB_ICONEXCLAMATION);
+		MessageBox(L"Ëá≥Â∞ëË¶ÅÈÄâÁî®‰∏ÄÈ°πÂêß„ÄÇ", L"Â∞èÁãºÊØ´‰∏çÊòØËøôËà¨Áî®Ê≥ï", MB_OK | MB_ICONEXCLAMATION);
 		return 0;
 	}
 	m_styleSettings.CloseDialog(0);

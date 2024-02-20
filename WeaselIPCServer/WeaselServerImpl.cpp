@@ -121,7 +121,6 @@ LRESULT ServerImpl::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	case ID_WEASELTRAY_FULL_SHAPE:
 		m_pRequestHandler->SetOption(lParam, "full_shape", true);
 		return 0;
-	default:;
 	}
 
 	std::map<UINT, CommandHandler>::iterator it = m_MenuHandlers.find(uID);
