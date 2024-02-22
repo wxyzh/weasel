@@ -264,7 +264,17 @@ program_files:
 
   ; Prompt reboot
   StrCmp $0 "Upgrade" 0 +2
-  SetRebootFlag true
+  ; SetRebootFlag true
+
+  ; Prompt logoff
+  MessageBox MB_YESNO|MB_ICONINFORMATION \
+  "安装完毕，注销后生效。$\n$\n「是」立即注销，「否」手动注销。" \
+  /SD IDYES IDYES label_yes IDNO label_no
+
+  label_yes:
+  System::Call "User32::ExitWindowsEx(i 0x0, i 0x0) i .r0"
+
+  label_no:
 
 SectionEnd
 
@@ -319,6 +329,16 @@ Section "Uninstall"
   RMDir /REBOOTOK "$SMPROGRAMS\$(DISPLAYNAME)"
 
   ; Prompt reboot
-  SetRebootFlag true
+  ; SetRebootFlag true
+
+  ; Prompt logoff
+  MessageBox MB_YESNO|MB_ICONINFORMATION \
+  "安装完毕，注销后生效。$\n$\n「是」立即注销，「否」手动注销。" \
+  /SD IDYES IDYES label_yes IDNO label_no
+
+  label_yes:
+  System::Call "User32::ExitWindowsEx(i 0x0, i 0x0) i .r0"
+
+  label_no:
 
 SectionEnd
