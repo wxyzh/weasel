@@ -113,7 +113,7 @@ private:
 	bool hide_candidates;
 	// for multi font_face & font_point
 	PDWR m_pDWR;
-	std::function<void(int* const, int* const, bool* const)>& _UICallback;
+	std::function<void(int* const, int* const, bool* const, bool* const)>& _UICallback;
 	std::function<void(const RECT&)>& _SetRectCallback;
 
 	bool m_following{ true };

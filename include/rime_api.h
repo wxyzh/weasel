@@ -30,7 +30,7 @@ extern "C" {
 #define RIME_API
 #endif /* _WIN32 */
 
-    using RimeSessionId = uint64_t;
+typedef uintptr_t RimeSessionId;
 
 typedef int Bool;
 
@@ -665,6 +665,13 @@ typedef struct rime_api_t {
   void (*get_prebuilt_data_dir_s)(char* dir, size_t buffer_size);
   void (*get_staging_dir_s)(char* dir, size_t buffer_size);
   void (*get_sync_dir_s)(char* dir, size_t buffer_size);
+
+  //! highlight a selection without committing
+  Bool(*highlight_candidate)(RimeSessionId session_id, size_t index);
+  //! highlight a selection without committing
+  Bool(*highlight_candidate_on_current_page)(RimeSessionId session_id, size_t index);
+
+  Bool(*change_page)(RimeSessionId session_id, Bool backward);
 } RimeApi;
 
 //! API entry

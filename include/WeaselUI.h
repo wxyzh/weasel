@@ -57,8 +57,8 @@ namespace weasel
 		void SetCaretFollowing(const bool following);
 		bool GetCaretFollowing() const;
 
-		std::function<void(int* const, int* const, bool* const)>& uiCallback();
-		void SetSelectCallback(std::function<void(int* const, int* const, bool* const)> const& func);
+		std::function<void(int* const, int* const, bool* const, bool* const)>& uiCallback();
+		void SetSelectCallback(std::function<void(int* const, int* const, bool* const, bool* const)> const& func);
 
 		std::function<void (const RECT&)>& SetRectCallback();
 		void SetRectCallback(std::function<void (const RECT&)> func);

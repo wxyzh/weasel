@@ -14,7 +14,7 @@ struct UI::Data
 	UIStyle ostyle;
 
 	PDWR pDWR;
-	std::function<void(int* const, int* const, bool* const)> UICallback;
+	std::function<void(int* const, int* const, bool* const, bool* const)> UICallback;
 	std::function<void(const RECT&)> SetRectCallback;
 	bool caretFollowing{ true };
 	bool shown{ false };
@@ -272,12 +272,12 @@ bool UI::GetCaretFollowing() const
 	return m_data->caretFollowing;
 }
 
-std::function<void(int* const, int* const, bool* const)>& UI::uiCallback()
+std::function<void(int* const, int* const, bool* const, bool* const)>& UI::uiCallback()
 {
 	return m_data->UICallback;
 }
 
-void UI::SetSelectCallback(std::function<void(int* const, int* const, bool* const)> const& func)
+void UI::SetSelectCallback(std::function<void(int* const, int* const, bool* const, bool* const)> const& func)
 {
 	m_data->UICallback = func;
 }

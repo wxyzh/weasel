@@ -2,8 +2,8 @@
 //
 
 #include "stdafx.h"
-#include <WeaselIPC.h>
-#include <RimeWithWeasel.h>
+import WeaselIPC;
+import RimeWithWeasel;
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 using namespace boost::interprocess;
@@ -60,7 +60,7 @@ bool launch_server()
 	return true;
 }
 
-bool read_buffer(LPWSTR buffer, UINT length, LPWSTR dest)
+bool read_buffer(LPWSTR buffer, size_t length, LPWSTR dest)
 {
 	wbufferstream bs(buffer, length);
 	bs.read(dest, WEASEL_IPC_BUFFER_LENGTH);
@@ -153,22 +153,23 @@ public:
 	{
 		std::cerr << "handler dtor: " << m_counter << std::endl;
 	}
-	virtual UINT FindSession(UINT session_id)
+	virtual RimeSessionId FindSession(RimeSessionId session_id) override
 	{
 		std::cerr << "FindSession: " << session_id << std::endl;
 		return (session_id <= m_counter ? session_id : 0);
 	}
-	virtual UINT AddSession(LPWSTR buffer)
+	virtual RimeSessionId AddSession(LPWSTR buffer, EatLine eat = 0) override
 	{
 		std::cerr << "AddSession: " << m_counter + 1 << std::endl;
 		return ++m_counter;
 	}
-	virtual UINT RemoveSession(UINT session_id)
+	virtual RimeSessionId RemoveSession(RimeSessionId session_id) override
 	{
 		std::cerr << "RemoveClient: " << session_id << std::endl;
 		return 0;
 	}
-	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, EatLine eat) {
+	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, RimeSessionId session_id, EatLine eat) override
+	{
 		std::cerr << "ProcessKeyEvent: " << session_id 
 			  << " keycode: " << keyEvent.keycode 
 			  << " mask: " << keyEvent.mask 
@@ -176,6 +177,18 @@ public:
 		eat(std::wstring(L"Greeting=Hello, 小狼毫.\n"));
 		return TRUE;
 	}
+	virtual void CommitComposition(RimeSessionId session_id) override {}
+	virtual void ClearComposition(RimeSessionId session_id) override {}
+	virtual void SelectCandidateOnCurrentPage(size_t index, RimeSessionId session_id) override {}
+	virtual bool HighlightCandidateOnCurrentPage(size_t index, RimeSessionId session_id, EatLine eat) override { return false; }
+	virtual bool ChangePage(bool backward, RimeSessionId session_id, EatLine eat) override { return false; }
+	virtual void FocusIn(PARAM param, RimeSessionId session_id) override {}
+	virtual void FocusOut(PARAM param, RimeSessionId session_id) override {}
+	virtual void UpdateInputPosition(RECT const& rc, RimeSessionId session_id) override {}
+	virtual void StartMaintenance() override {}
+	virtual void EndMaintenance() override {}
+	virtual void SetOption(RimeSessionId session_id, const std::string& opt, bool val) override {}
+	virtual void UpdateColorTheme(bool darkMode) override {}
 private:
 	unsigned int m_counter;
 };

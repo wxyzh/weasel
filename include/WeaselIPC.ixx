@@ -32,8 +32,10 @@ export
 		WEASEL_IPC_END_MAINTENANCE,
 		WEASEL_IPC_COMMIT_COMPOSITION,
 		WEASEL_IPC_CLEAR_COMPOSITION,
-		WEASEL_IPC_SELECT_CANDIDATE_ON_CURRENT_PAGE,
 		WEASEL_IPC_TRAY_COMMAND,
+		WEASEL_IPC_SELECT_CANDIDATE_ON_CURRENT_PAGE,
+		WEASEL_IPC_HIGHLIGHT_CANDIDATE_ON_CURRENT_PAGE,
+		WEASEL_IPC_CHANGE_PAGE,
 		WEASEL_IPC_LAST_COMMAND
 	};
 
@@ -83,6 +85,8 @@ export
 			virtual void CommitComposition(RimeSessionId session_id) = 0;
 			virtual void ClearComposition(RimeSessionId session_id) = 0;
 			virtual void SelectCandidateOnCurrentPage(size_t index, RimeSessionId session_id) = 0;
+			virtual bool HighlightCandidateOnCurrentPage(size_t index, RimeSessionId session_id, EatLine eat) = 0;
+			virtual bool ChangePage(bool backward, RimeSessionId session_id, EatLine eat) = 0;
 			virtual void FocusIn(PARAM param, RimeSessionId session_id) = 0;
 			virtual void FocusOut(PARAM param, RimeSessionId session_id) = 0;
 			virtual void UpdateInputPosition(RECT const& rc, RimeSessionId session_id) = 0;
@@ -138,6 +142,10 @@ export
 			bool ClearComposition();
 			// 选择当前页面编号为index的候选
 			bool SelectCandidateOnCurrentPage(const size_t index);
+			// 高亮当前页面编号为index的候选
+			bool HighlightCandidateOnCurrentPage(size_t index);
+			// 翻页，backward = true向前翻，false向后翻
+			bool ChangePage(bool backward);
 			// 更新输入位置
 			void UpdateInputPosition(RECT const& rc);
 			// 输入窗口获得焦点

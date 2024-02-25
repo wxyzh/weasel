@@ -13,7 +13,10 @@ CCandidateList::CCandidateList(WeaselTSF& textService) :
 	// _pReadingInformation.Attach(new CReadingInformation(_tsf, &_ui));
 	_cRef = 1;
 	_pbShow = TRUE;
-	_ui.SetSelectCallback([this](int* const sel, int* const hov, bool* const next) { _tsf.HandleUICallback(sel, hov, next); });
+	_ui.SetSelectCallback([this](int* const sel, int* const hov, bool* const next, bool* const scroll_next) 
+		{ 
+			_tsf.HandleUICallback(sel, hov, next, scroll_next); 
+		});
 	_ui.SetRectCallback([this](const RECT& rc) { _tsf.SetRect(rc); });
 }
 

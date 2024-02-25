@@ -104,6 +104,22 @@ bool weasel::ClientImpl::SelectCandidateOnCurrentPage(const size_t index)
 	return ret != 0;
 }
 
+bool weasel::ClientImpl::HighlightCandidateOnCurrentPage(size_t index)
+{
+	if (!_Active())
+		return false;
+	auto ret = _SendMessage(WEASEL_IPC_HIGHLIGHT_CANDIDATE_ON_CURRENT_PAGE, index, session_id);
+	return ret != 0;
+}
+
+bool weasel::ClientImpl::ChangePage(bool backward)
+{
+	if (!_Active())
+		return false;
+	auto ret = _SendMessage(WEASEL_IPC_CHANGE_PAGE, backward, session_id);
+	return ret != 0;
+}
+
 void ClientImpl::UpdateInputPosition(RECT const& rc)
 {
 	if (!_Active())
@@ -257,6 +273,16 @@ bool Client::ClearComposition()
 bool weasel::Client::SelectCandidateOnCurrentPage(const size_t index)
 {
 	return m_pImpl->SelectCandidateOnCurrentPage(index);
+}
+
+bool weasel::Client::HighlightCandidateOnCurrentPage(size_t index)
+{
+	return m_pImpl->HighlightCandidateOnCurrentPage(index);
+}
+
+bool weasel::Client::ChangePage(bool backward)
+{
+	return m_pImpl->ChangePage(backward);
 }
 
 void Client::UpdateInputPosition(RECT const& rc)

@@ -27,6 +27,8 @@ export namespace weasel
 		bool CommitComposition();
 		bool ClearComposition();
 		bool SelectCandidateOnCurrentPage(const size_t index);
+		bool HighlightCandidateOnCurrentPage(size_t index);
+		bool ChangePage(bool backward);
 		void UpdateInputPosition(RECT const& rc);
 		void FocusIn();
 		void FocusOut();

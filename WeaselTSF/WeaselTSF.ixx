@@ -123,7 +123,7 @@ export
 
 		com_ptr<ITfThreadMgr> _GetThreadMgr() { return _pThreadMgr; }
 
-		void HandleUICallback(int* const sel, int* const hov, bool* const next);
+		void HandleUICallback(int* const sel, int* const hov, bool* const next, bool* const scroll_next);
 
 		HRESULT _GetCompartmentDWORD(_Out_ DWORD& value, const GUID guid);
 		HRESULT _SetCompartmentDWORD(DWORD value, const GUID guid);
@@ -160,7 +160,7 @@ export
 		// ui callback functions
 		void _SelectCandidateOnCurrentPage(const int index);
 		void _HandleMouseHoverEvent(const int index);
-		void _HandleMousePageEvent(const bool nextPage);
+		void _HandleMousePageEvent(bool* const nextPage, bool* const scrollNextPage);
 		/* TSF Related */
 		BOOL _InitThreadMgrEventSink();
 		void _UninitThreadMgrEventSink();

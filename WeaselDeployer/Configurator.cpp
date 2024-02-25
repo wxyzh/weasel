@@ -12,7 +12,6 @@
 #include <rime_api.h>
 #include <rime_levers_api.h>
 #pragma warning(default: 4005)
-#pragma comment(lib, "rime.lib")
 module Config;
 import WeaselIPC;
 import WeaselUtility;

@@ -329,6 +329,34 @@ PARAM weasel::ServerImpl::OnSelectCandidateOnCurrentPage(WEASEL_IPC_COMMAND uMsg
 	return 0;
 }
 
+PARAM weasel::ServerImpl::OnHighlightCandidateOnCurrentPage(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam)
+{
+	if (m_pRequestHandler)
+	{
+		auto eat = [this](std::wstring_view msg) -> bool
+			{
+				*channel << msg.data();
+				return true;
+			};
+		m_pRequestHandler->HighlightCandidateOnCurrentPage(wParam, lParam, eat);
+	}
+	return 0;
+}
+
+PARAM weasel::ServerImpl::OnChangePage(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam)
+{
+	if (m_pRequestHandler)
+	{
+		auto eat = [this](std::wstring_view msg) -> bool
+			{
+				*channel << msg.data();
+				return true;
+			};
+		m_pRequestHandler->ChangePage(wParam, lParam, eat);
+	}
+	return 0;
+}
+
 #define MAP_PIPE_MSG_HANDLE(__msg, __wParam, __lParam) {\
 auto lParam = __lParam;\
 auto wParam = __wParam;\
@@ -361,6 +389,8 @@ void ServerImpl::HandlePipeMessage(PipeMessage pipe_msg, _Resp resp)
 		PIPE_MSG_HANDLE(WEASEL_IPC_COMMIT_COMPOSITION, OnCommitComposition)
 		PIPE_MSG_HANDLE(WEASEL_IPC_CLEAR_COMPOSITION, OnClearComposition);
 		PIPE_MSG_HANDLE(WEASEL_IPC_SELECT_CANDIDATE_ON_CURRENT_PAGE, OnSelectCandidateOnCurrentPage);
+		PIPE_MSG_HANDLE(WEASEL_IPC_HIGHLIGHT_CANDIDATE_ON_CURRENT_PAGE, OnHighlightCandidateOnCurrentPage);
+		PIPE_MSG_HANDLE(WEASEL_IPC_CHANGE_PAGE, OnChangePage);
 		PIPE_MSG_HANDLE(WEASEL_IPC_TRAY_COMMAND, OnCommand_);
 	END_MAP_PIPE_MSG_HANDLE(result);
 

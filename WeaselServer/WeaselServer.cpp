@@ -6,6 +6,7 @@
 #include "resource.h"
 #include <winsparkle.h>
 #include <functional>
+#include <VersionHelpers.h>
 #include <ShellScalingApi.h>
 #include <WinUser.h>
 #include <memory>
@@ -20,7 +21,7 @@ CAppModule _Module;
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
-	if (!IsWindowsBlueOrLaterEx())
+	if (!::IsWindows8Point1OrGreater())
 	{
 		::MessageBox(NULL, L"仅支持Windows 8.1或更高版本系统", L"系统版本过低", MB_ICONERROR);
 		return 0;
@@ -37,7 +38,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 		return 1;
 	}
 
-	::SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+	if (::IsWindows10OrGreater())
+	{
+		HMODULE lib{ ::LoadLibrary(L"User32.dll") };
+		using SetThreadDpiAwarenessContextFunction = void(WINAPI*)(DPI_AWARENESS_CONTEXT);
+		auto SetThreadDpiAwarenessContext{ (SetThreadDpiAwarenessContextFunction)::GetProcAddress(lib, "SetThreadDpiAwarenessContext") };
+		SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+		::FreeLibrary(lib);
+	}		
 
 	HRESULT hRes = ::CoInitialize(NULL);
 	// If you are running on NT 4.0 or higher you can use the following call instead to 
@@ -68,14 +76,25 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	// command line option /q stops the running server
 	bool quit = !wcscmp(L"/q", lpstrCmdLine) || !wcscmp(L"/quit", lpstrCmdLine);
 	// restart if already running
-	if (quit)
 	{
 		weasel::Client client;
 		if (client.Connect())  // try to connect to running server
 		{
 			client.ShutdownServer();
+			if (quit)
+				return 0;
+			int retry{};
+			while (client.Connect() && retry < 10)
+			{
+				client.ShutdownServer();
+				++retry;
+				Sleep(50);
+			}
+			if (retry >= 10)
+				return 0;
 		}
-		return 0;
+		else if (quit)
+			return 0;
 	}
 
 	bool check_updates = !wcscmp(L"/update", lpstrCmdLine);

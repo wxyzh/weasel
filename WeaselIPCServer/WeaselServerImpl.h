@@ -49,6 +49,8 @@ namespace weasel
 		PARAM OnCommitComposition(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
 		PARAM OnClearComposition(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
 		PARAM OnSelectCandidateOnCurrentPage(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
+		PARAM OnHighlightCandidateOnCurrentPage(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
+		PARAM OnChangePage(WEASEL_IPC_COMMAND uMsg, PARAM wParam, RimeSessionId lParam);
 
 	public:
 		ServerImpl();
@@ -74,7 +76,7 @@ namespace weasel
 
 		std::unique_ptr<PipeServer> channel;
 		std::unique_ptr<std::thread> pipeThread;
-		RequestHandler *m_pRequestHandler;  // reference
+		RequestHandler* m_pRequestHandler;  // reference
 		std::map<UINT, CommandHandler> m_MenuHandlers;
 		HMODULE m_hUser32Module;
 		SecurityAttribute sa;

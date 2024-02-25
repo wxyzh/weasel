@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "SwitcherSettingsDialog.h"
 #include "UIStyleSettingsDialog.h"
 

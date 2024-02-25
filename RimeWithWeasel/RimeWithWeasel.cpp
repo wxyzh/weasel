@@ -280,6 +280,30 @@ void RimeWithWeaselHandler::SelectCandidateOnCurrentPage(const size_t index, Rim
 	api->select_candidate_on_current_page(session_id, index);
 }
 
+bool RimeWithWeaselHandler::HighlightCandidateOnCurrentPage(size_t index, RimeSessionId session_id, EatLine eat)
+{
+	DLOG(INFO) << std::format("highlight candidate on current page, session_id = 0x{:X}, index = {}", session_id, index);
+	RimeApi* api = rime_get_api();
+	if (!api)
+		return false;
+	bool res = api->highlight_candidate_on_current_page(session_id, index);
+	_Respond(session_id, eat);
+	_UpdateUI(session_id);
+	return res;
+}
+
+bool RimeWithWeaselHandler::ChangePage(bool backward, RimeSessionId session_id, EatLine eat)
+{
+	DLOG(INFO) << std::format("change page, session_id = 0x{:X} {}", session_id, backward ? "backward" : "foreward");
+	RimeApi* api = rime_get_api();
+	if (!api)
+		return false;
+	bool res = api->change_page(session_id, backward);
+	_Respond(session_id, eat);
+	_UpdateUI(session_id);
+	return res;
+}
+
 void RimeWithWeaselHandler::FocusIn(PARAM client_caps, RimeSessionId session_id)
 {
 	DLOG(INFO) << "Focus in: session_id = " << session_id << ", client_caps = " << client_caps;

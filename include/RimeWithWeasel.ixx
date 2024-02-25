@@ -52,6 +52,8 @@ export
 		virtual void CommitComposition(RimeSessionId session_id) override;
 		virtual void ClearComposition(RimeSessionId session_id) override;
 		virtual void SelectCandidateOnCurrentPage(const size_t index, RimeSessionId session_id) override;
+		virtual bool HighlightCandidateOnCurrentPage(size_t index, RimeSessionId session_id, EatLine eat) override;
+		virtual bool ChangePage(bool backward, RimeSessionId session_id, EatLine eat) override;
 		virtual void FocusIn(PARAM param, RimeSessionId session_id) override;
 		virtual void FocusOut(PARAM param, RimeSessionId session_id) override;
 		virtual void UpdateInputPosition(RECT const& rc, RimeSessionId session_id) override;
