@@ -156,6 +156,8 @@ export
 
 		TfClientId GetClientId() const { return _tfClientId; }
 
+		void WriteConsole(std::wstring_view buffer);
+
 	private:
 		// ui callback functions
 		void _SelectCandidateOnCurrentPage(const int index);
@@ -264,10 +266,12 @@ export
 		TF_PRESERVEDKEY _preservedKeyCaretFollowing;	// Ctrl+Shift+F
 		TF_PRESERVEDKEY _preservedKeyDaemon;			// Ctrl+Shift+D
 		// TF_PRESERVEDKEY _preservedKeyImeMode;			// Ctrl+9
-		std::array<std::wstring, 3> _gameNames
+		std::array<std::wstring, 2> _gameNames
 		{
 			L"War3.exe",
 			L"WoW.exe"
 		};
+
+		HANDLE m_hConsole;
 	};
 }

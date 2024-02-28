@@ -1,11 +1,6 @@
 ﻿module;
 #include "stdafx.h"
 #include <WeaselCommon.h>
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 module WeaselTSF;
 import CandidateList;
 import ResponseParser;

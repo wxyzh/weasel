@@ -118,14 +118,14 @@
     <ClCompile Include="WeaselTSF.ixx">
       <Filter>Module Files</Filter>
     </ClCompile>
-    <ClCompile Include="CleanupContextDurationSink.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Configuration.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WeaselFlag.ixx">
       <Filter>Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CleanupContextDurationSink.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +142,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

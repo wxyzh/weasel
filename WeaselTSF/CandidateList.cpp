@@ -237,7 +237,7 @@ STDMETHODIMP CCandidateList::SetIntegrationStyle(GUID guidIntegrationStyle)
 
 STDMETHODIMP CCandidateList::GetSelectionStyle(TfIntegratableCandidateListSelectionStyle* ptfSelectionStyle)
 {
-	* ptfSelectionStyle = _selectionStyle;
+	*ptfSelectionStyle = _selectionStyle;
 	return S_OK;
 }
 
@@ -249,7 +249,7 @@ STDMETHODIMP CCandidateList::OnKeyDown(WPARAM wParam, LPARAM lParam, BOOL* pIsEa
 
 STDMETHODIMP CCandidateList::ShowCandidateNumbers(BOOL* pIsShow)
 {
-	* pIsShow = TRUE;
+	*pIsShow = TRUE;
 	return S_OK;
 }
 
@@ -369,7 +369,6 @@ HRESULT CCandidateList::_UpdateUIElement()
 
 	if (SUCCEEDED(pThreadMgr->QueryInterface(&pUIElementMgr)))
 	{
-		// hr = pUIElementMgr->UpdateUIElement(uiid2);
 		hr = pUIElementMgr->UpdateUIElement(uiid);
 	}
 
@@ -391,7 +390,7 @@ void CCandidateList::StartUI()
 
 	// ToDo: send select candidate info back to rime	
 	hr = pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
-	// hr = pUIElementMgr->BeginUIElement(_pReadingInformation, &_pbShow, &uiid2);
+	// MessageBox(nullptr, std::format(L"pbShow = {:s}", static_cast<bool>(_pbShow)).data(), L"²âÊÔ", MB_OK);
 	if (_tsf.GetBit(WeaselFlag::GAME_MODE_SELF_REDRAW))
 		_pbShow = true;
 	if (_pbShow)
@@ -422,7 +421,6 @@ void CCandidateList::EndUI()
 		{
 			_flags = 0;
 			emgr->EndUIElement(uiid);
-			// emgr->EndUIElement(uiid2);
 			if (_tsf.GetBit(WeaselFlag::GAME_WAR3))
 			{
 				PostMessage(_GetActiveWnd(), WM_IME_NOTIFY, IMN_CLOSECANDIDATE, 0);

@@ -4,6 +4,7 @@
 #include "Globals.h"
 #include <resource.h>
 #include <filesystem>
+#include "test.h"
 
 namespace fs = std::filesystem;
 
@@ -44,7 +45,7 @@ WeaselTSF::WeaselTSF()
 }
 
 WeaselTSF::~WeaselTSF()
-{
+{	
 	DllRelease();
 }
 
@@ -122,7 +123,8 @@ STDAPI WeaselTSF::Deactivate()
 	_UninitKeyEventSink();
 	_UninitPreservedKey();
 
-	_UninitLanguageBar();
+	if (!GetBit(WeaselFlag::INIT_LANGUAGEBAR_FAILED))
+		_UninitLanguageBar();
 
 	_UninitCompartment();
 
@@ -130,11 +132,23 @@ STDAPI WeaselTSF::Deactivate()
 
 	_cand->Destroy();
 
+#ifdef TEST
+	if (GetBit(WeaselFlag::WEASEL_TSF_DEBUG) && m_hConsole)
+	{
+		::FreeConsole();
+	}
+#endif // TEST	
+
 	return S_OK;
 }
 
 STDAPI WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr, TfClientId tfClientId, DWORD dwFlags)
 {
+#ifdef TEST
+	std::wstring buffer{ std::format(L"From WeaselActivateEx().\n") };
+	WriteConsole(buffer);
+#endif // TEST
+
 	com_ptr<ITfDocumentMgr> pDocMgrFocus;
 	_activateFlags = dwFlags;
 
@@ -143,37 +157,74 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr, TfClientId tfClientId, DW
 
 	_InitWeaselData();
 
+#ifdef TEST
+	buffer = std::format(L"From WeaselActivateEx(). InitThreadMgrEventSink\n");
+	WriteConsole(buffer);
+#endif // TEST
 	if (!_InitThreadMgrEventSink())
 		goto ExitError;
 
+#ifdef TEST
+	buffer = std::format(L"From WeaselActivateEx(). InitTextEditSink\n");
+	WriteConsole(buffer);
+#endif // TEST
 	if ((_pThreadMgr->GetFocus(&pDocMgrFocus) == S_OK) && (pDocMgrFocus != NULL))
 	{
 		_InitTextEditSink(pDocMgrFocus);
 	}
 
+#ifdef TEST
+	buffer = std::format(L"From WeaselActivateEx(). InitCleanupContextDurationSink\n");
+	WriteConsole(buffer);
+#endif // TEST
 	if (!_InitCleanupContextDurationSink())
 		goto ExitError;
 
+#ifdef TEST
+	buffer = std::format(L"From WeaselActivateEx(). InitKeyEventSink\n");
+	WriteConsole(buffer);
+#endif // TEST
 	if (!_InitKeyEventSink())
 		goto ExitError;
 
+#ifdef TEST
+	buffer = std::format(L"From WeaselActivateEx(). InitActiveLanguageProfileNotifySink\n");
+	WriteConsole(buffer);
+#endif // TEST
 	if (!_InitActiveLanguageProfileNotifySink())
 	{
 		goto ExitError;
 	}
 
+#ifdef TEST
+	buffer = std::format(L"From WeaselActivateEx(). InitDisplayAttributeGuidAtom\n");
+	WriteConsole(buffer);
+#endif // TEST
 	if (!_InitDisplayAttributeGuidAtom())
 	{
 		ResetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);
 	}
 
+#ifdef TEST
+	buffer = std::format(L"From WeaselActivateEx(). InitLanguageBar\n");
+	WriteConsole(buffer);
+#endif // TEST
 	if (!_InitLanguageBar())
-		goto ExitError;
+		SetBit(WeaselFlag::INIT_LANGUAGEBAR_FAILED);
 
+#ifdef TEST
+	buffer = std::format(L"From WeaselActivateEx(). IsKeyboardOpen\n");
+	WriteConsole(buffer);
+#endif // TEST
 	if (!_IsKeyboardOpen())
 		_SetKeyboardOpen(TRUE);
 
-	_InitGlobalCompartment();
+#ifdef TEST
+	buffer = std::format(L"From WeaselActivateEx(). InitGlobalCompartment\n");
+	WriteConsole(buffer);
+#endif // TEST
+	if (!GetBit(WeaselFlag::PLANTS_VS_ZOMBIES))
+		_InitGlobalCompartment();
 	_pCompartmentConversion = std::make_unique<CCompartment>(pThreadMgr, tfClientId, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
 
 	_EnsureServerConnected();
@@ -183,6 +234,11 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr, TfClientId tfClientId, DW
 
 	if (GetBit(WeaselFlag::PRESERVED_KEY_SWITCH))
 		_InitPreservedKey();
+
+#ifdef TEST
+	buffer = std::format(L"From WeaselActivateEx(). End\n");
+	WriteConsole(buffer);
+#endif // TEST
 
 	return S_OK;
 
@@ -250,28 +306,45 @@ void WeaselTSF::_InitWeaselData()
 	auto ret = QueryFullProcessImageName(hProcess, 0, name.data(), &len);
 	CloseHandle(hProcess);
 	name = name.data();
+	name = fs::path(name).filename().wstring();
 
-	if (fs::path(name).filename().wstring() == L"acad.exe")
+	if (name == L"acad.exe")
 	{
 		SetBit(WeaselFlag::AUTOCAD);
 	}
 
-	if (fs::path(name).filename().wstring() == L"wezterm-gui.exe")
+	if (name == L"wezterm-gui.exe")
 	{
 		SetBit(WeaselFlag::WEZTERM_FIRST_KEY);
 	}
 
-	if (fs::path(name).filename().wstring() == L"firefox.exe")
+	if (name == L"firefox.exe")
 	{
 		SetBit(WeaselFlag::FIREFOX);
 	}
 
-	if (fs::path(name).filename().wstring() == L"dota2.exe")
+	if (name == L"dota2.exe")
 	{
 		SetBit(WeaselFlag::GAME_MODE_SELF_REDRAW);
 		ResetBit(WeaselFlag::CARET_FOLLOWING);
 		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
 	}
+
+	if (name == L"PlantsVsZombies.exe")
+	{
+		SetBit(WeaselFlag::PLANTS_VS_ZOMBIES);
+	}
+
+#ifdef TEST
+	if (name != L"conhost.exe" && name != L"explorer.exe")
+	{
+		AllocConsole();
+		SetBit(WeaselFlag::WEASEL_TSF_DEBUG);
+		m_hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		std::wstring buffer{ std::format(L"ActivateEx. Current Process: {}\n", name) };
+		WriteConsole(buffer);
+	}
+#endif // TEST	
 
 	for (size_t i{}; i < _gameNames.size(); ++i)
 	{
@@ -283,5 +356,13 @@ void WeaselTSF::_InitWeaselData()
 				SetBit(WeaselFlag::GAME_WAR3);
 			}
 		}
+	}
+}
+
+void WeaselTSF::WriteConsole(std::wstring_view buffer)
+{
+	if (GetBit(WeaselFlag::WEASEL_TSF_DEBUG) && m_hConsole)
+	{
+		::WriteConsole(m_hConsole, buffer.data(), buffer.size(), nullptr, 0);
 	}
 }

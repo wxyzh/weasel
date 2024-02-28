@@ -1,6 +1,7 @@
 module;
 #include "stdafx.h"
 #include "Globals.h"
+#include "test.h"
 module WeaselTSF;
 import WeaselIPC;
 import KeyEvent;
@@ -91,6 +92,11 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lPar
 
 STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 {
+#ifdef TEST
+	std::wstring buffer{ std::format(L"From OnKeyDown. wParam = 0x{:X}\n", static_cast<unsigned>(wParam)) };
+	WriteConsole(buffer);
+#endif // TEST
+
 	_lastKey = static_cast<unsigned short>(wParam);
 	_fTestKeyUpPending = false;
 	if (_fTestKeyDownPending)

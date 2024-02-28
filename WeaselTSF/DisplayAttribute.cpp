@@ -1,11 +1,6 @@
 module;
 #include "stdafx.h"
 #include "Globals.h"
-#include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 module WeaselTSF;
 
 void WeaselTSF::_ClearCompositionDisplayAttributes(TfEditCookie ec, _In_ ITfContext* pContext)
@@ -61,9 +56,6 @@ BOOL WeaselTSF::_InitDisplayAttributeGuidAtom()
     if (SUCCEEDED(_pThreadMgr->QueryInterface(&pCategoryMgr)))
     {
         hr = pCategoryMgr->RegisterGUID(c_guidDisplayAttributeInput, &_gaDisplayAttributeInput);
-#ifdef TEST
-        LOG(INFO) << std::format("From WeaselTSF::_InitDisplayAttributeGuidAtom. hr = 0x{:X}", (unsigned)hr);
-#endif // TEST
     }
 
     return SUCCEEDED(hr);
