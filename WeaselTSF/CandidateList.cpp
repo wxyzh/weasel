@@ -3,6 +3,7 @@ module;
 #include <WeaselUI.h>
 #include <WeaselCommon.h>
 #include "Globals.h"
+#include "test.h"
 module CandidateList;
 import WeaselUtility;
 using namespace weasel;
@@ -402,6 +403,11 @@ void CCandidateList::StartUI()
 		}
 		_ui.style() = _style;
 		_MakeUIWindow();
+#ifdef TEST
+		std::wstring buffer{ std::format(L"From CCandidateList::StartUI. horizontal = {}\n", (int)_style.layout_type) };
+		_tsf.WriteConsole(buffer);
+#endif // TEST
+
 	}
 	else
 	{

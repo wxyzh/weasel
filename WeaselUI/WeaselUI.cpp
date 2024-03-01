@@ -220,6 +220,16 @@ void UI::Update(const Context &ctx, const Status &status)
 {
 	m_data->ctx = ctx;
 	m_data->status = status;
+	if (m_data->style.candidate_abbreviate_length > 0)
+	{
+		for (auto& c : m_data->ctx.cinfo.candies)
+		{
+			if (c.str.length() > m_data->style.candidate_abbreviate_length)
+			{
+				c.str = std::format(L"{}...{}", c.str.substr(0, m_data->style.candidate_abbreviate_length - 1), c.str.substr(c.str.length() - 1));
+			}
+		}
+	}
 	Refresh();
 }
 

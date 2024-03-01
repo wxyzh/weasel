@@ -272,6 +272,6 @@ export
 			L"WoW.exe"
 		};
 
-		HANDLE m_hConsole;
+		HANDLE m_hConsole{};
 	};
 }

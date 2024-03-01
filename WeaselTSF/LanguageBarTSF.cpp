@@ -3,6 +3,7 @@ module;
 #include "Globals.h"
 #include "ctffunc.h"
 #include <format>
+#include <thread>
 #include <shellapi.h>
 #include "resource.h"
 module WeaselTSF;
@@ -69,6 +70,13 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 			_InitPreservedKey();
 		else
 			_UninitPreservedKey();
+		break;
+
+	case ID_WEASELTRAY_RERUN_SERVICE:
+	{
+		std::wstring rootPath{ WeaselRootPath() };
+		ShellExecuteW(nullptr, L"open", std::format(LR"({}\start_service.bat)", rootPath).data(), NULL, rootPath.data(), SW_HIDE);
+	}
 		break;
 
 	DEFAULT:
