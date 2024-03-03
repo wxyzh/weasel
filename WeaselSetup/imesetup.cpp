@@ -165,7 +165,7 @@ int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func f
 	GetSystemWow64Directory(path, _countof(path));
 	imePath = path;
 	imePath += L"\\weasel" + ext;
-	retval += func(imePath, false, true, false, silent);	
+	retval += func(imePath, false, true, false, silent);
 	
 	if (!delete_file(imePath))
 	{

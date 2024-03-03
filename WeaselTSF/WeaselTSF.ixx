@@ -25,7 +25,8 @@ export
 		public ITfActiveLanguageProfileNotifySink,
 		public ITfEditSession,
 		public ITfDisplayAttributeProvider,
-		public ITfCleanupContextDurationSink
+		public ITfCleanupContextDurationSink,
+		public ITfThreadFocusSink
 	{
 	public:
 		WeaselTSF();
@@ -76,6 +77,10 @@ export
 		// ITfDisplayAttributeProvider
 		STDMETHODIMP EnumDisplayAttributeInfo(__RPC__deref_out_opt IEnumTfDisplayAttributeInfo** ppEnum);
 		STDMETHODIMP GetDisplayAttributeInfo(__RPC__in REFGUID guidInfo, __RPC__deref_out_opt ITfDisplayAttributeInfo** ppInfo);
+
+		/* ITfThreadFocusSink */
+		STDMETHODIMP OnSetThreadFocus();
+		STDMETHODIMP OnKillThreadFocus();
 
 		/* ITfCompartmentEventSink */
 		// STDMETHODIMP OnChange(_In_ REFGUID guid);
@@ -185,6 +190,9 @@ export
 		void _ShowLanguageBar(BOOL show);
 		void _EnableLanguageBar(BOOL enable);
 
+		BOOL _InitThreadFocusSink();
+		void _UninitThreadFocusSink();
+
 		BOOL _InsertText(ITfContext* pContext, std::wstring_view text);
 
 		void _DeleteCandidateList();
@@ -249,6 +257,8 @@ export
 
 		// The cookie of ActiveLanguageProfileNotifySink
 		DWORD _activeLanguageProfileNotifySinkCookie;
+
+		DWORD _dwThreadFocusSinkCookie;
 
 		RECT m_rcFallback{};
 		HWND m_hwnd{};

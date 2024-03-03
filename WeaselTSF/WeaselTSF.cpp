@@ -35,6 +35,7 @@ WeaselTSF::WeaselTSF()
 	_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 	_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
 	_activeLanguageProfileNotifySinkCookie = TF_INVALID_COOKIE;
+	_dwThreadFocusSinkCookie = TF_INVALID_COOKIE;
 
 	_cand.Attach(new CCandidateList(*this));
 	SetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);
@@ -78,6 +79,8 @@ STDAPI WeaselTSF::QueryInterface(REFIID riid, void** ppvObject)
 		*ppvObject = (ITfDisplayAttributeProvider*)this;
 	else if (IsEqualIID(riid, IID_ITfCleanupContextDurationSink))
 		*ppvObject = (ITfCleanupContextDurationSink*)this;
+	else if (IsEqualIID(riid, IID_ITfThreadFocusSink))
+		*ppvObject = (ITfThreadFocusSink*)this;
 
 	if (*ppvObject)
 	{
@@ -127,6 +130,7 @@ STDAPI WeaselTSF::Deactivate()
 		_UninitLanguageBar();
 
 	_UninitCompartment();
+	_UninitThreadFocusSink();
 
 	_tfClientId = TF_CLIENTID_NULL;
 
@@ -211,6 +215,9 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr, TfClientId tfClientId, DW
 #endif // TEST
 	if (!_InitLanguageBar())
 		SetBit(WeaselFlag::INIT_LANGUAGEBAR_FAILED);
+
+	if (!_InitThreadFocusSink())
+		goto ExitError;
 
 #ifdef TEST
 	buffer = std::format(L"From WeaselActivateEx(). IsKeyboardOpen\n");
