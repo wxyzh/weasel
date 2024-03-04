@@ -14,7 +14,15 @@ STDMETHODIMP WeaselTSF::OnSetThreadFocus()
 	if (m_client.Echo())
 	{
 		m_client.ProcessKeyEvent(0);
-		_UpdateComposition(_pEditSessionContext);
+		POINT pt{};
+		::GetCursorPos(&pt);
+		RECT rc{ pt.x, pt.y, pt.x, pt.y };
+		m_client.UpdateInputPosition(rc);
+		weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
+		bool ok = m_client.GetResponseData(std::ref(parser));
+		if (ok) {
+			_UpdateLanguageBar();
+		}
 	}
 #ifdef TEST
 	buffer = std::format(L"From WeaselTSF::OnSetThreadFocus(). ascii_mode = {:s}\n", _status.ascii_mode);

@@ -182,6 +182,10 @@ STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEa
 	{
 		Flip(WeaselFlag::CARET_FOLLOWING);
 		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
+		if (!GetBit(WeaselFlag::CARET_FOLLOWING))
+		{
+			ReadConfiguration(ConfigFlag::FALLBACK_POSITION);
+		}
 		*pfEaten = TRUE;
 	}
 	else if (IsEqualGUID(rguid, WEASEL_DAEMON_PRESERVED_KEY))

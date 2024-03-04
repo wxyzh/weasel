@@ -335,6 +335,7 @@ void WeaselTSF::_InitWeaselData()
 		SetBit(WeaselFlag::GAME_MODE_SELF_REDRAW);
 		ResetBit(WeaselFlag::CARET_FOLLOWING);
 		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
+		ReadConfiguration(ConfigFlag::FALLBACK_POSITION);
 	}
 
 	if (name == L"PlantsVsZombies.exe")

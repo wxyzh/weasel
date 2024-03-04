@@ -142,7 +142,7 @@ export
 
 		bool execute(std::wstring_view cmd, std::wstring_view args = L"");
 		bool explore(std::wstring_view path);
-		void SetRect(const RECT& rc) { m_rcFallback = rc; }
+		void SetRect(const RECT& rc);
 		RECT GetRect() const { return m_rcFallback; }
 		WCHAR GetInput() const { return static_cast<WCHAR>(_keycode); }
 
@@ -155,8 +155,8 @@ export
 		void UpdateGlobalCompartment(bool in = true);
 		void SetHWND(HWND hwnd) { m_hwnd = hwnd; }
 
-		bool ReadConfiguration();
-		bool WriteConfiguration();
+		bool ReadConfiguration(ConfigFlag flag);
+		bool WriteConfiguration(ConfigFlag flag);
 		bool StoreTextServiceHandle(HKL hkl);
 
 		TfClientId GetClientId() const { return _tfClientId; }

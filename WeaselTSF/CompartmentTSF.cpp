@@ -223,8 +223,8 @@ HRESULT WeaselTSF::_InitGlobalCompartment()
 				{
 					if ((var.ulVal & 0xFF00'0000) != 0xFC00'0000)
 					{
-						if (!ReadConfiguration())
-							WriteConfiguration();
+						if (!ReadConfiguration(ConfigFlag::GLOBAL_COMPARTMENT))
+							WriteConfiguration(ConfigFlag::GLOBAL_COMPARTMENT);
 						var.ulVal = m_globalCompartment;
 						ret = _pGlobalCompartment->SetValue(_tfClientId, &var);
 						value = static_cast<unsigned char>(m_globalCompartment);
@@ -238,8 +238,8 @@ HRESULT WeaselTSF::_InitGlobalCompartment()
 				else
 				{
 					var.vt = VT_I4;
-					if (!ReadConfiguration())
-						WriteConfiguration();
+					if (!ReadConfiguration(ConfigFlag::GLOBAL_COMPARTMENT))
+						WriteConfiguration(ConfigFlag::GLOBAL_COMPARTMENT);
 					var.ulVal = m_globalCompartment;
 					ret = _pGlobalCompartment->SetValue(_tfClientId, &var);
 					value = static_cast<unsigned char>(m_globalCompartment);
@@ -268,7 +268,7 @@ void WeaselTSF::UpdateGlobalCompartment(bool in)
 		m_globalCompartment = var.ulVal;
 
 		_pGlobalCompartment->SetValue(_tfClientId, &var);
-		WriteConfiguration();
+		WriteConfiguration(ConfigFlag::GLOBAL_COMPARTMENT);
 	}
 	else if (SUCCEEDED(_pGlobalCompartment->GetValue(&var)))
 	{

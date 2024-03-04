@@ -296,3 +296,12 @@ void WeaselTSF::SimulatingKeyboardEvents(unsigned short code)
 
 	SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
 }
+
+void WeaselTSF::SetRect(const RECT& rc)
+{ 
+	m_rcFallback = rc;
+	if (!GetBit(WeaselFlag::CARET_FOLLOWING))
+	{
+		WriteConfiguration(ConfigFlag::FALLBACK_POSITION);
+	}
+}

@@ -60,6 +60,10 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 	case ID_STYLE_CARET_FOLLOWING:
 		_bitset.flip(static_cast<int>(WeaselFlag::CARET_FOLLOWING));
 		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
+		if (!GetBit(WeaselFlag::CARET_FOLLOWING))
+		{
+			ReadConfiguration(ConfigFlag::FALLBACK_POSITION);
+		}
 		break;
 
 	case ID_STYLE_PRESERVED_KEY_SWITCH:
