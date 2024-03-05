@@ -1,4 +1,4 @@
-// Microsoft Visual C++ generated resource script.
+﻿// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// ����(���壬�й�) resources
+// 中文(简体，中国) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -86,14 +86,14 @@ BEGIN
     BEGIN
         BLOCK "080404b0"
         BEGIN
-            VALUE "Comments", "Powered by RIME | ���������뷨����"
-            VALUE "CompanyName", "ʽˡ��"
-            VALUE "FileDescription", "С�Ǻ��㷨����"
+            VALUE "Comments", "Powered by RIME | 中州韵输入法引擎"
+            VALUE "CompanyName", "式恕堂"
+            VALUE "FileDescription", "小狼毫算法服务"
             VALUE "FileVersion", "0.15.1.0"
             VALUE "InternalName", "WeaselServer"
-            VALUE "LegalCopyright", "ʽˡ�� ��Ȩ����"
+            VALUE "LegalCopyright", "式恕堂 版权所无"
             VALUE "OriginalFilename", "WeaselServer.exe"
-            VALUE "ProductName", "С�Ǻ�"
+            VALUE "ProductName", "小狼毫"
             VALUE "ProductVersion", "0.15.1.0"
         END
     END
@@ -133,23 +133,23 @@ IDR_MENU_POPUP MENU
 BEGIN
     POPUP "WeaselTray"
     BEGIN
-        MENUITEM "���뷨�趨 (&S)",                  ID_WEASELTRAY_SETTINGS
-        MENUITEM "�û��ʵ���� (&D)",                 ID_WEASELTRAY_DICT_MANAGEMENT
-        MENUITEM "�û�����ͬ�� (&N)",                 ID_WEASELTRAY_SYNC
+        MENUITEM "输入法设定 (&S)",                  ID_WEASELTRAY_SETTINGS
+        MENUITEM "用户词典管理 (&D)",                 ID_WEASELTRAY_DICT_MANAGEMENT
+        MENUITEM "用户资料同步 (&N)",                 ID_WEASELTRAY_SYNC
         MENUITEM SEPARATOR
-        MENUITEM "�û��ļ��� (&C)",                  ID_WEASELTRAY_USERCONFIG
-        MENUITEM "�����ļ��� (&P)",                  ID_WEASELTRAY_INSTALLDIR
+        MENUITEM "用户文件夹 (&C)",                  ID_WEASELTRAY_USERCONFIG
+        MENUITEM "程序文件夹 (&P)",                  ID_WEASELTRAY_INSTALLDIR
         MENUITEM SEPARATOR
-        MENUITEM "�����ĵ� (&H)",                   ID_WEASELTRAY_WIKI
-        MENUITEM "�μ����� (&J)",                   ID_WEASELTRAY_FORUM
+        MENUITEM "帮助文档 (&H)",                   ID_WEASELTRAY_WIKI
+        MENUITEM "参加讨论 (&J)",                   ID_WEASELTRAY_FORUM
         MENUITEM SEPARATOR
-        MENUITEM "����°汾 (&U)",                  ID_WEASELTRAY_CHECKUPDATE
-        MENUITEM "���²��� (&R)",                   ID_WEASELTRAY_DEPLOY
-        MENUITEM "�˳� (&Q)",                     ID_WEASELTRAY_QUIT
+        MENUITEM "检查新版本 (&U)",                  ID_WEASELTRAY_CHECKUPDATE
+        MENUITEM "重新部署 (&R)",                   ID_WEASELTRAY_DEPLOY
+        MENUITEM "退出 (&Q)",                     ID_WEASELTRAY_QUIT
     END
 END
 
-#endif    // ����(���壬�й�) resources
+#endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
