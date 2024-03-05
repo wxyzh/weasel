@@ -33,4 +33,10 @@ export
 		PLANTS_VS_ZOMBIES,
 		WEASEL_TSF_DEBUG
 	};
+
+	enum class ConfigFlag
+	{
+		GLOBAL_COMPARTMENT,
+		FALLBACK_POSITION
+	};
 }

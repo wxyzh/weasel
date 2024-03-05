@@ -3,7 +3,6 @@ module;
 #include "Globals.h"
 #include "ctffunc.h"
 #include <format>
-#include <thread>
 #include <shellapi.h>
 #include "resource.h"
 module WeaselTSF;
@@ -55,12 +54,16 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 	{
 		Flip(WeaselFlag::DAEMON_ENABLE);
 		UpdateGlobalCompartment();
-	}
-	break;
+		break;
+	}	
 
 	case ID_STYLE_CARET_FOLLOWING:
 		_bitset.flip(static_cast<int>(WeaselFlag::CARET_FOLLOWING));
 		_cand->SetCaretFollowing(GetBit(WeaselFlag::CARET_FOLLOWING));
+		if (!GetBit(WeaselFlag::CARET_FOLLOWING))
+		{
+			ReadConfiguration(ConfigFlag::FALLBACK_POSITION);
+		}
 		break;
 
 	case ID_STYLE_PRESERVED_KEY_SWITCH:
@@ -73,10 +76,7 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 		break;
 
 	case ID_WEASELTRAY_RERUN_SERVICE:
-	{
-		std::wstring rootPath{ WeaselRootPath() };
-		ShellExecuteW(nullptr, L"open", std::format(LR"({}\start_service.bat)", rootPath).data(), NULL, rootPath.data(), SW_HIDE);
-	}
+		execute(std::format(LR"({}\WeaselServer.exe)", WeaselRootPath()));
 		break;
 
 	DEFAULT:

@@ -34,10 +34,6 @@ protected:
 	LRESULT OnUseCustomDir(WORD, WORD code, HWND, BOOL&);
 	LRESULT OnBrowser(WORD, WORD code, HWND, BOOL&);
 
-	void UpdateWidgets();
-	void Modify();
-	void ResetServer();
-
 	CButton cn_;
 	CButton tw_;
 	CButton remove_;

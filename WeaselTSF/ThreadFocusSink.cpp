@@ -1,50 +1,39 @@
 module;
 #include "stdafx.h"
 #include "test.h"
-#ifdef TEST
-#define WEASEL_ENABLE_LOGGING
-#include "logging.h"
-#endif // TEST
 module WeaselTSF;
 import CandidateList;
+import ResponseParser;
 
 STDMETHODIMP WeaselTSF::OnSetThreadFocus()
 {
 #ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnSetThreadFocus. _pComposition ? {:s}", (bool)_IsComposing());
+	std::wstring buffer = std::format(L"From WeaselTSF::OnSetThreadFocus(). ascii_mode = {:s}\n", _status.ascii_mode);
+	WriteConsole(buffer);
 #endif // TEST
-	if (_pComposition)
+	if (m_client.Echo())
 	{
-		com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
-		if (SUCCEEDED(_pTextEditSinkContext->GetDocumentMgr(&pCandidateListDocumentMgr)))
-		{
-			if (pCandidateListDocumentMgr == _pDocMgrLastFocused)
-			{
-				_cand->SetThreadFocus();
-			}
+		m_client.ProcessKeyEvent(0);
+		POINT pt{};
+		::GetCursorPos(&pt);
+		RECT rc{ pt.x, pt.y, pt.x, pt.y };
+		m_client.UpdateInputPosition(rc);
+		weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
+		bool ok = m_client.GetResponseData(std::ref(parser));
+		if (ok) {
+			_UpdateLanguageBar();
 		}
 	}
+#ifdef TEST
+	buffer = std::format(L"From WeaselTSF::OnSetThreadFocus(). ascii_mode = {:s}\n", _status.ascii_mode);
+	WriteConsole(buffer);
+#endif // TEST
+
 	return S_OK;
 }
+
 STDMETHODIMP WeaselTSF::OnKillThreadFocus()
 {
-#ifdef TEST
-	LOG(INFO) << std::format("From WeaselTSF::OnKillThreadFocus. _pComposition ? {:s}", (bool)_IsComposing());
-#endif // TEST
-	if (_pComposition)
-	{
-		com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
-
-		if (SUCCEEDED(_pTextEditSinkContext->GetDocumentMgr(&pCandidateListDocumentMgr)))
-		{
-			if (_pDocMgrLastFocused)
-			{
-				_pDocMgrLastFocused.Release();
-			}
-			_pDocMgrLastFocused = pCandidateListDocumentMgr;
-		}
-		_cand->KillThreadFocus();
-	}
 	return S_OK;
 }
 
