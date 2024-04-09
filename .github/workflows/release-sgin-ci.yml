@@ -1,0 +1,186 @@
+name: Release CI Sign 
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '[0-9]+.*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    permissions:
+      contents: write
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-2022, windows-2019]
+    env:
+      librime_build: submodule
+      boost_version: 1.84.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
+      env_script: ${{ matrix.os == 'windows-2022' && 'env.vs2022.bat' || 'env.vs2019.bat' }}
+    steps:
+      - name: Checkout last commit
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure build environment
+        shell: bash
+        run: |
+          cp ${{ env.env_script }} env.bat
+          librime_id=$(git submodule foreach --quiet 'if [ $name == "librime" ]; then echo `git rev-parse HEAD`; fi')
+          echo "librime_id is $librime_id"
+          echo "librime_id=$librime_id" >> $GITHUB_ENV
+
+      # cache boost
+      - name: Cache Boost
+        id: cache-boost
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.BOOST_ROOT }}
+          key: ${{ matrix.os }}-boost-${{ env.boost_version }}
+
+      # install boost if not cached
+      - name: Install Boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          ./install_boost.bat
+          ./build.bat boost arm64
+
+      # add msbuild to PATH
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      # use upper stream released librime files if stable release
+      - name: Copy Rime files
+        if: ${{ startsWith(github.ref, 'refs/tags/') || env.librime_build == 'stable' }}
+        run: |
+          .\github.install.bat
+
+      # cache librime for nightly build and not stable release
+      - name: Cache librime
+        if: ${{ github.ref == 'refs/heads/x64' && env.librime_build == 'submodule' }}
+        id: cache-librime
+        uses: actions/cache@v4
+        with:
+          path: |
+            librime
+          key: ${{ matrix.os }}-librime-${{ env.librime_id }}-dual
+
+      # build librime if not cached for nightly build and not stable release
+      - name: Build librime
+        if: ${{ github.ref == 'refs/heads/x64' && env.librime_build == 'submodule' && steps.cache-librime.outputs.cache-hit != 'true' }}
+        env:
+          RIME_PLUGINS: hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
+        shell: bash
+        run: |
+          # load plugins
+          pushd librime
+          ./action-install-plugins-windows.bat
+          popd
+          ./build.bat librime
+
+      # build librime if cached
+      - name: Copy librime built files cached
+        if: ${{ github.ref == 'refs/heads/x64' && env.librime_build == 'submodule' && steps.cache-librime.outputs.cache-hit == 'true' }}
+        shell: bash
+        run: |
+          cp ./librime/dist_x64/lib/rime* ./lib64/
+          cp ./librime/dist_x64/lib/rime.dll ./output/
+          cp ./librime/dist_x64/include/*.h ./include/
+          cp ./librime/dist_Win32/lib/rime* ./lib/
+          cp ./librime/dist_Win32/lib/rime.dll ./output/Win32/
+
+      - name: Build Weasel
+        id: build_weasel
+        shell: bash
+        run: |
+          ./build.bat data
+          ./build.bat hant arm64
+          ./build.bat installer
+
+      - name: Upload artifacts bin
+        uses: actions/upload-artifact@v4
+        with:
+          name: weasel_bin-${{ matrix.os }}
+          if-no-files-found: error
+          path: |
+            .\output\*.exe
+            .\output\*.dll
+            .\output\*.ime
+            .\output\Win32\*.exe
+            .\output\Win32\*.dll
+            .\output\Win32\*.ime    
+
+          
+      - name: Sign Bin
+        shell: pwsh
+        env:
+          env_certificate: ${{ secrets.CERTIFICATE }}
+          env_certpassword: ${{ secrets.PASSWORD }}
+          env_catert: '${{ secrets.CACERT }}'
+        run: |
+          $tempCertFile = New-TemporaryFile
+          $tempCAFile = New-TemporaryFile        
+
+          # Retrieve environment variables for cert/password.
+          $certText = $env:env_certificate
+          $CertPass = ($env:env_certpassword).ToString()
+          $CACertText = $env:env_catert
+
+          $SecPass =ConvertTo-SecureString -String $CertPass -AsPlainText -force
+
+          # Create a Cert object by converting the cert string to bytes.
+
+          $certBytes = [Convert]::FromBase64String($certText)
+          $CAcertBytes = [Convert]::FromBase64String($CACertText)
+
+          Set-Content -Path $tempCertFile -Value $certBytes -AsByteStream
+          Set-Content -Path $tempCAFile -Value $CAcertBytes -AsByteStream
+
+          #Import-Certificate -FilePath $tempCAFile  -CertStoreLocation Cert:\CurrentUser\Root\ -Confirm:$false
+          certutil.exe -addstore root $tempCAFile.FullName
+
+          $cert=Get-PfxCertificate -FilePath $tempCertFile -Password $SecPass
+
+          # Go through the artifacts directory and sign the 'windows' artifacts.
+          $output = ".\output"
+
+          $Extension = @(".exe",".dll",".ime")
+          Get-ChildItem -Path $output -Recurse |  where {$Extension -contains $_.Extension} | Set-AuthenticodeSignature -Certificate $Cert -TimestampServer http://timestamp.digicert.com
+          Remove-Item $tempCAFile -Force
+          Remove-Item $tempCertFile -Force
+
+      - name: Upload artifacts bin
+        uses: actions/upload-artifact@v4
+        with:
+          name: weasel_bin_signed-${{ matrix.os }}
+          if-no-files-found: error
+          path: |
+            .\output\*.exe
+            .\output\*.dll
+            .\output\*.ime
+            .\output\Win32\*.exe
+            .\output\Win32\*.dll
+            .\output\Win32\*.ime    
+          
+      - name: Compress Debug Symbols
+        shell: pwsh
+        run: |
+          Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: weasel_installer-${{ matrix.os }}
+          if-no-files-found: error
+          path: |
+            .\output\archives\weasel*.exe
+            .\output\archives\symbols.zip
+
